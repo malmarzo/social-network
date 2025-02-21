@@ -107,3 +107,10 @@ social-network/
 - Migrations in the `/migrations` dir
 - DB connection in the `/sqlite` dir in the `sqlite.go` file
 - Functions and queries in the `queries` dir
+
+#### database & migration
+- to create a new migration file run the command "migrate create -ext sql -dir pkg/db/migrations/sqlite -seq create_notifications_table" by changing the create_notifications_table you change the name of the file 
+- after creating a migration file there will be one file called down which has the drop table code and another file
+that is called up which has the table itself
+- by running the application the migrations will be applied automatically and if the migrations are succesful the 
+function will print a message in the terminal
