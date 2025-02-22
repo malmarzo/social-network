@@ -107,6 +107,11 @@
   font-weight: 600;
 }
 
+.errMsg {
+  color: rgb(243, 38, 38);
+  font-size: 0.9em;
+}
+
 .input {
   font-size: medium;
 }

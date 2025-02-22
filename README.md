@@ -18,7 +18,7 @@ A Facebook like social media application made using Next.js and go.
 ### Running the backend
 
 - Navigate to the backend dir: `cd backend`
-- Run: `go run cmd/main.go`
+- Run: `go run cmd/server.go`
 
 ### Project Structure
 
@@ -69,6 +69,43 @@ social-network/
 
 - Utility code
 
+### Frontend Utilities
+
+#### invokeAPI Function
+
+```javascript
+// Usage: invokeAPI(route, body, method, contentType)
+// Example:
+const response = await invokeAPI(
+  "signup",
+  formData,
+  "POST",
+  "multipart/form-data"
+);
+```
+
+- `route`: API endpoint path (string)
+- `body`: Request body (object or FormData)
+- `method`: HTTP method ("GET", "POST", etc.)
+- `contentType`: Content type header (optional, defaults to "application/json")
+- Returns: Promise with API response
+
+#### Alert Components
+
+```jsx
+// Success Alert
+<SuccessAlert
+  msg="Operation successful!"
+  link="/home"
+  linkText="Go to Home"
+/>
+
+// Fail Alert
+<FailAlert msg="Operation failed!" />
+```
+
+- `msg`: Message to display
+
 ### backend
 
 - Will hold all the backend components: Server, App Logic, Database
@@ -109,8 +146,56 @@ social-network/
 - Functions and queries in the `queries` dir
 
 #### database & migration
-- to create a new migration file run the command "migrate create -ext sql -dir pkg/db/migrations/sqlite -seq create_notifications_table" by changing the create_notifications_table you change the name of the file 
+
+- to create a new migration file run the command "migrate create -ext sql -dir pkg/db/migrations/sqlite -seq create_notifications_table" by changing the create_notifications_table you change the name of the file
 - after creating a migration file there will be one file called down which has the drop table code and another file
-that is called up which has the table itself
-- by running the application the migrations will be applied automatically and if the migrations are succesful the 
-function will print a message in the terminal
+  that is called up which has the table itself
+- by running the application the migrations will be applied automatically and if the migrations are succesful the
+  function will print a message in the terminal
+
+### Backend Utilities
+
+#### CORS Middleware
+
+```go
+// Usage in server.go
+	http.HandleFunc("/signup", middleware.CorsMiddleware(api.SignupHandler))
+```
+
+Enables Cross-Origin Resource Sharing with configured options:
+
+- Allowed Origins: localhost:3000
+- Allowed Methods: GET, POST, PUT, DELETE
+- Allowed Headers: Content-Type
+- Credentials: Allowed
+
+#### SendResponse Function
+
+```go
+// Usage in handlers
+utils.SendResponse(w, datamodels.Response{
+    Code: http.StatusOK,
+    Status: "Success",
+    ErrorMsg: "",
+})
+```
+
+Sends a standardized JSON response with:
+
+- `Code`: HTTP status code
+- `Status`: "Success" or "Failed"
+- `ErrorMsg`: Error message (optional)
+
+#### Password Utilities
+
+```go
+// Hash a password
+hashedPassword, err := utils.HashPassword(password)
+
+// Verify a password
+match := utils.CheckPasswordHash(password, hashedPassword)
+```
+
+- `HashPassword`: Generates a secure hash using bcrypt
+- `CheckPasswordHash`: Verifies a password against its hash
+- Uses bcrypt with default cost factor
