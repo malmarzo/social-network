@@ -121,7 +121,7 @@ const SignUpForm = () => {
     formData.append("nickname", nickname);
     formData.append("about_me", aboutMe);
 
-    if (!firstName || !lastName || !email || !password || !dob || !nickname) {
+    if (!firstName || !lastName || !email || !password || !dob || !nickname || (!validateDOB(dob) && dob)) {
       setErrorMsg("Please fill in all required fields.");
       setSuccess(false);
       return;
