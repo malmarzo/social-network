@@ -269,7 +269,7 @@ const SignUpForm = () => {
             Submit
           </button>
           <p className={styles.signin}>
-            Already have an account? <Link href="/">Signin</Link>
+            Already have an account? <Link href="/login">Signin</Link>
           </p>
         </form>
       </div>

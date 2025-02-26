@@ -1,6 +1,11 @@
 package middleware
 
-import "net/http"
+import ("net/http"
+//"social-network/pkg/utils"
+//datamodels "social-network/pkg/dataModels"
+"social-network/pkg/db/queries"
+
+)
 
 // CORS Middleware
 func CorsMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -18,3 +23,23 @@ func CorsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		next.ServeHTTP(w, r)
 	})
 }
+
+
+func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err1 := r.Cookie("session_id")
+		if err1 != nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther) // Redirect to login
+			return
+		}
+		
+		userID, err2:= queries.ValidateSession(cookie.Value)
+		if err2 != nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther) // Redirect to login
+			return
+		}
+		r.Header.Set("User-ID", userID)
+		next(w, r)
+	}
+}
+

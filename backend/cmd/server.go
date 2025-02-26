@@ -14,6 +14,10 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/signup", middleware.CorsMiddleware(api.SignupHandler))
+	http.HandleFunc("/login", middleware.CorsMiddleware(api.LoginHandler))
+	http.HandleFunc("/logout", middleware.CorsMiddleware(middleware.AuthMiddleware(api.LogoutHandler)))
+	http.HandleFunc("/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.HomeHandler)))
+	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
 
 	port := ":8080"
 	log.Printf("Server running on http://localhost%s\n", port)
