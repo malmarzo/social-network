@@ -50,7 +50,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Change to true in production with HTTPS
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteDefaultMode,
 		Expires:  time.Now().Add(24 * time.Hour),
 	})
 	response.Code = 200

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
 import styles from "./SignUpForm.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 import SuccessAlert from "../components/Alerts/SuccessAlert";
@@ -11,6 +11,8 @@ import {
   validatePassword,
   validateTextOnly,
 } from "@/utils/formValidators";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const SignUpForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -42,7 +44,6 @@ const SignUpForm = () => {
       setFirstErr("");
     }
   };
-
 
   //Validates the last name on every change
   const handleLastNameChange = (e) => {
@@ -107,7 +108,6 @@ const SignUpForm = () => {
   //Sets the about me value
   const handleAboutMeChange = (e) => setAboutMe(e.target.value);
 
-
   //Handles form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -121,7 +121,15 @@ const SignUpForm = () => {
     formData.append("nickname", nickname);
     formData.append("about_me", aboutMe);
 
-    if (!firstName || !lastName || !email || !password || !dob || !nickname || (!validateDOB(dob) && dob)) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !dob ||
+      !nickname ||
+      (!validateDOB(dob) && dob)
+    ) {
       setErrorMsg("Please fill in all required fields.");
       setSuccess(false);
       return;
@@ -161,118 +169,121 @@ const SignUpForm = () => {
         />
       )}
       {!success && errorMsg && <FailAlert msg={errorMsg} />}
-      <div className={styles.wrapper}>
-        <form className={styles.form} onSubmit={handleFormSubmit}>
-          <p className={styles.title}>Signup</p>
-          <div className={styles.flex}>
+
+    
+        <div className={styles.wrapper}>
+          <form className={styles.form} onSubmit={handleFormSubmit}>
+            <p className={styles.title}>Signup</p>
+            <div className={styles.flex}>
+              <label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  value={firstName}
+                  onChange={handleFirstNameChange}
+                  required
+                />
+                <span>
+                  First Name <span className={styles.errMsg}>{firstErr}</span>
+                </span>
+              </label>
+              <label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={handleLastNameChange}
+                />
+                <span>
+                  Last Name <span className={styles.errMsg}>{lastErr}</span>
+                </span>
+              </label>
+            </div>
             <label>
               <input
                 className={styles.input}
                 type="text"
-                value={firstName}
-                onChange={handleFirstNameChange}
+                value={nickname}
+                onChange={handleNicknameChange}
                 required
               />
               <span>
-                First Name <span className={styles.errMsg}>{firstErr}</span>
+                Nickname <span className={styles.errMsg}>{nickErr}</span>
               </span>
             </label>
             <label>
               <input
                 className={styles.input}
-                type="text"
+                type="email"
                 required
-                value={lastName}
-                onChange={handleLastNameChange}
+                value={email}
+                onChange={handleEmailChange}
               />
               <span>
-                Last Name <span className={styles.errMsg}>{lastErr}</span>
+                Email <span className={styles.errMsg}>{emailErr}</span>
               </span>
             </label>
-          </div>
-          <label>
-            <input
-              className={styles.input}
-              type="text"
-              value={nickname}
-              onChange={handleNicknameChange}
-              required
-            />
-            <span>
-              Nickname <span className={styles.errMsg}>{nickErr}</span>
-            </span>
-          </label>
-          <label>
-            <input
-              className={styles.input}
-              type="email"
-              required
-              value={email}
-              onChange={handleEmailChange}
-            />
-            <span>
-              Email <span className={styles.errMsg}>{emailErr}</span>
-            </span>
-          </label>
 
-          <label>
-            <input
-              className={styles.input}
-              type="date"
-              required
-              value={dob}
-              onChange={handleDobChange}
-            />
-            <span>
-              Date of Birth <span className={styles.errMsg}>{dateErr}</span>
-            </span>
-          </label>
+            <label>
+              <input
+                className={styles.input}
+                type="date"
+                required
+                value={dob}
+                onChange={handleDobChange}
+              />
+              <span>
+                Date of Birth <span className={styles.errMsg}>{dateErr}</span>
+              </span>
+            </label>
 
-          <label>
-            <input
-              className={styles.input}
-              type="file"
-              accept="image/jpeg, image/png, image/gif"
-              onChange={handleAvatarChange}
-            />
-            <span>
-              Avatar (Optional){" "}
-              <span className={styles.errMsg}>{avatarErr}</span>
-            </span>
-          </label>
-          <label>
-            <textarea
-              className={styles.input}
-              rows="1"
-              style={{ resize: "none" }}
-              value={aboutMe}
-              onChange={handleAboutMeChange}
-              maxLength="100"
-            ></textarea>
-            <span>
-              About (Optional) <span className={styles.errMsg}>{aboutErr}</span>
-            </span>
-          </label>
-          <label>
-            <input
-              className={styles.input}
-              type="password"
-              required
-              value={password}
-              onChange={handlePasswordChange}
-            />
-            <span>
-              Password <span className={styles.errMsg}>{passErr}</span>
-            </span>
-          </label>
-          <button className={styles.submit} type="submit">
-            Submit
-          </button>
-          <p className={styles.signin}>
-            Already have an account? <Link href="/login">Signin</Link>
-          </p>
-        </form>
-      </div>
+            <label>
+              <input
+                className={styles.input}
+                type="file"
+                accept="image/jpeg, image/png, image/gif"
+                onChange={handleAvatarChange}
+              />
+              <span>
+                Avatar (Optional){" "}
+                <span className={styles.errMsg}>{avatarErr}</span>
+              </span>
+            </label>
+            <label>
+              <textarea
+                className={styles.input}
+                rows="1"
+                style={{ resize: "none" }}
+                value={aboutMe}
+                onChange={handleAboutMeChange}
+                maxLength="100"
+              ></textarea>
+              <span>
+                About (Optional){" "}
+                <span className={styles.errMsg}>{aboutErr}</span>
+              </span>
+            </label>
+            <label>
+              <input
+                className={styles.input}
+                type="password"
+                required
+                value={password}
+                onChange={handlePasswordChange}
+              />
+              <span>
+                Password <span className={styles.errMsg}>{passErr}</span>
+              </span>
+            </label>
+            <button className={styles.submit} type="submit">
+              Submit
+            </button>
+            <p className={styles.signin}>
+              Already have an account? <Link href="/login">Signin</Link>
+            </p>
+          </form>
+        </div>
     </>
   );
 };

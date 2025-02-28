@@ -14,7 +14,9 @@ export async function invokeAPI(route, body, method, contentType) {
     options.headers = {
       "Content-Type": contentType || "application/json",
     };
-    options.body = JSON.stringify(body);
+    if (method !== "GET") {
+      options.body = JSON.stringify(body);
+    }
   }
   
   try {
