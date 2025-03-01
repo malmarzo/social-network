@@ -6,7 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const { isLoggedIn, loading } = useAuth();
-  console.log(isLoggedIn);
   return (
     <header className={style.header}>
       <div className={style.logoCont}>

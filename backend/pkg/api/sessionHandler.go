@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	datamodels "social-network/pkg/dataModels"
 	"social-network/pkg/db/queries"
@@ -12,13 +11,11 @@ func SessionHandler(w http.ResponseWriter, r *http.Request) {
 	response := datamodels.Response{}
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		log.Println(err)
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusUnauthorized, Status: "Failed", ErrorMsg: "unauthorized"})
 		return
 	}
 
 	sessionExists, err := queries.ValidateSession(cookie.Value)
-	log.Println("sessionExists: ", sessionExists)
 	if err != nil || sessionExists == "" {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusUnauthorized, Status: "Failed", ErrorMsg: "unauthorized"})
 		return

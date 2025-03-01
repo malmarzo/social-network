@@ -79,3 +79,25 @@ func CheckUserExists(email, nickname string) (string, bool, error) {
 
 	return "", false, nil
 }
+
+func GetNickname(userID string) (string, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	defer db.Close()
+
+	var nickname string
+
+	err = db.QueryRow("SELECT nickname FROM users WHERE id = ?", userID).Scan(&nickname)
+
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	return nickname, nil
+}

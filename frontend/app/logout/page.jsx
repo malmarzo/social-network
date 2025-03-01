@@ -1,35 +1,35 @@
 "use client";
 import { React, useState } from "react";
 import { invokeAPI } from "@/utils/invokeAPI";
-import SuccessAlert from "../components/Alerts/SuccessAlert";
 import FailAlert from "../components/Alerts/FailAlert";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const LogoutButton = () => {
-  const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
-
-  const { setIsLoggedIn } = useAuth();
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
   const handleLogout = async (e) => {
     e.preventDefault();
-    const response = await invokeAPI("logout", null, "POST");
-    if (response.code === 200) {
-      setSuccess(true);
-      setIsLoggedIn(false);
-      router.push("/login"); // Redirect to homepage
-    } else {
-      setSuccess(false);
-      setErrorMsg(response.error_msg);
+    try {
+      const response = await invokeAPI("logout", null, "POST");
+      if (response.code === 200) {
+        setIsLoggedIn(false); // Ensure state updates
+        console.log("Logout successful, isLoggedIn should be false now.");
+        router.replace("/login"); // Navigate after state update
+      } else {
+        setErrorMsg(response.error_msg);
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setErrorMsg("Logout failed. Please try again.");
     }
   };
 
   return (
     <>
-      {!success && errorMsg && <FailAlert msg={errorMsg} />}
-
+      {errorMsg && <FailAlert msg={errorMsg} />}
       <div>
         <button
           onClick={handleLogout}

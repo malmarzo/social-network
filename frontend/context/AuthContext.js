@@ -3,33 +3,47 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { invokeAPI } from "../utils/invokeAPI";
 
+//Setting value to be false at the start
 const AuthContext = createContext({ isLoggedIn: false });
 
 export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const updateAuthState = async (newState) => {
+    setIsLoggedIn(newState);
+  };
+
   useEffect(() => {
+    console.log("Auth State Updated:", isLoggedIn);
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    //Validating user authentication from the backend
     async function checkAuth() {
       try {
-        const response = await invokeAPI("session", null, "POST");
-        if (response.code === 200) {
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-        }
+        const response = await invokeAPI("session", null, "GET");
+        await updateAuthState(response.code === 200);
       } catch (error) {
         console.error("Auth check failed:", error);
-        setIsLoggedIn(false);
+        await updateAuthState(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     checkAuth();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, loading }}>
+    <AuthContext.Provider
+      //Values that could be accessed through other components
+      value={{
+        isLoggedIn,
+        setIsLoggedIn: updateAuthState,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,17 +1,15 @@
 "use client";
-import Image from "next/image";
-import { invokeAPI } from "@/utils/invokeAPI";
-import { useRouter } from "next/navigation";
+
 import { React } from "react";
-import { useEffect, useState } from "react";
-import { AuthProvider } from "@/context/AuthContext";
+import HelloSender from "./components/Buttons/HelloSender";
 
 export default function Home() {
 
   
   return (
-      <div className="container text-white bg-black min-h-screen flex items-center justify-center">
-        Hello world
-      </div>
+    <div className="container text-white bg-black min-h-screen flex items-center justify-center">
+      <div>Hello world </div>
+      <HelloSender />
+    </div>
   );
 }
