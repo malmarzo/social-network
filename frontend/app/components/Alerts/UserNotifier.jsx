@@ -22,7 +22,7 @@ const UserNotifier = () => {
     });
   }, [addMessageHandler]);
 
-  return null; // This component only listens for messages
+  return null;
 };
 
 export default UserNotifier;
