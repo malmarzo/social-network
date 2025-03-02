@@ -21,3 +21,19 @@ type User struct {
 	Private bool `json:"private"`
 	CreatedAt string `json:"created_at"`
 }
+
+// group struct to store groups
+type Group struct {
+    ID          int       `json:"id"`
+    Title       string    `json:"title"`
+    Description string    `json:"description"`
+    CreatorID   string       `json:"creator_id"`
+    CreatedAt   string `json:"created_at"`
+}
+
+// Invite to invite a person to join a group
+type Invite struct {
+	GroupID  int `json:"group_id"`
+	UserID   string `json:"user_id"`
+	InvitedBy string `json:"invited_by"`
+}

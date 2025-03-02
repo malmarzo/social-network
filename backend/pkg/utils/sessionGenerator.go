@@ -3,6 +3,9 @@ package utils
 import ("math/rand"
 "time"
 "fmt"
+// "log"
+// "net/http"
+// "social-network/pkg/db/queries"
 )
 
 func GenerateSessionID() string {

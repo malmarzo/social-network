@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { React } from "react";
 import { useEffect, useState } from "react";
 import { AuthProvider } from "@/context/AuthContext";
-
+import CreateGroup from "./groups/page"; //
+import AuthButton from "./components/Buttons/AuthButtons";
 export default function Home() {
 
   
   return (
       <div className="container text-white bg-black min-h-screen flex items-center justify-center">
         Hello world
+        {/* <CreateGroup /> */}
+        <AuthButton text="create group" href="/groups" />
+        
       </div>
   );
 }
