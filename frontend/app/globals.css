@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #171717;
+  --background: #ffffff;
   --foreground: #171717;
 }
 
@@ -18,8 +18,20 @@ body {
   height: 100%;
 }
 
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-top: 1rem;
+}
+
 .main-container {
-  padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 @keyframes spin {

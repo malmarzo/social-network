@@ -1,5 +1,5 @@
 import React from "react";
-import style from "./Header.module.css";
+import style from "@/styles/Header.module.css";
 import AuthButton from "../Buttons/AuthButtons";
 import LogoutButton from "@/app/logout/page";
 import { useAuth } from "@/context/AuthContext";
