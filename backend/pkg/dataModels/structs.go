@@ -5,6 +5,7 @@ type Response struct {
 	Code     int    `json:"code"`
 	Status   string `json:"status"`
 	ErrorMsg string `json:"error_msg"`
+	Group 	 Group	`json:"group"`
 }
 
 //User struct to store user data

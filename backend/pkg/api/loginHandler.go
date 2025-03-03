@@ -54,16 +54,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 		Expires:  time.Now().Add(24 * time.Hour),
 	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "user_id",
-		Value:    userID, // Convert int to string if needed
-		Path:     "/",
-		HttpOnly: true,  // Optional: Set to false if you need access in JavaScript
-		Secure:   false, // Change to true in production
-		SameSite: http.SameSiteDefaultMode,
-		Expires:  time.Now().Add(24 * time.Hour),
-	})
 	response.Code = 200
 	response.Status = "OK"
 	utils.SendResponse(w, response) //send the response
