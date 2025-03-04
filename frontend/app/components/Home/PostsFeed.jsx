@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styles from "./PostsFeed.module.css";
+import styles from "@/styles/PostsFeed.module.css";
 import {
   HeartIcon,
   ChatBubbleLeftIcon,

@@ -3,17 +3,11 @@ package queries
 import (
 	"database/sql"
 	"log"
+	"mime"
+	"os"
 	"path/filepath"
-	"runtime"
 	datamodels "social-network/pkg/dataModels"
 )
-
-// Will return the path to the database file
-func getDBPath() string {
-	_, b, _, _ := runtime.Caller(0)
-	basePath := filepath.Dir(filepath.Dir(b)) // Adjust path based on actual structure
-	return filepath.Join(basePath, "sqlite", "social_network.db")
-}
 
 // AddUser will add a user to the database
 func AddUser(user datamodels.User) error {
@@ -100,4 +94,45 @@ func GetNickname(userID string) (string, error) {
 	}
 
 	return nickname, nil
+}
+
+// GetUserAvatar returns the user's avatar as a base64 encoded string and its extention type
+func GetUserAvatar(userID string) ([]byte, string, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return nil, "", err
+	}
+	defer db.Close()
+
+	var filePath string
+
+	err = db.QueryRow("SELECT avatar FROM users WHERE id = ?", userID).Scan(&filePath)
+	if err != nil {
+		log.Println(err)
+		return nil, "", err
+	}
+
+	if filePath == "" {
+		return nil, "", nil
+	}
+
+	fullPath := filepath.Join(getUploadPath(), filePath)
+
+	// read the image file
+	avatar, err := os.ReadFile(fullPath)
+	if err != nil {
+		log.Printf("Error reading avatar file: %v", err)
+		return nil, "", err
+	}
+
+	// get the extention
+	ext := filepath.Ext(fullPath)
+	mimeType := mime.TypeByExtension(ext)
+	if mimeType == "" {
+		mimeType = "application/octet-stream" // Fallback MIME type
+	}
+
+	return avatar, mimeType, nil
 }

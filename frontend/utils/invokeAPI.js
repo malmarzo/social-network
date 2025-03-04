@@ -22,7 +22,6 @@ export async function invokeAPI(route, body, method, contentType) {
   try {
     const response = await fetch("http://localhost:8080/" + route, options);
     const data = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error("API Error:", error);

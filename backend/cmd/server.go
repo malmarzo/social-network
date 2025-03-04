@@ -20,6 +20,7 @@ func main() {
 	http.HandleFunc("/login", middleware.CorsMiddleware(api.LoginHandler))
 	http.HandleFunc("/logout", middleware.CorsMiddleware(middleware.AuthMiddleware(api.LogoutHandler)))
 	http.HandleFunc("/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.HomeHandler)))
+	http.HandleFunc("/profileCard", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ProfileCardHandler)))
 
 	//Handles validating user session
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
