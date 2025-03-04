@@ -15,7 +15,7 @@ import(
 func CreateGroupHandler(w http.ResponseWriter, r *http.Request) {
     var g datamodels.Group
 	var response datamodels.Response
-
+	if r.Method == http.MethodPost {
     // DEBUG: Log incoming request
     body, _ := io.ReadAll(r.Body)
     fmt.Println("Received Body:", string(body))
@@ -66,4 +66,5 @@ func CreateGroupHandler(w http.ResponseWriter, r *http.Request) {
     }
 	utils.SendResponse(w, response) //send the response
     //json.NewEncoder(w).Encode(g)
+}
 }

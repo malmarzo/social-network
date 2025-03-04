@@ -31,7 +31,8 @@ export default function CreateGroup() {
             setGroupID(response.group.id);
             setGroupCreatorID(response.group.creator_id);
             console.log(groupCreatorID);
-            router.push("./groupChat");
+           // router.push("./groupChat");
+           router.push(`/groupChat/${response.group.id}`);
 
             // Invite users automatically after creating the group
             if (selectedUsers.length > 0) {

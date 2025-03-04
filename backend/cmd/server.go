@@ -21,6 +21,7 @@ func main() {
 	http.HandleFunc("/groups", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupHandler)))
     http.HandleFunc("/groups/invite", middleware.CorsMiddleware(middleware.AuthMiddleware(api.InviteUserHandler)))
 	http.HandleFunc("/groups/users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUsersHandler)))
+	http.HandleFunc("/groups/chat/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupChatHandler)))
 
 	port := ":8080"
 	log.Printf("Server running on http://localhost%s\n", port)

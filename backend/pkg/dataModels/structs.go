@@ -30,6 +30,8 @@ type Group struct {
     Description string    `json:"description"`
     CreatorID   string       `json:"creator_id"`
     CreatedAt   string `json:"created_at"`
+	FirstName       string    `json:"firstname"`
+	LastName       string    `json:"lastname"`
 }
 
 // Invite to invite a person to join a group

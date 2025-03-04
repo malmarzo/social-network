@@ -11,7 +11,7 @@ import(
 func InviteUserHandler(w http.ResponseWriter, r *http.Request) {
 	var response datamodels.Response
     var invite datamodels.Invite
-
+	if r.Method == http.MethodPost {
     if err := json.NewDecoder(r.Body).Decode(&invite); err != nil {
         http.Error(w, "Invalid request", http.StatusBadRequest)
         return
@@ -25,4 +25,5 @@ func InviteUserHandler(w http.ResponseWriter, r *http.Request) {
 	response.Status = "OK"
 	utils.SendResponse(w, response) //send the response
     //w.WriteHeader(http.StatusCreated)
+}
 }

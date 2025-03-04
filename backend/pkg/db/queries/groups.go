@@ -84,3 +84,54 @@ func GetUsersList()([]datamodels.User, error){
 
 	return users, nil
 }
+
+func GetGroupByID(groupID int) (int, string, string, string, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return 0, "", "", "", err
+	}
+	defer db.Close()
+
+	var id int
+	var creatorID, title, description string
+
+	// Fetch the group by its ID
+	err = db.QueryRow("SELECT id, creator_id, title, description FROM groups WHERE id = ?", groupID).
+		Scan(&id, &creatorID, &title, &description)
+	if err != nil {
+		log.Println(err)
+		return 0, "", "", "", err
+	}
+
+	return id, creatorID, title, description, nil
+}
+
+
+
+func GetCreatorFirstLastName(creatorID string) (string, string, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return "", "", err
+	}
+	defer db.Close()
+
+	var firstName, lastName string
+
+	query := `
+		SELECT u.first_name, u.last_name
+		FROM users u
+		WHERE u.id = ?;
+	`
+
+	err = db.QueryRow(query, creatorID).Scan(&firstName, &lastName)
+	if err != nil {
+		log.Println(err)
+		return "", "", err
+	}
+
+	return firstName, lastName, nil
+}
