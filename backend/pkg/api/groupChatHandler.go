@@ -46,6 +46,49 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
+
+	users, err:= queries.GetUsersList()
+	if err != nil {
+		log.Println(err)
+			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error22"})
+			return
+	}
+
+	users2, err4:= queries.GetAvailableUsersList(groupIDInt)
+	if err4 != nil {
+		fmt.Println("Error retriving the available userlist", err4)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+	}
+	
+	// remove the users that already invited or accepted the invitation
+	var users4 []datamodels.User
+	for _, user1 := range users {
+        found := false
+        
+        for _, user2 := range users2 {
+            if user1.Nickname == user2.Nickname {
+                found = true
+                break
+            }
+        }
+        
+        if !found {
+            users4 = append(users4, user1)
+        }
+    }
+	//remove the creator from the invitation list
+	var users3 []datamodels.User
+	for i:= 0; i <len(users4); i++ {
+		if users4[i].ID != CreatorID{
+			users3 = append(users3,users4[i])
+		}
+	}
+	// users3 is the last updated list 
+	for i:= 0 ; i< len(users3);i++ {
+		fmt.Println(users3[i].Nickname)
+	}
+	
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",
@@ -57,6 +100,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			FirstName: firstName,
 			LastName: lastName,
         },
+		Users: users3,
     }
 	utils.SendResponse(w, response) //send the response
     //json.NewEncoder(w).Encode(g)

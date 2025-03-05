@@ -6,6 +6,7 @@ type Response struct {
 	Status   string `json:"status"`
 	ErrorMsg string `json:"error_msg"`
 	Group 	 Group	`json:"group"`
+	Users	 []User `json:"users"`
 }
 
 //User struct to store user data

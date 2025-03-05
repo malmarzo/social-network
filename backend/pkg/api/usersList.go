@@ -7,10 +7,11 @@ import(
 	"social-network/pkg/utils"
 	datamodels "social-network/pkg/dataModels"
 	"fmt"
+	 //"strconv"
+	 //"strings"
 )
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-    
 	users, err:= queries.GetUsersList()
 	if err != nil {
 		log.Println(err)
@@ -29,12 +30,23 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
+	//remove the creator from the invitation list
 	var users2 []datamodels.User
 	for i:= 0; i<len(users);i++ {
 		if users[i].ID != CreatorID {
 			users2= append(users2,users[i])
 		}
 	}
+	
+	// users3, err4:= queries.GetAvailableUsersList(groupIDInt)
+	// if err4 != nil {
+	// 	fmt.Println("Error retriving the available userlist", err4)
+    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+    //     return
+	// }
+	// for i:= 0 ; i< len(users3);i++ {
+	// 	fmt.Println(users3[i])
+	// }
     // json.NewEncoder(w).Encode(users)
 	w.Header().Set("Content-Type", "application/json")
 if err := json.NewEncoder(w).Encode(users2); err != nil {

@@ -4,6 +4,9 @@ import { invokeAPI } from "@/utils/invokeAPI";
 import UsersList from "./userlist";
 import { useRouter } from "next/navigation";  
 import { sendInvitations } from "./sendInvitation";
+import { fetchUsersData } from "./userlist";
+import { useEffect } from "react";
+
 
 export default function CreateGroup() {
     const [title, setTitle] = useState("");
@@ -12,7 +15,16 @@ export default function CreateGroup() {
     const [groupCreatorID, setGroupCreatorID] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]);  // Store selected users here
     const router = useRouter();
+    const [users, setUsers] = useState([]);
+    useEffect(() => {
+      const fetchUsers = async () => {
+          const data = await fetchUsersData();  // Fetch users data
+          setUsers(data);  // Set the fetched users data into state
+      };
 
+      fetchUsers();
+  }, []);  // This will run only once when the component mounts
+   
     const createGroup = async () => {
         if (!title.trim() || !description.trim()) {
             alert("Title and Description are required.");
@@ -22,7 +34,7 @@ export default function CreateGroup() {
           alert("you need at least to invite one person");
           return;
         }
-
+       
         const body = { title, description };
         const response = await invokeAPI("groups", body, "POST");
         
@@ -31,7 +43,8 @@ export default function CreateGroup() {
             setGroupID(response.group.id);
             setGroupCreatorID(response.group.creator_id);
             console.log(groupCreatorID);
-           // router.push("./groupChat");
+
+           
            router.push(`/groupChat/${response.group.id}`);
 
             // Invite users automatically after creating the group
@@ -67,6 +80,7 @@ export default function CreateGroup() {
 
             {/* Pass selectedUsers state and setter to UsersList */}
             <UsersList 
+                users = {users}
                 selectedUsers={selectedUsers} 
                 setSelectedUsers={setSelectedUsers} 
             />

@@ -68,6 +68,7 @@ export default function GroupChat() {
     const { id } = useParams();
     const [group, setGroup] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]); // Track selected users
+    const [users, setUsers] = useState(null);
 
     useEffect(() => {
         const fetchGroup = async () => {
@@ -81,6 +82,9 @@ export default function GroupChat() {
 
             if (response.code === 200) {
                 setGroup(response);
+                setUsers(response);
+                
+               
             } else {
                 console.log("hellooooooo");
                 router.push("/"); // Redirect if group not found
@@ -126,7 +130,7 @@ export default function GroupChat() {
 
             {/* Users List for Invitations */}
             <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
-                <UsersList selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
+                <UsersList users={users.users} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
                 <button 
                     onClick={handleInviteUsers}
                     className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
