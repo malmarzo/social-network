@@ -20,6 +20,13 @@ A Facebook like social media application made using Next.js and go.
 - Navigate to the backend dir: `cd backend`
 - Run: `go run cmd/server.go`
 
+
+
+### Working on your branch
+- Create a new branch: `git checkout -b branch-name` use your name and feature to implement. Ex: `mahmood/homePage`
+- Stagging and committing: `git add .` `git commit -m "msg"`
+- Pushing: `git push origin branch-name`
+
 ### Project Structure
 
 ```
