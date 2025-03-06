@@ -1,9 +1,11 @@
 package queries
 
-import "database/sql"
+import (
+	"database/sql"
+	datamodels "social-network/pkg/dataModels"
+)
 
-
-//Returns the number of followers and following for a user
+// Returns the number of followers and following for a user
 func GetNumofFollowersAndFollowing(userID string) (int, int, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
@@ -26,4 +28,31 @@ func GetNumofFollowersAndFollowing(userID string) (int, int, error) {
 	}
 
 	return numOfFollowers, numOfFollowing, nil
+}
+
+func GetFollowersList(userID string) ([]datamodels.User, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	rows, err := db.Query("SELECT users.id, users.nickname FROM users INNER JOIN followers ON users.id = followers.follower_id WHERE followers.following_id = ?", userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var followersList []datamodels.User
+	for rows.Next() {
+		var user datamodels.User
+		err = rows.Scan(&user.ID, &user.Nickname)
+		if err != nil {
+			return nil, err
+		}
+		followersList = append(followersList, user)
+	}
+
+	return followersList, nil
 }

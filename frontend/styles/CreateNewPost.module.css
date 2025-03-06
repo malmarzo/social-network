@@ -1,0 +1,102 @@
+.container {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+}
+
+.modal {
+  @apply w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden;
+}
+
+.modalHeader {
+  @apply px-6 py-4 flex items-center justify-between border-b border-gray-200;
+}
+
+.modalTitle {
+  @apply text-xl font-semibold text-gray-800;
+}
+
+.closeButton {
+  @apply p-2 hover:bg-gray-100 rounded-full transition-colors duration-200;
+}
+
+.modalBody {
+  @apply p-6 grid grid-cols-2 gap-6;
+}
+
+.input {
+  @apply space-y-2;
+}
+
+.inputLabel {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+.inputField {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm
+    focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
+    placeholder-gray-400 transition-colors duration-200;
+
+  background: white;
+}
+
+.textarea {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm
+    focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
+    placeholder-gray-400 transition-colors duration-200
+    resize-none h-32;
+
+  background: white;
+  resize: none;
+}
+
+.imageUpload {
+  @apply col-span-2 flex flex-col items-center justify-center p-6
+    border-2 border-dashed border-gray-300 rounded-lg
+    hover:border-indigo-500 transition-colors duration-200;
+}
+
+.radioGroup {
+  @apply space-y-2 flex flex-row gap-4 items-center;
+}
+
+.radioOption {
+  @apply flex items-center space-x-2;
+}
+
+.radioInput {
+  @apply w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500;
+}
+
+.radioLabel {
+  @apply text-sm text-gray-700;
+}
+
+.followerSection {
+  @apply col-span-2;
+}
+
+.followerList {
+  @apply mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md
+    divide-y divide-gray-200 bg-gray-50;
+}
+
+.followerItem {
+  @apply flex items-center px-4 py-2 hover:bg-gray-100;
+}
+
+.modalFooter {
+  @apply px-6 py-4 bg-gray-50 flex justify-end space-x-3;
+}
+
+.buttonPrimary {
+  @apply px-4 py-2 bg-indigo-600 text-white rounded-md font-medium
+    hover:bg-indigo-700 focus:outline-none focus:ring-2 
+    focus:ring-offset-2 focus:ring-indigo-500
+    transition-colors duration-200;
+}
+
+.buttonSecondary {
+  @apply px-4 py-2 bg-white text-gray-700 rounded-md font-medium
+    border border-gray-300 hover:bg-gray-50
+    focus:outline-none focus:ring-2 focus:ring-offset-2 
+    focus:ring-indigo-500 transition-colors duration-200;
+}

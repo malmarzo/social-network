@@ -21,6 +21,9 @@ func main() {
 	http.HandleFunc("/logout", middleware.CorsMiddleware(middleware.AuthMiddleware(api.LogoutHandler)))
 	http.HandleFunc("/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.HomeHandler)))
 	http.HandleFunc("/profileCard", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ProfileCardHandler)))
+	http.HandleFunc("/followersList", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetFollowersListHandler)))
+	http.HandleFunc("/createPost", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateNewPostHandler)))
+	http.HandleFunc("/posts", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetPostsHandler)))
 
 	//Handles validating user session
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))

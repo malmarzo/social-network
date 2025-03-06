@@ -23,6 +23,8 @@ const Card = () => {
           return;
         }
 
+        console.log(response)
+
         const profileData = response.data;
         console.log("Profile data:", profileData);
 
@@ -32,9 +34,9 @@ const Card = () => {
         }
 
         setUsername(profileData.nickname || "");
-        setPosts(profileData.posts || 0);
-        setFollowers(profileData.followers || 0);
-        setFollowing(profileData.following || 0);
+        setPosts(profileData.num_of_posts || 0);
+        setFollowers(profileData.num_of_followers || 0);
+        setFollowing(profileData.num_of_following || 0);
       } catch (error) {
         console.error("Failed to fetch profile data:", error);
         setError(true);

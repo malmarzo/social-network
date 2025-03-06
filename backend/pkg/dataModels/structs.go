@@ -32,3 +32,21 @@ type ProfileCard struct {
 	Avatar         string `json:"avatar"`
 	AvatarMimeType string `json:"avatar_mime_type"`
 }
+
+// Post struct
+type Post struct {
+	PostID        string `json:"post_id"`
+	UserID        string `json:"user_id"`
+	UserNickname string `json:"user_nickname"`
+	PostTitle     string `json:"post_title"`
+	Content       string `json:"content"`
+	PostPrivacy   string `json:"post_privacy"`
+	PostImage     string `json:"post_image"` // Will contain base64 string after conversion
+	NumOfLikes    int    `json:"num_of_likes"`
+	NumOfDislikes int    `json:"num_of_dislikes"`
+	NumOfComments int    `json:"num_of_comments"`
+	CreatedAt     string `json:"created_at"`
+	AllowedUsers  string `json:"allowed_users"`
+	ImageMimeType string `json:"image_mime_type"` // For content-type header
+	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
+}
