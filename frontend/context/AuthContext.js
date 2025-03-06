@@ -4,14 +4,27 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { invokeAPI } from "../utils/invokeAPI";
 
 //Setting value to be false at the start
-const AuthContext = createContext({ isLoggedIn: false });
+const AuthContext = createContext({
+  isLoggedIn: false,
+  userID: "",
+  userNickname: "",
+});
 
 export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userID, setUserID] = useState("");
+  const [userNickname, setUserNickname] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const updateAuthState = async (newState) => {
+  const updateAuthState = async (newState, userData = null) => {
     setIsLoggedIn(newState);
+    if (userData) {
+      setUserID(userData.user_id);
+      setUserNickname(userData.user_nickname);
+    } else {
+      setUserID("");
+      setUserNickname("");
+    }
   };
 
   useEffect(() => {
@@ -23,7 +36,11 @@ export function AuthProvider({ children }) {
     async function checkAuth() {
       try {
         const response = await invokeAPI("session", null, "GET");
-        await updateAuthState(response.code === 200);
+        if (response.code === 200) {
+          await updateAuthState(true, response.data);
+        } else {
+          await updateAuthState(false);
+        }
       } catch (error) {
         console.error("Auth check failed:", error);
         await updateAuthState(false);
@@ -40,6 +57,8 @@ export function AuthProvider({ children }) {
       //Values that could be accessed through other components
       value={{
         isLoggedIn,
+        userID,
+        userNickname,
         setIsLoggedIn: updateAuthState,
         loading,
       }}

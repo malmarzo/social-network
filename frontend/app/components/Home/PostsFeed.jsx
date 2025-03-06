@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import CreateNewPost from "./CreateNewPost";
+import Link from "next/link";
 
 const PostsFeed = () => {
   const [activeTab, setActiveTab] = useState("latest");
@@ -115,12 +116,16 @@ const PostsFeed = () => {
 
               <div className={styles.postContent}>
                 <div className={styles.postHeader}>
-                  <span className={styles.postAuthor}>
-                    @{post.user_nickname}
-                  </span>
-                  <span className={styles.postDate}>{post.created_at}</span>
+                  <h2 className={styles.postTitle}>{post.post_title}</h2>
+                  <div className={styles.authorInfo}>
+                    <Link href={`/profile/${post.user_id}`}>
+                      <span className={styles.postAuthor}>
+                        @{post.user_nickname}
+                      </span>
+                    </Link>
+                    <span className={styles.postDate}>{post.created_at}</span>
+                  </div>
                 </div>
-                <h2 className={styles.postTitle}>{post.post_title}</h2>
                 <p className={styles.postCaption}>{post.content}</p>
               </div>
 

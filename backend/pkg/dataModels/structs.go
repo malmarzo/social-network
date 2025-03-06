@@ -23,6 +23,11 @@ type User struct {
 	CreatedAt string `json:"created_at"`
 }
 
+type UserLogin struct {
+	UserID       string `json:"user_id"`
+	UserNickname string `json:"user_nickname"`
+}
+
 // ProfileCard struct that returns the number of posts, followers, and following, username, avatar, and extention of the avatar
 type ProfileCard struct {
 	Nickanme       string `json:"nickname"`
@@ -37,7 +42,7 @@ type ProfileCard struct {
 type Post struct {
 	PostID        string `json:"post_id"`
 	UserID        string `json:"user_id"`
-	UserNickname string `json:"user_nickname"`
+	UserNickname  string `json:"user_nickname"`
 	PostTitle     string `json:"post_title"`
 	Content       string `json:"content"`
 	PostPrivacy   string `json:"post_privacy"`

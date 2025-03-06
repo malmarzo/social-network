@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import style from "@/styles/ProfileCard.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
+import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 const Card = () => {
   //Data for the profile card
@@ -11,6 +13,8 @@ const Card = () => {
   const [posts, setPosts] = useState(0);
   const [followers, setFollowers] = useState(0);
   const [following, setFollowing] = useState(0);
+
+  const { userID } = useAuth();
 
   useEffect(() => {
     //Fetches the user's data for the card
@@ -23,7 +27,7 @@ const Card = () => {
           return;
         }
 
-        console.log(response)
+        console.log(response);
 
         const profileData = response.data;
         console.log("Profile data:", profileData);
@@ -77,7 +81,9 @@ const Card = () => {
             <p className={style.statLabel}>Following</p>
           </span>
         </div>
-        <button className={style.viewProfileButton}>View Profile</button>
+        <button className={style.viewProfileButton}>
+          <Link href={`/profile/${userID}`}>View Profile</Link>
+        </button>
       </div>
     </div>
   );
