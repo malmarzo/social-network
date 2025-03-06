@@ -156,12 +156,13 @@ Sends a standardized JSON response with:
 ### Accessing user Auth state in the frontend in other components
 
 Use the `useAuth` hook to access authentication state in any component:
+- You can also access the user id and user nickname using it
 
 ```javascript
 import { useAuth } from "@/context/AuthContext";
 
 const MyComponent = () => {
-  const { isLoggedIn, loading, setIsLoggedIn } = useAuth();
+  const { isLoggedIn, loading, setIsLoggedIn, userID, userNickname } = useAuth();
 
   return (
     <div>
