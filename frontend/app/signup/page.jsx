@@ -1,9 +1,8 @@
 "use client";
 import Link from "next/link";
 import { React, useEffect, useState } from "react";
-import styles from "@/styles/SignUpForm.module.css"
+import styles from "@/styles/SignUpForm.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
-import SuccessAlert from "../components/Alerts/SuccessAlert";
 import FailAlert from "../components/Alerts/FailAlert";
 import {
   validateDOB,
@@ -12,7 +11,6 @@ import {
   validateTextOnly,
 } from "@/utils/formValidators";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 
 const SignUpForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -33,6 +31,8 @@ const SignUpForm = () => {
   const [avatarErr, setAvatarErr] = useState("");
   const [aboutErr, setAboutErr] = useState("");
   const [passErr, setPassErr] = useState("");
+
+  const router = useRouter();
 
   //Validates the first name on every change
   const handleFirstNameChange = (e) => {
@@ -152,6 +152,7 @@ const SignUpForm = () => {
       setNickname("");
       setAvatar("");
       setAboutMe("");
+      router.push("/login");
     } else {
       setSuccess(false);
       // Display the error message
@@ -161,13 +162,6 @@ const SignUpForm = () => {
 
   return (
     <>
-      {success && (
-        <SuccessAlert
-          msg="Signup successful! Please signin."
-          link={"/"}
-          linkText={"Login"}
-        />
-      )}
       {!success && errorMsg && <FailAlert msg={errorMsg} />}
 
       <div className={styles.wrapper}>

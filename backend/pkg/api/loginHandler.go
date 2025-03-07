@@ -12,10 +12,10 @@ import (
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	response := datamodels.Response{}
 	if r.Method == http.MethodPost {
-		email := r.FormValue("email")
+		email_nickname := r.FormValue("email_nickname")
 		password := r.FormValue("password")
 
-		hashedPassword, err0 := queries.GetPasswordByEmail(email)
+		hashedPassword, err0 := queries.GetPasswordByEmailOrNickname(email_nickname)
 		if err0 != nil {
 			log.Println(err0)
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Login failed. Please try again."})
@@ -23,9 +23,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if utils.CheckPasswordHash(password, hashedPassword) {
-			userID, err1 := queries.GetUserIdByEmail(email)
+			userID, err1 := queries.GetUserIdByEmail(email_nickname)
 			if err1 != nil {
 				log.Println(err1)
+				utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Login failed. Please try again."})
+				return
+			}
+
+			userNickname, err := queries.GetNickname(userID)
+			if err != nil {
+				log.Println(err)
 				utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Login failed. Please try again."})
 				return
 			}
@@ -54,6 +61,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			response.Code = 200
 			response.Status = "OK"
+			response.Data = datamodels.UserLogin{UserID: userID, UserNickname: userNickname}
+
 			utils.SendResponse(w, response) //send the response
 
 		} else {

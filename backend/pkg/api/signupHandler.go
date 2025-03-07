@@ -75,8 +75,8 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		user.ID = id
-		user.FirstName = strings.ToUpper(firstName)
-		user.LastName = strings.ToUpper(lastName)
+		user.FirstName = strings.ToUpper(strings.ToLower(firstName))[0:1] + strings.ToLower(firstName)[1:]
+		user.LastName = strings.ToUpper(strings.ToLower(lastName))[0:1] + strings.ToLower(lastName)[1:]
 		user.Email = email
 		user.Password = hashedPassword
 		user.DOB = dob

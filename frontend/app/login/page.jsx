@@ -23,7 +23,7 @@ const LogInForm = () => {
     }
 
     const formData = new FormData();
-    formData.append("email", email);
+    formData.append("email_nickname", email);
     formData.append("password", password);
 
     const response = await invokeAPI("login", formData, "POST");
@@ -31,7 +31,7 @@ const LogInForm = () => {
       setSuccess(true);
       setEmail("");
       setPassword("");
-      setIsLoggedIn(true);
+      setIsLoggedIn(true, response.data);
       router.push("/");
     } else {
       setSuccess(false);
@@ -49,7 +49,7 @@ const LogInForm = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="text"
-            placeholder="Email"
+            placeholder="Nickname or Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

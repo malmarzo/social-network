@@ -17,6 +17,7 @@ const Card = () => {
   const { userID } = useAuth();
 
   useEffect(() => {
+    console.log(userID);
     //Fetches the user's data for the card
     async function fetchData() {
       try {
