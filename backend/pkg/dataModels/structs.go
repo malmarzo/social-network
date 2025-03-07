@@ -55,3 +55,10 @@ type Post struct {
 	ImageMimeType string `json:"image_mime_type"` // For content-type header
 	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
 }
+
+// Post interactions stats
+type PostInteractions struct {
+	Likes    int `json:"likes"`
+	Dislikes int `json:"dislikes"`
+	Comments int `json:"comments"`
+}

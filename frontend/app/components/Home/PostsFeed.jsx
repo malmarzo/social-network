@@ -1,19 +1,13 @@
 import React, { useState, useCallback, useEffect } from "react";
 import styles from "@/styles/PostsFeed.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
-import {
-  HeartIcon,
-  ChatBubbleLeftIcon,
-  HandThumbDownIcon,
-} from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import CreateNewPost from "./CreateNewPost";
 import Link from "next/link";
+import PostActionButtons from "./PostActionButtons";
 
 const PostsFeed = () => {
   const [activeTab, setActiveTab] = useState("latest");
   const [expandedPost, setExpandedPost] = useState(null);
-  const [likes, setLikes] = useState({});
   const [createNewPost, setCreateNewPost] = useState(false);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -129,32 +123,7 @@ const PostsFeed = () => {
                 <p className={styles.postCaption}>{post.content}</p>
               </div>
 
-              <div className={styles.actionButtons}>
-                <button
-                  className={styles.actionButton}
-                  onClick={() => handleLike(post.post_id)}
-                >
-                  {likes[post.post_id] ? (
-                    <HeartSolidIcon className="w-6 h-6 text-red-500" />
-                  ) : (
-                    <HeartIcon className="w-6 h-6" />
-                  )}
-                  <span>Like ({post.num_of_likes})</span>
-                </button>
-
-                <button className={styles.actionButton}>
-                  <HandThumbDownIcon className="w-6 h-6" />
-                  <span>Dislike ({post.num_of_dislikes})</span>
-                </button>
-
-                <button
-                  className={styles.actionButton}
-                  onClick={() => toggleComments(post.post_id)}
-                >
-                  <ChatBubbleLeftIcon className="w-6 h-6" />
-                  <span>Comment ({post.num_of_comments})</span>
-                </button>
-              </div>
+              <PostActionButtons postID={post.post_id}/>
 
               <div
                 className={`${styles.commentsSection} ${

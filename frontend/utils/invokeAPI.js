@@ -18,11 +18,22 @@ export async function invokeAPI(route, body, method, contentType) {
       options.body = JSON.stringify(body);
     }
   }
-  
+
   try {
-    const response = await fetch("http://localhost:8080/" + route, options);
-    const data = await response.json();
-    return data;
+    const response = await fetch(`http://localhost:8080/${route}`, options);
+    const text = await response.text();
+
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.error("Raw response:", text);
+      return {
+        code: 500,
+        error_msg: "Invalid JSON response from server",
+      };
+    }
   } catch (error) {
     console.error("API Error:", error);
     return {
@@ -31,4 +42,3 @@ export async function invokeAPI(route, body, method, contentType) {
     };
   }
 }
-

@@ -13,7 +13,7 @@ import (
 func GetNumOfPosts(userID string) (int, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
+	if (err != nil) {
 		return 0, err
 	}
 
@@ -21,7 +21,7 @@ func GetNumOfPosts(userID string) (int, error) {
 
 	var numOfPOsts int
 	err = db.QueryRow("SELECT COUNT(*) FROM posts WHERE user_id = ?", userID).Scan(&numOfPOsts)
-	if err != nil {
+	if (err != nil) {
 		return 0, err
 	}
 
@@ -32,7 +32,7 @@ func InsertNewPost(post datamodels.Post) error {
 	dbPath := getDBPath()
 
 	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
+	if (err != nil) {
 		log.Println(err)
 		return err
 	}
@@ -58,7 +58,7 @@ func InsertNewPost(post datamodels.Post) error {
 		post.NumOfComments,
 		post.AllowedUsers,
 	)
-	if err != nil {
+	if (err != nil) {
 		log.Println(err)
 		return err
 	}
@@ -69,13 +69,13 @@ func InsertNewPost(post datamodels.Post) error {
 func GetAllPosts(userID string) ([]datamodels.Post, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
+	if (err != nil) {
 		return nil, err
 	}
 	defer db.Close()
 
 	rows, err := db.Query("SELECT * FROM posts WHERE user_id = ? OR privacy = 'public' OR allowedUsers LIKE ?", userID, "%"+userID+"%")
-	if err != nil {
+	if (err != nil) {
 		return nil, err
 	}
 	defer rows.Close()
@@ -97,17 +97,17 @@ func GetAllPosts(userID string) ([]datamodels.Post, error) {
 			&post.NumOfComments,
 			&post.AllowedUsers,
 		)
-		if err != nil {
+		if (err != nil) {
 			return nil, err
 		}
 
 		// If post has an image, read it from uploads directory
-		if post.PostImage != "" {
+		if (post.PostImage != "") {
 			fullPath := filepath.Join(getUploadPath(), post.PostImage)
 
 			// Read the image file
 			imageData, err := os.ReadFile(fullPath)
-			if err != nil {
+			if (err != nil) {
 				log.Printf("Error reading post image file: %v", err)
 				continue // Skip image if can't be read but continue with posts
 			}
@@ -115,7 +115,7 @@ func GetAllPosts(userID string) ([]datamodels.Post, error) {
 			// Get the extension and mime type
 			ext := filepath.Ext(fullPath)
 			mimeType := mime.TypeByExtension(ext)
-			if mimeType == "" {
+			if (mimeType == "") {
 				mimeType = "application/octet-stream"
 			}
 
@@ -132,3 +132,136 @@ func GetAllPosts(userID string) ([]datamodels.Post, error) {
 
 	return posts, nil
 }
+
+func GetPostInteractionStats(postID string) (datamodels.PostInteractions, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if (err != nil) {
+		return datamodels.PostInteractions{}, err
+	}
+	defer db.Close()
+
+	var postInteractions datamodels.PostInteractions
+	err = db.QueryRow("SELECT num_likes, num_dislikes, num_comments FROM posts WHERE id = ?", postID).Scan(&postInteractions.Likes, &postInteractions.Dislikes, &postInteractions.Comments)
+	if (err != nil) {
+		return datamodels.PostInteractions{}, err
+	}
+
+	return postInteractions, nil
+}
+
+func LikePost(postID string, userID string) error {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if (err != nil) {
+		return err
+	}
+	defer db.Close()
+
+	// Start transaction
+	tx, err := db.Begin()
+	if (err != nil) {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Check current interaction status
+	var currentType string
+	err = tx.QueryRow("SELECT type FROM likes WHERE user_id = ? AND post_id = ?", userID, postID).Scan(&currentType)
+	if (err != nil && err != sql.ErrNoRows) {
+		return err
+	}
+
+	// Handle different cases
+	switch currentType {
+	case "like": // Remove like
+		_, err = tx.Exec("DELETE FROM likes WHERE user_id = ? AND post_id = ?", userID, postID)
+		if (err != nil) {
+			return err
+		}
+		_, err = tx.Exec("UPDATE posts SET num_likes = CASE WHEN num_likes > 0 THEN num_likes - 1 ELSE 0 END WHERE id = ?", postID)
+
+	case "dislike": // Change dislike to like
+		_, err = tx.Exec("UPDATE likes SET type = 'like' WHERE user_id = ? AND post_id = ?", userID, postID)
+		if (err != nil) {
+			return err
+		}
+		_, err = tx.Exec(`
+            UPDATE posts 
+            SET num_likes = CASE WHEN num_likes >= 0 THEN num_likes + 1 ELSE 1 END,
+                num_dislikes = CASE WHEN num_dislikes > 0 THEN num_dislikes - 1 ELSE 0 END 
+            WHERE id = ?`, postID)
+
+	default: // New like
+		_, err = tx.Exec("INSERT INTO likes (user_id, post_id, type) VALUES (?, ?, 'like')", userID, postID)
+		if (err != nil) {
+			return err
+		}
+		_, err = tx.Exec("UPDATE posts SET num_likes = num_likes + 1 WHERE id = ?", postID)
+	}
+
+	if (err != nil) {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func DislikePost(postID string, userID string) error {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if (err != nil) {
+		return err
+	}
+	defer db.Close()
+
+	// Start transaction
+	tx, err := db.Begin()
+	if (err != nil) {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Check current interaction status
+	var currentType string
+	err = tx.QueryRow("SELECT type FROM likes WHERE user_id = ? AND post_id = ?", userID, postID).Scan(&currentType)
+	if (err != nil && err != sql.ErrNoRows) {
+		return err
+	}
+
+	// Handle different cases
+	switch currentType {
+	case "dislike": // Remove dislike
+		_, err = tx.Exec("DELETE FROM likes WHERE user_id = ? AND post_id = ?", userID, postID)
+		if (err != nil) {
+			return err
+		}
+		_, err = tx.Exec("UPDATE posts SET num_dislikes = CASE WHEN num_dislikes > 0 THEN num_dislikes - 1 ELSE 0 END WHERE id = ?", postID)
+
+	case "like": // Change like to dislike
+		_, err = tx.Exec("UPDATE likes SET type = 'dislike' WHERE user_id = ? AND post_id = ?", userID, postID)
+		if (err != nil) {
+			return err
+		}
+		_, err = tx.Exec(`
+            UPDATE posts 
+            SET num_dislikes = CASE WHEN num_dislikes >= 0 THEN num_dislikes + 1 ELSE 1 END,
+                num_likes = CASE WHEN num_likes > 0 THEN num_likes - 1 ELSE 0 END 
+            WHERE id = ?`, postID)
+
+	default: // New dislike
+		_, err = tx.Exec("INSERT INTO likes (user_id, post_id, type) VALUES (?, ?, 'dislike')", userID, postID)
+		if (err != nil) {
+			return err
+		}
+		_, err = tx.Exec("UPDATE posts SET num_dislikes = num_dislikes + 1 WHERE id = ?", postID)
+	}
+
+	if (err != nil) {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+

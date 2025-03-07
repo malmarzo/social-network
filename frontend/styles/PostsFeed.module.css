@@ -100,3 +100,7 @@
 .postAuthor {
   @apply text-base font-medium text-indigo-600 hover:text-indigo-700 mb-1;
 }
+
+.errorText {
+  @apply text-red-500 text-xs mt-1;
+}
