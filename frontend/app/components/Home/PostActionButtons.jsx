@@ -5,8 +5,9 @@ import {
   HeartIcon,
   ChatBubbleLeftIcon,
   HandThumbDownIcon,
+  PaperAirplaneIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import styles from "@/styles/PostsFeed.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 
@@ -14,7 +15,13 @@ const PostActionButtons = ({ postID }) => {
   const [likes, setLikes] = useState(0);
   const [dislikes, setDislikes] = useState(0);
   const [comments, setComments] = useState(0);
+  const [expandedPost, setExpandedPost] = useState(null);
+  const [commentInput, setCommentInput] = useState("");
+  const [commentsList, setCommentsList] = useState([]);
   const [error, setError] = useState("");
+  const [commentImage, setCommentImage] = useState(null);
+  const [imageError, setImageError] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
 
   async function fetchPostStats() {
     try {
@@ -67,29 +74,168 @@ const PostActionButtons = ({ postID }) => {
     }
   }
 
+  const toggleComments = (postId) => {
+    setExpandedPost(expandedPost === postId ? null : postId);
+  };
+
+  async function postComment() {
+    const formData = new FormData();
+
+    if ((!commentInput || commentInput.trim() === "") && !commentImage) {
+      return;
+    }
+
+    formData.append("postID", postID);
+    formData.append("comment", commentInput);
+    if (commentImage) {
+      formData.append("image", commentImage);
+    }
+
+    try {
+      const response = await invokeAPI("comment", formData, "POST");
+
+      if (response.code === 200) {
+        console.log(response);
+        setLikes(response.data.stats.likes);
+        setDislikes(response.data.stats.dislikes);
+        setComments(response.data.stats.comments);
+        setCommentsList([...commentsList, response.data.comment]);
+        setCommentInput("");
+        setCommentImage(null);
+        setImagePreviewUrl(null);
+      } else {
+        setError("Error posting comment");
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      setError("Error posting comment");
+    }
+  }
+
+  function handleImageChange(e) {
+    const file = e.target.files[0];
+    const allowedExtensions = ["image/jpeg", "image/png", "image/gif"];
+
+    if (file && !allowedExtensions.includes(file.type)) {
+      setImageError("Only JPG, PNG, and GIF files are allowed");
+      setCommentImage(null);
+      setImagePreviewUrl(null);
+    } else {
+      setImageError("");
+      setCommentImage(file);
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setImagePreviewUrl(url);
+    }
+  }
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
   useEffect(() => {
     fetchPostStats();
   }, []);
 
   return (
-    <div className={styles.actionButtons}>
-      <button className={styles.actionButton} onClick={like}>
-        <HeartIcon className="w-6 h-6" />
-        <span>{likes}</span>
-      </button>
+    <>
+      <div className={styles.actionButtons}>
+        <button className={styles.actionButton} onClick={like}>
+          <HeartIcon className="w-6 h-6" />
+          <span>{likes}</span>
+        </button>
 
-      <button className={styles.actionButton} onClick={dislike}>
-        <HandThumbDownIcon className="w-6 h-6" />
-        <span>{dislikes}</span>
-      </button>
+        <button className={styles.actionButton} onClick={dislike}>
+          <HandThumbDownIcon className="w-6 h-6" />
+          <span>{dislikes}</span>
+        </button>
 
-      <button className={styles.actionButton}>
-        <ChatBubbleLeftIcon className="w-6 h-6" />
-        <span>{comments}</span>
-      </button>
+        <button
+          className={styles.actionButton}
+          onClick={() => toggleComments(postID)}
+        >
+          <ChatBubbleLeftIcon className="w-6 h-6" />
+          <span>{comments}</span>
+        </button>
 
-      {error && <span className={styles.errorText}>{error}</span>}
-    </div>
+        {error && <span className={styles.errorText}>{error}</span>}
+      </div>
+
+      <div
+        className={`${styles.commentsSection} ${
+          expandedPost === postID ? styles.expanded : ""
+        }`}
+      >
+        <div className={styles.commentsList}>
+          {commentsList?.map((comment, index) => (
+            <div key={index} className="p-2 border-b border-gray-500">
+              <div className={styles.commentHeader}>
+                <div className={styles.commentUser}>
+                  @{comment.user_nickname}
+                </div>
+                <div className={styles.commentDate}>{comment.created_at}</div>
+              </div>
+              <p className={styles.commentText}>{comment.comment_text}</p>
+              {comment.comment_image && (
+                <div className={styles.commentImageContainer}>
+                  <img
+                    src={`data:${comment.image_mime_type};base64,${comment.comment_image}`}
+                    alt="Comment attachment"
+                    className={styles.commentImage}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className={styles.commentInputContainer}>
+          {imagePreviewUrl && (
+            <div className={styles.imagePreviewContainer}>
+              <img
+                src={imagePreviewUrl}
+                alt="Preview"
+                className={styles.imagePreview}
+              />
+              <button
+                onClick={() => {
+                  setCommentImage(null);
+                  setImagePreviewUrl(null);
+                }}
+                className={styles.removeImageButton}
+              >
+                ×
+              </button>
+            </div>
+          )}
+          <div className={styles.commentInput}>
+            <input
+              type="text"
+              placeholder="Add a comment..."
+              className={styles.commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              value={commentInput}
+            />
+            <label className={styles.fileInputLabel}>
+              <input
+                type="file"
+                className={styles.fileInput}
+                onChange={handleImageChange}
+                accept="image/jpeg,image/png,image/gif"
+              />
+              <PhotoIcon className="w-6 h-6 text-gray-500 hover:text-black transition-colors duration-200" />
+            </label>
+            <button className={styles.sendButton} onClick={postComment}>
+              <PaperAirplaneIcon className="w-6 h-5 block text-gray-500 hover:text-black transition-colors duration-200" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

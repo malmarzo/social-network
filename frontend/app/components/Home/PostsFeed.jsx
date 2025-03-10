@@ -7,7 +7,6 @@ import PostActionButtons from "./PostActionButtons";
 
 const PostsFeed = () => {
   const [activeTab, setActiveTab] = useState("latest");
-  const [expandedPost, setExpandedPost] = useState(null);
   const [createNewPost, setCreateNewPost] = useState(false);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,16 +43,7 @@ const PostsFeed = () => {
     fetchPosts();
   }, [fetchPosts]);
 
-  const handleLike = (postId) => {
-    setLikes((prev) => ({
-      ...prev,
-      [postId]: !prev[postId],
-    }));
-  };
 
-  const toggleComments = (postId) => {
-    setExpandedPost(expandedPost === postId ? null : postId);
-  };
 
   if (loading) {
     return <div className={styles.loading}>Loading posts...</div>;
@@ -125,26 +115,7 @@ const PostsFeed = () => {
 
               <PostActionButtons postID={post.post_id}/>
 
-              <div
-                className={`${styles.commentsSection} ${
-                  expandedPost === post.post_id ? styles.expanded : ""
-                }`}
-              >
-                <div className={styles.commentsList}>
-                  {post.comments?.map((comment, index) => (
-                    <div key={index} className="p-2 border-b border-gray-100">
-                      {comment}
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.commentInput}>
-                  <input
-                    type="text"
-                    placeholder="Add a comment..."
-                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
+              
             </div>
           ))}
       </div>
