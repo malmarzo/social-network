@@ -62,6 +62,7 @@ import { useRouter, useParams } from "next/navigation";
 import { invokeAPI } from "@/utils/invokeAPI";
 import UsersList from "../../groups/userlist";
 import { sendInvitations } from "../../groups/sendInvitation";
+import { useWebSocket } from "@/context/Websocket";
 
 export default function GroupChat() {
     const router = useRouter();
@@ -69,6 +70,7 @@ export default function GroupChat() {
     const [group, setGroup] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]); // Track selected users
     const [users, setUsers] = useState(null);
+     const { sendMessage } = useWebSocket();
 
     useEffect(() => {
         const fetchGroup = async () => {
@@ -102,7 +104,7 @@ export default function GroupChat() {
         }
 
         try {
-            await sendInvitations(group.group.id, group.group.creator_id, selectedUsers);
+            await sendInvitations(selectedUsers,sendMessage,group.group.id, group.group.creator_id);
             alert("Invitations sent successfully!");
             setSelectedUsers([]); // Reset selection after sending
         } catch (error) {

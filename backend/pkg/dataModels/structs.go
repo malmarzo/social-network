@@ -40,4 +40,5 @@ type Invite struct {
 	GroupID  int `json:"group_id"`
 	UserID   string `json:"user_id"`
 	InvitedBy string `json:"invited_by"`
+	Accepted bool `json:"accepted"`
 }

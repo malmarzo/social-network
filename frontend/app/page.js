@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import CreateGroup from "./groups/page"; //
 import AuthButton from "./components/Buttons/AuthButtons";
+import HelloSender from "./components/Buttons/HelloSender";
 export default function Home() {
 
   
@@ -15,7 +16,7 @@ export default function Home() {
         Hello world
         {/* <CreateGroup /> */}
         <AuthButton text="create group" href="/groups" />
-        
+        <HelloSender />
       </div>
   );
 }

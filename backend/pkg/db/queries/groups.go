@@ -59,6 +59,44 @@ func InviteUser(GroupID int, UserID, InvitedBy string)error{
 
 }
 
+
+func AcceptInvitation(GroupID int, UserID, InvitedBy string)error{
+	dbPath := getDBPath()
+	db, err1 := sql.Open("sqlite3", dbPath)
+	if err1 != nil {
+		log.Println(err1)
+		return err1
+	}
+	defer db.Close()
+    _, err2 := db.Exec("UPDATE group_members SET status = ? WHERE group_id = ? AND user_id = ? AND invited_by = ?",
+        "accepted", GroupID, UserID, InvitedBy,)
+    if err2 != nil {
+        log.Println(err2)
+		return err2
+    }
+	return nil
+
+}
+
+func DeclineInvitation(GroupID int, UserID, InvitedBy string)error{
+	dbPath := getDBPath()
+	db, err1 := sql.Open("sqlite3", dbPath)
+	if err1 != nil {
+		log.Println(err1)
+		return err1
+	}
+	defer db.Close()
+    _, err2 := db.Exec("UPDATE group_members SET status = ? WHERE group_id = ? AND user_id = ? AND invited_by = ?",
+        "declined", GroupID, UserID, InvitedBy,)
+    if err2 != nil {
+        log.Println(err2)
+		return err2
+    }
+	return nil
+}
+
+
+
 func GetUsersList()([]datamodels.User, error){
 	dbPath := getDBPath()
 	db, err1 := sql.Open("sqlite3", dbPath)
@@ -151,7 +189,7 @@ func GetAvailableUsersList(groupID int) ([]datamodels.User, error) {
 		SELECT u.nickname , u.id
 		FROM users u
 		INNER JOIN group_members gm ON u.id = gm.user_id
-		WHERE gm.group_id = ? AND gm.status IN ('pending', 'declined')
+		WHERE gm.group_id = ? AND gm.status IN ('pending', 'accepted')
 	`, groupID)
 
 	if err != nil {

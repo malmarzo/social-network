@@ -84,9 +84,9 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			users3 = append(users3,users4[i])
 		}
 	}
-	// users3 is the last updated list 
-	for i:= 0 ; i< len(users3);i++ {
-		fmt.Println(users3[i].Nickname)
+	//users3 is the last updated list 
+	for i:= 0 ; i< len(users2);i++ {
+		fmt.Println(users2[i].Nickname)
 	}
 	
 	response = datamodels.Response{

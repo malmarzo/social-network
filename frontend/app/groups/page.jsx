@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { sendInvitations } from "./sendInvitation";
 import { fetchUsersData } from "./userlist";
 import { useEffect } from "react";
+import { useWebSocket } from "@/context/Websocket";
 
 
 export default function CreateGroup() {
@@ -16,6 +17,7 @@ export default function CreateGroup() {
     const [selectedUsers, setSelectedUsers] = useState([]);  // Store selected users here
     const router = useRouter();
     const [users, setUsers] = useState([]);
+    const { sendMessage } = useWebSocket();
     useEffect(() => {
       const fetchUsers = async () => {
           const data = await fetchUsersData();  // Fetch users data
@@ -49,7 +51,13 @@ export default function CreateGroup() {
 
             // Invite users automatically after creating the group
             if (selectedUsers.length > 0) {
-                await sendInvitations(response.group.id, response.group.creator_id, selectedUsers);
+                // await sendInvitations(response.group.id, response.group.creator_id, selectedUsers);
+                //test;
+                console.log("Selected Users:", selectedUsers);
+
+                console.log("test for send invitations");
+                await sendInvitations(selectedUsers,sendMessage,response.group.id,response.group.creator_id);
+                //end of test
             }
             
             alert("Group created and users invited successfully!");
