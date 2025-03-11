@@ -162,5 +162,5 @@
 }
 
 .commentImage {
-  @apply max-w-[200px] rounded-lg shadow-sm;
+  @apply max-w-[100px] rounded-lg shadow-sm;
 }

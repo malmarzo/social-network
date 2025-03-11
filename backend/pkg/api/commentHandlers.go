@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	datamodels "social-network/pkg/dataModels"
 	"social-network/pkg/db/queries"
 	"social-network/pkg/utils"
+	"time"
 )
 
 func NewComment(w http.ResponseWriter, r *http.Request) {
@@ -45,15 +47,20 @@ func NewComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commentID := utils.GenerateUUID()
+	fmt.Println("comment ID" + commentID)
 	if commentID == "" {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
 		return
 	}
 
+	// Format current time as dd-mm-yyyy hh:mm am/pm
+	currentTime := time.Now().Format("02-01-2006 03:04 PM")
+
 	newComment := datamodels.Comment{
 		CommentID:   commentID,
 		PostID:      postID,
 		UserID:      userID,
+		CreatedAt:  currentTime,
 		CommentText: commentText,
 	}
 
@@ -156,5 +163,45 @@ func NewComment(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func GetPostComments(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
 
+	//Getting the post id from the path parameter
+	postID := r.URL.Path[len("/comments/"):]
+	if postID == "" {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Missing required fields"})
+		return
+	}
 
+	comments, err := queries.GetPostComments(postID)
+	if err != nil {
+		log.Println("Failed to get comments:", err)
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusInternalServerError,
+			Status:   "Failed",
+			ErrorMsg: "Failed to get comments",
+		})
+		return
+	}
+
+	// Convert images to base64 for each comment
+	for i := range comments {
+		if comments[i].ImageDataURL != nil {
+			// Convert the image byte array to base64 string
+			imageBase64 := base64.StdEncoding.EncodeToString(comments[i].ImageDataURL)
+			// Update the comment with base64 string instead of byte array
+			comments[i].CommentImage = imageBase64
+			// Clear the byte array as it's no longer needed
+			comments[i].ImageDataURL = nil
+		}
+	}
+
+	utils.SendResponse(w, datamodels.Response{
+		Code:   http.StatusOK,
+		Status: "Success",
+		Data:   comments,
+	})
+}

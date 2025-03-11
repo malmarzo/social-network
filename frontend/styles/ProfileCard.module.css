@@ -79,6 +79,8 @@
   border-radius: 6px;
   cursor: pointer;
   transition: 0.3s;
+  display: inline-block;
+  text-decoration: none;
 }
 
 .viewProfileButton:hover {

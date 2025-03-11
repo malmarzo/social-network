@@ -82,9 +82,9 @@ const Card = () => {
             <p className={style.statLabel}>Following</p>
           </span>
         </div>
-        <button className={style.viewProfileButton}>
-          <Link href={`/profile/${userID}`}>View Profile</Link>
-        </button>
+        <Link href={`/profile/${userID}`} className={style.viewProfileButton}>
+          View Profile
+        </Link>
       </div>
     </div>
   );

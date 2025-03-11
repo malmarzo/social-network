@@ -228,5 +228,3 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		Data:   posts,
 	})
 }
-
-

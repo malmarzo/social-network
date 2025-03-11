@@ -31,7 +31,7 @@ func InsertNewComment(comment datamodels.Comment) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("INSERT INTO comments (id, user_id, post_id, content, image) VALUES (?, ?, ?, ?, ?)", comment.CommentID, comment.PostID, comment.UserID, comment.CommentText, comment.CommentImage)
+	_, err = tx.Exec("INSERT INTO comments (id, user_id, post_id, content, created_at, image) VALUES (?, ?, ?, ?, ?, ?)", comment.CommentID, comment.UserID, comment.PostID, comment.CommentText, comment.CreatedAt, comment.CommentImage)
 	if err != nil {
 		return err
 	}
@@ -70,9 +70,9 @@ func GetPostComments(postID string) ([]datamodels.Comment, error) {
             u.nickname
         FROM comments c
         JOIN users u ON c.user_id = u.id
-        WHERE c.post_id = ?
-        ORDER BY c.created_at DESC`, postID)
+        WHERE c.post_id = ?`, postID)
 	if err != nil {
+		log.Printf("Query error: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -80,17 +80,25 @@ func GetPostComments(postID string) ([]datamodels.Comment, error) {
 	var comments []datamodels.Comment
 	for rows.Next() {
 		var comment datamodels.Comment
+		var imageStr sql.NullString // Handle NULL values for image
+
 		err = rows.Scan(
 			&comment.CommentID,
 			&comment.UserID,
 			&comment.PostID,
 			&comment.CommentText,
 			&comment.CreatedAt,
-			&comment.CommentImage,
+			&imageStr,
 			&comment.UserNickname,
 		)
 		if err != nil {
+			log.Printf("Scan error: %v", err)
 			return nil, err
+		}
+
+		// Handle NULL image value
+		if imageStr.Valid {
+			comment.CommentImage = imageStr.String
 		}
 
 		// If comment has an image, read it from uploads directory
@@ -119,9 +127,9 @@ func GetPostComments(postID string) ([]datamodels.Comment, error) {
 	}
 
 	if err = rows.Err(); err != nil {
+		log.Printf("Rows error: %v", err)
 		return nil, err
 	}
-
 	return comments, nil
 }
 
@@ -169,7 +177,6 @@ func GetComment(commentID string) (datamodels.Comment, error) {
 		comment.ImageDataURL = imageData
 		comment.ImageMimeType = mimeType
 	}
-
 
 	return comment, nil
 }

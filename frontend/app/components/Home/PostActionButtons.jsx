@@ -10,6 +10,8 @@ import {
 } from "@heroicons/react/24/outline";
 import styles from "@/styles/PostsFeed.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
+import Link from "next/link";
+import { comment } from "postcss";
 
 const PostActionButtons = ({ postID }) => {
   const [likes, setLikes] = useState(0);
@@ -74,8 +76,9 @@ const PostActionButtons = ({ postID }) => {
     }
   }
 
-  const toggleComments = (postId) => {
+  const toggleComments = async (postId) => {
     setExpandedPost(expandedPost === postId ? null : postId);
+    await getPostComments(expandedPost);
   };
 
   async function postComment() {
@@ -99,7 +102,15 @@ const PostActionButtons = ({ postID }) => {
         setLikes(response.data.stats.likes);
         setDislikes(response.data.stats.dislikes);
         setComments(response.data.stats.comments);
-        setCommentsList([...commentsList, response.data.comment]);
+
+        // Initialize commentsList as empty array if null
+        setCommentsList((prevComments) => {
+          if (!prevComments) {
+            return [response.data.comment];
+          }
+          return [...prevComments, response.data.comment];
+        });
+
         setCommentInput("");
         setCommentImage(null);
         setImagePreviewUrl(null);
@@ -126,6 +137,20 @@ const PostActionButtons = ({ postID }) => {
       // Create preview URL
       const url = URL.createObjectURL(file);
       setImagePreviewUrl(url);
+    }
+  }
+
+  async function getPostComments(isOpen) {
+    if (isOpen !== postID) {
+      try {
+        const response = await invokeAPI(`comments/${postID}`, {}, "GET");
+        if (response.code === 200) {
+          console.log(response);
+          setCommentsList(response.data);
+        }
+      } catch (error) {
+        console.log("Error fetching comments:", error);
+      }
     }
   }
 
@@ -176,7 +201,9 @@ const PostActionButtons = ({ postID }) => {
             <div key={index} className="p-2 border-b border-gray-500">
               <div className={styles.commentHeader}>
                 <div className={styles.commentUser}>
-                  @{comment.user_nickname}
+                  <Link href={`/profile/${comment.user_id}`}>
+                    @{comment.user_nickname}
+                  </Link>
                 </div>
                 <div className={styles.commentDate}>{comment.created_at}</div>
               </div>
