@@ -150,6 +150,13 @@ func HandleMessages() {
 					}
 				}
 			}
+		}else if newMsg.Type == "new_post"{
+			err := clients[newMsg.UserDetails.ID].WriteJSON(newMsg)
+			if err != nil {
+				log.Printf("Error sending message to user %s: %v", newMsg.UserDetails.ID, err)
+				clients[newMsg.UserDetails.ID].Close()
+				delete(clients, newMsg.UserDetails.ID)
+			}
 		} else {
 			for id, c := range clients {
 				if c != clients[newMsg.UserDetails.ID] {

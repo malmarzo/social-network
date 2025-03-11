@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import styles from "@/styles/CreateNewPost.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 import FailAlert from "../Alerts/FailAlert";
+import { useWebSocket } from "@/context/Websocket";
+import { useAuth } from "@/context/AuthContext";
 
 const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
   // Add onPostCreated prop
@@ -14,6 +16,9 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [followersList, setFollowersList] = useState([]);
   const [fetchError, setFetchError] = useState("");
+
+  const { sendMessage } = useWebSocket();
+  const { userID } = useAuth();
 
   useEffect(() => {
     async function getFollowers() {
@@ -84,6 +89,15 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
           onPostCreated();
         }
         onClose();
+
+        if (!isGroup) {
+          sendMessage({
+            type: "new_post",
+            userDetails: {
+              id: userID,
+            }
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to create post", error);
