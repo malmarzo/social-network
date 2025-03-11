@@ -29,7 +29,10 @@ const PostsFeed = ({isGroup, groupID}) => {
         }
         response = await invokeAPI(`groupPosts/${groupID}`, null, "GET");
       } else {
-        response = await invokeAPI("posts", null, "GET");
+        const queryParams = {
+          tab: activeTab,
+        }
+        response = await invokeAPI("posts", null, "GET", null, queryParams);
       }
       if (response.code === 200) {
         setPosts(response.data);
@@ -42,13 +45,14 @@ const PostsFeed = ({isGroup, groupID}) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
   const refreshPosts = useCallback(() => {
+    setActiveTab("latest")
     fetchPosts();
   }, [fetchPosts]);
 

@@ -1,14 +1,25 @@
 //Function to invoke the API (backend) with the given route, body, method, and content type
 
-export async function invokeAPI(route, body, method, contentType) {
+export async function invokeAPI(route, body, method, contentType, queryParams) {
   const options = {
     method: method,
     credentials: "include",
     cache: "no-store",
   };
 
+  // Handle query parameters
+  let url = `http://localhost:8080/${route}`;
+  if (queryParams && Object.keys(queryParams).length > 0) {
+    const searchParams = new URLSearchParams();
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        searchParams.append(key, value);
+      }
+    });
+    url += `?${searchParams.toString()}`;
+  }
+
   if (body instanceof FormData) {
-    // Content type for form data will be set by browser
     options.body = body;
   } else {
     options.headers = {
@@ -20,7 +31,7 @@ export async function invokeAPI(route, body, method, contentType) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8080/${route}`, options);
+    const response = await fetch(url, options);
     const text = await response.text();
 
     try {

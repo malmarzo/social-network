@@ -180,6 +180,12 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Get the active tab from query parameters
+	activeTab := r.URL.Query().Get("tab")
+	if activeTab == "" || (activeTab != "latest" && activeTab != "my-posts" && activeTab != "trending") {
+		activeTab = "latest"
+	}
+
 	// Get the session cookie
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
@@ -194,7 +200,7 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := queries.GetAllPosts(userID)
+	posts, err := queries.GetAllPosts(userID, activeTab)
 	if err != nil {
 		log.Println("Failed to get posts:", err)
 		utils.SendResponse(w, datamodels.Response{
@@ -217,9 +223,11 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//reverse the posts array
-	for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
-		posts[i], posts[j] = posts[j], posts[i]
+	if activeTab != "trending" {
+		//reverse the posts array
+		for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
+			posts[i], posts[j] = posts[j], posts[i]
+		}
 	}
 
 	utils.SendResponse(w, datamodels.Response{

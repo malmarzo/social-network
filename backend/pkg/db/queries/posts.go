@@ -66,7 +66,7 @@ func InsertNewPost(post datamodels.Post) error {
 	return nil
 }
 
-func GetAllPosts(userID string) ([]datamodels.Post, error) {
+func GetAllPosts(userID, tab string) ([]datamodels.Post, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
 	if (err != nil) {
@@ -74,9 +74,20 @@ func GetAllPosts(userID string) ([]datamodels.Post, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM posts WHERE user_id = ? OR privacy = 'public' OR allowedUsers LIKE ?", userID, "%"+userID+"%")
-	if (err != nil) {
-		return nil, err
+	var rows *sql.Rows
+	var errFetch error
+
+	if tab == "latest" || tab == ""{
+		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ? OR privacy = 'public' OR allowedUsers LIKE ?", userID, "%"+userID+"%")
+	} else if tab == "trending"{
+		//Get the posts with the most interaction Sum(likes, dislikes, comments)
+		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ? OR privacy = 'public' OR allowedUsers LIKE ? ORDER BY (num_likes + num_dislikes + num_comments) DESC", userID, "%"+userID+"%")
+	} else if tab == "my-posts"{
+		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ?", userID)
+	}
+
+	if (errFetch != nil) {
+		return nil, errFetch
 	}
 	defer rows.Close()
 
