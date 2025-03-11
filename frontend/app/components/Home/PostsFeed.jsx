@@ -5,7 +5,7 @@ import CreateNewPost from "./CreateNewPost";
 import Link from "next/link";
 import PostActionButtons from "./PostActionButtons";
 
-const PostsFeed = () => {
+const PostsFeed = ({isGroup, groupID}) => {
   const [activeTab, setActiveTab] = useState("latest");
   const [createNewPost, setCreateNewPost] = useState(false);
   const [posts, setPosts] = useState([]);
@@ -21,7 +21,16 @@ const PostsFeed = () => {
   const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await invokeAPI("posts", null, "GET");
+      let response;
+      if (isGroup) {
+        if (!groupID) {
+          setError("Failed to fetch posts");
+          return;
+        }
+        response = await invokeAPI(`groupPosts/${groupID}`, null, "GET");
+      } else {
+        response = await invokeAPI("posts", null, "GET");
+      }
       if (response.code === 200) {
         setPosts(response.data);
       } else {
@@ -57,25 +66,29 @@ const PostsFeed = () => {
     <div className={styles.feedContainer}>
       <h1 className={styles.title}>Posts</h1>
       <nav className={styles.toggleNav}>
-        <div className={styles.toggleButtons}>
-          {toggles.map((toggle) => (
-            <button
-              key={toggle.id}
-              className={`${styles.toggleButton} ${
-                activeTab === toggle.id ? styles.activeToggle : ""
-              }`}
-              onClick={() => setActiveTab(toggle.id)}
-            >
-              {toggle.label}
-            </button>
-          ))}
-        </div>
-        <button
-          className={styles.createPostButton}
-          onClick={() => setCreateNewPost(true)} // Add click handler
-        >
-          Create Post
-        </button>
+      {!isGroup && (
+        <>
+          <div className={styles.toggleButtons}>
+            {toggles.map((toggle) => (
+              <button
+                key={toggle.id}
+                className={`${styles.toggleButton} ${
+                  activeTab === toggle.id ? styles.activeToggle : ""
+                }`}
+                onClick={() => setActiveTab(toggle.id)}
+              >
+                {toggle.label}
+              </button>
+            ))}
+          </div>
+          </>
+          )}
+          <button
+            className={styles.createPostButton}
+            onClick={() => setCreateNewPost(true)} // Add click handler
+          >
+            Create Post
+          </button>
       </nav>
 
       {/* Keep only one instance of CreateNewPost */}
@@ -83,6 +96,8 @@ const PostsFeed = () => {
         <CreateNewPost
           onClose={() => setCreateNewPost(false)}
           onPostCreated={refreshPosts}
+          isGroup={isGroup}
+          groupID={groupID}
         />
       )}
 
@@ -113,9 +128,7 @@ const PostsFeed = () => {
                 <p className={styles.postCaption}>{post.content}</p>
               </div>
 
-              <PostActionButtons postID={post.post_id}/>
-
-              
+              <PostActionButtons postID={post.post_id} isGroup={isGroup}/>
             </div>
           ))}
       </div>

@@ -12,7 +12,7 @@ export default function Home() {
         <ProfileWindow />
       </div>
       <div className={style.postsDiv}>
-        <PostsFeed />
+        <PostsFeed isGroup={false}/>
       </div>
       <div className={style.searchDiv}>Search</div>
     </div>

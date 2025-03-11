@@ -13,7 +13,7 @@ import { invokeAPI } from "@/utils/invokeAPI";
 import Link from "next/link";
 import { comment } from "postcss";
 
-const PostActionButtons = ({ postID }) => {
+const PostActionButtons = ({ postID, isGroup }) => {
   const [likes, setLikes] = useState(0);
   const [dislikes, setDislikes] = useState(0);
   const [comments, setComments] = useState(0);
@@ -27,7 +27,17 @@ const PostActionButtons = ({ postID }) => {
 
   async function fetchPostStats() {
     try {
-      const response = await invokeAPI(`postInteractions/${postID}`, {}, "GET");
+      let response;
+
+      if (isGroup) {
+        response = await invokeAPI(
+          `groupPostInteractions/${postID}`,
+          {},
+          "GET"
+        );
+      } else {
+        response = await invokeAPI(`postInteractions/${postID}`, {}, "GET");
+      }
       if (response.code === 200) {
         console.log(response);
         setLikes(response.data.likes);
@@ -44,7 +54,12 @@ const PostActionButtons = ({ postID }) => {
 
   async function like() {
     try {
-      const response = await invokeAPI(`like/${postID}`, {}, "POST");
+      let response;
+      if (isGroup) {
+        response = await invokeAPI(`likeGroupPost/${postID}`, {}, "POST");
+      } else {
+        response = await invokeAPI(`like/${postID}`, {}, "POST");
+      }
       if (response.code === 200) {
         console.log(response);
         setLikes(response.data.likes);
@@ -61,7 +76,12 @@ const PostActionButtons = ({ postID }) => {
 
   async function dislike() {
     try {
-      const response = await invokeAPI(`dislike/${postID}`, {}, "POST");
+      let response;
+      if (isGroup) {
+        response = await invokeAPI(`dislikeGroupPost/${postID}`, {}, "POST");
+      } else {
+        response = await invokeAPI(`dislike/${postID}`, {}, "POST");
+      }
       if (response.code === 200) {
         console.log(response);
         setLikes(response.data.likes);
@@ -95,7 +115,12 @@ const PostActionButtons = ({ postID }) => {
     }
 
     try {
-      const response = await invokeAPI("comment", formData, "POST");
+      let response;
+      if (isGroup) {
+        response = await invokeAPI("groupComment", formData, "POST");
+      } else {
+        response = await invokeAPI("comment", formData, "POST");
+      }
 
       if (response.code === 200) {
         console.log(response);
