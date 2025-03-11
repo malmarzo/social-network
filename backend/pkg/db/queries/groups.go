@@ -207,3 +207,70 @@ func GetAvailableUsersList(groupID int) ([]datamodels.User, error) {
 
 	return users, nil
 }
+
+
+// func IsUserInGroup(userID, groupID int) (bool, error) {
+// 	dbPath := getDBPath()
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return false, err
+// 	}
+// 	defer db.Close()
+
+// 	var exists bool
+
+// 	query := `
+// 		SELECT EXISTS(
+// 			SELECT 1 FROM group_members 
+// 			WHERE user_id = ? AND group_id = ? AND status = 'accepted'
+// 		)
+// 	`
+// 	err = db.QueryRow(query, userID, groupID).Scan(&exists)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return false, err
+// 	}
+
+// 	return exists, nil
+// }
+
+func IsUserInGroup(userID string, groupID int) (bool, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	defer db.Close()
+
+	var creatorID string
+
+	// Fetch the creator of the group
+	err = db.QueryRow("SELECT creator_id FROM groups WHERE id = ?", groupID).Scan(&creatorID)
+	if err != nil {
+		log.Println("Error fetching group creator:", err)
+		return false, err
+	}
+
+	// If the user is the creator of the group, allow access
+	if userID == creatorID {
+		return true, nil
+	}
+
+	// Check if the user is an accepted member
+	var exists bool
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM group_members 
+			WHERE user_id = ? AND group_id = ? AND status = 'accepted'
+		)
+	`
+	err = db.QueryRow(query, userID, groupID).Scan(&exists)
+	if err != nil {
+		log.Println("Error checking membership:", err)
+		return false, err
+	}
+
+	return exists, nil
+}

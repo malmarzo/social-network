@@ -77,6 +77,38 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
             users4 = append(users4, user1)
         }
     }
+
+	// test 
+	cookie, err := r.Cookie("session_id")
+    if err != nil {
+        fmt.Println("Error retrieving session_id cookie:", err)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusUnauthorized, Status: "Failed", ErrorMsg: "session ID not found"})
+        return
+    }
+	currentUser, err3 := queries.ValidateSession(cookie.Value)
+	if err3 != nil {
+		fmt.Println("Error retriving user id from session", err3)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+	}
+	// end of test 
+	 
+	// check if user part of a group if not error 
+	checkUser, err6:= queries.IsUserInGroup(currentUser,groupIDInt)
+	if err6 != nil {
+		fmt.Println("Error checking user part of agroup or not", err6)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+	}
+
+	if checkUser != true {
+		fmt.Println("Error user is not part of the group")
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Bad request error"})
+        return
+
+	}
+	//end
+
 	//remove the creator from the invitation list
 	var users3 []datamodels.User
 	for i:= 0; i <len(users4); i++ {
@@ -88,6 +120,16 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 	for i:= 0 ; i< len(users2);i++ {
 		fmt.Println(users2[i].Nickname)
 	}
+
+	//test
+	// remove the current user
+	var users5 []datamodels.User
+	for i:= 0; i<len(users3);i++ {
+		if users[i].ID != currentUser {
+			users5= append(users5,users3[i])
+		}
+	}
+	// end of test 
 	
 	response = datamodels.Response{
         Code:   200,
@@ -100,7 +142,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			FirstName: firstName,
 			LastName: lastName,
         },
-		Users: users3,
+		Users: users5,
     }
 	utils.SendResponse(w, response) //send the response
     //json.NewEncoder(w).Encode(g)
