@@ -60,8 +60,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { invokeAPI } from "@/utils/invokeAPI";
-import UsersList from "../../groups/userlist";
-import { sendInvitations } from "../../groups/sendInvitation";
+import UsersList from "../../createGroup/userlist";
+import { sendInvitations } from "../../createGroup/sendInvitation";
 import { useWebSocket } from "@/context/Websocket";
 
 export default function GroupChat() {

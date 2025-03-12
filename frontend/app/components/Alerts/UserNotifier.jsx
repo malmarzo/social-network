@@ -1,5 +1,5 @@
 import { useWebSocket } from "@/context/Websocket";
-import  DisplayInvitationCard from "../../groups/invitationCard"
+import  DisplayInvitationCard from "../../createGroup/invitationCard"
 import { useState, useEffect } from "react";
 
 
