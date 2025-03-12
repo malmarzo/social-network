@@ -25,7 +25,7 @@ func main() {
 	http.HandleFunc("/groups/users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUsersHandler)))
 	http.HandleFunc("/groups/chat/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupChatHandler)))
 	http.HandleFunc("/groups/invitation", middleware.CorsMiddleware(middleware.AuthMiddleware(api.InvitationResponseHandler)))
-
+	http.HandleFunc("/groups/request", middleware.CorsMiddleware(middleware.AuthMiddleware(api.RequestGroupsHandler)))
 	//Handle establishing websocket connection
 	http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))
 

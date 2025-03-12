@@ -46,20 +46,21 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
-
+// get the full user list
 	users, err:= queries.GetUsersList()
 	if err != nil {
 		log.Println(err)
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error22"})
 			return
 	}
-
+//  members of a specific group and have a status of either 'pending' or 'accepted'.
 	users2, err4:= queries.GetAvailableUsersList(groupIDInt)
 	if err4 != nil {
 		fmt.Println("Error retriving the available userlist", err4)
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
+	
 	
 	// remove the users that already invited or accepted the invitation
 	var users4 []datamodels.User
@@ -77,6 +78,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
             users4 = append(users4, user1)
         }
     }
+	
 
 	// test 
 	cookie, err := r.Cookie("session_id")
@@ -91,6 +93,10 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
+	fmt.Println("-------------------------------------------")
+	fmt.Println("Session Cookie:", cookie.Value)
+	fmt.Println("Current User ID:", currentUser)
+
 	// end of test 
 	 
 	// check if user part of a group if not error 
@@ -116,11 +122,8 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			users3 = append(users3,users4[i])
 		}
 	}
-	//users3 is the last updated list 
-	for i:= 0 ; i< len(users2);i++ {
-		fmt.Println(users2[i].Nickname)
-	}
 
+	
 	//test
 	// remove the current user
 	var users5 []datamodels.User
@@ -130,7 +133,10 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// end of test 
-	
+	// fmt.Println("-------------------------------------------")
+	// fmt.Println("users5",users5)
+	// fmt.Println("-------------------------------------------")
+
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",

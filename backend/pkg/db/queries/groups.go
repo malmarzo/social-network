@@ -5,23 +5,6 @@ import ("log"
 datamodels "social-network/pkg/dataModels"
 )
 
-// func InsertGroup(title,description, creatorID string)error{
-// 	dbPath := getDBPath()
-// 	db, err1 := sql.Open("sqlite3", dbPath)
-// 	if err1 != nil {
-// 		log.Println(err1)
-// 		return err1
-// 	}
-// 	defer db.Close()
-	
-//     _,err2 := db.Exec("INSERT INTO groups (title, description, creator_id RETURNING id) VALUES (?, ?, ?)",title, description, creatorID)
-//     if err2 != nil {
-// 		log.Println(err2)
-//         return err2
-//     }
-// 	return nil
-// }
-
 
 func InsertGroup(title, description string, creatorID string) (int, error) {
 	dbPath := getDBPath()
@@ -209,31 +192,6 @@ func GetAvailableUsersList(groupID int) ([]datamodels.User, error) {
 }
 
 
-// func IsUserInGroup(userID, groupID int) (bool, error) {
-// 	dbPath := getDBPath()
-// 	db, err := sql.Open("sqlite3", dbPath)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return false, err
-// 	}
-// 	defer db.Close()
-
-// 	var exists bool
-
-// 	query := `
-// 		SELECT EXISTS(
-// 			SELECT 1 FROM group_members 
-// 			WHERE user_id = ? AND group_id = ? AND status = 'accepted'
-// 		)
-// 	`
-// 	err = db.QueryRow(query, userID, groupID).Scan(&exists)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return false, err
-// 	}
-
-// 	return exists, nil
-// }
 
 func IsUserInGroup(userID string, groupID int) (bool, error) {
 	dbPath := getDBPath()
@@ -273,4 +231,52 @@ func IsUserInGroup(userID string, groupID int) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+var groups []datamodels.Group
+
+
+func GroupsToRequest(userID string )( []datamodels.Group, error){
+	
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return  nil, err
+	}
+	defer db.Close()
+
+	query := `
+		SELECT id, title 
+		FROM groups
+		WHERE id NOT IN (
+			SELECT group_id FROM group_members 
+			WHERE user_id = ? AND status IN ('pending', 'accepted')
+		) 
+		AND creator_id != ?;
+	`
+
+	rows, err := db.Query(query, userID, userID)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var groups []datamodels.Group
+	for rows.Next() {
+		var group datamodels.Group
+		if err := rows.Scan(&group.ID, &group.Title); err != nil {
+			log.Println("Error scanning row:", err)
+			return nil, err
+		}
+		groups = append(groups, group)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over rows:", err)
+		return nil, err
+	}
+
+	return groups, nil
 }
