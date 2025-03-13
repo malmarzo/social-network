@@ -4,6 +4,7 @@
   padding: 1rem;
   height: calc(90vh - 4rem);
   overflow-y: auto;
+  scrollbar-width: thin
 }
 
 .title {

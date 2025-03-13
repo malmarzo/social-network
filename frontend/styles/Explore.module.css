@@ -1,0 +1,93 @@
+.title {
+  @apply text-3xl font-bold mb-6 text-gray-800;
+}
+
+.container {
+  @apply max-w-4xl mx-auto px-4 py-6;
+}
+
+.toggleContainer {
+  @apply flex gap-2 mb-6;
+}
+
+.active {
+  @apply px-4 py-2 bg-indigo-600 text-white rounded-lg 
+    transition-all duration-200 font-medium
+    hover:bg-indigo-700 shadow-sm;
+}
+
+.inactive {
+  @apply px-4 py-2 bg-gray-100 text-gray-600 rounded-lg 
+    transition-all duration-200 font-medium
+    hover:bg-gray-200;
+}
+
+.searchInput {
+  @apply w-full mb-4 px-4 py-2 rounded-lg border border-gray-200
+    focus:outline-none focus:ring-2 focus:border-transparent
+    transition-all duration-200;
+  color: black;
+  background-color: rgb(255, 255, 255);
+}
+
+.loaderContainer {
+  @apply space-y-2 mb-4;
+}
+
+.usersList {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.5) rgba(229, 231, 235, 0.5);
+}
+
+/* Webkit scrollbar styling */
+.usersList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.usersList::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+.usersList::-webkit-scrollbar-thumb {
+  @apply bg-indigo-500 rounded-full;
+  &:hover {
+    @apply bg-indigo-600;
+  }
+}
+
+.userCard {
+  @apply flex items-center gap-3 p-2 bg-white rounded-xl
+    border border-gray-100 shadow-md hover:shadow-lg
+    transition-all duration-200;
+  margin-bottom: 0.3rem;
+}
+
+.userImage {
+  @apply w-12 h-12 rounded-full object-cover;
+}
+
+.userName {
+  @apply text-lg font-medium text-gray-800 hover:text-indigo-600
+    transition-colors duration-200;
+}
+
+.error {
+  @apply text-red-500 text-sm mt-2;
+}
+
+@media (max-width: 640px) {
+  .usersList {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    @apply text-xl;
+  }
+
+  .container {
+    @apply px-2 py-4;
+  }
+}

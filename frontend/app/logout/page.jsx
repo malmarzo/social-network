@@ -16,7 +16,6 @@ const LogoutButton = () => {
       const response = await invokeAPI("logout", null, "POST");
       if (response.code === 200) {
         setIsLoggedIn(false); // Ensure state updates
-        console.log("Logout successful, isLoggedIn should be false now.");
         router.replace("/login"); // Navigate after state update
       } else {
         setErrorMsg(response.error_msg);
