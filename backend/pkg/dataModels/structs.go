@@ -64,20 +64,29 @@ type PostInteractions struct {
 }
 
 type NewComment struct {
-	Comment Comment `json:"comment"`
+	Comment Comment          `json:"comment"`
 	Stats   PostInteractions `json:"stats"`
 }
 
-
-//Comment struct 
+// Comment struct
 type Comment struct {
-	CommentID   string `json:"comment_id"`
-	PostID      string `json:"post_id"`
-	UserID      string `json:"user_id"`
-	UserNickname string `json:"user_nickname"`
-	CommentText string `json:"comment_text"`
-	CreatedAt   string `json:"created_at"`
-	CommentImage string `json:"comment_image"` // Will contain base64 string after conversion
+	CommentID     string `json:"comment_id"`
+	PostID        string `json:"post_id"`
+	UserID        string `json:"user_id"`
+	UserNickname  string `json:"user_nickname"`
+	CommentText   string `json:"comment_text"`
+	CreatedAt     string `json:"created_at"`
+	CommentImage  string `json:"comment_image"`   // Will contain base64 string after conversion
 	ImageMimeType string `json:"image_mime_type"` // For content-type header
 	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
+}
+
+type Group struct {
+	GroupID   string `json:"group_id"`
+	GroupName string `json:"group_name"`
+}
+
+type ExploreLists struct {
+	UsersList  []User  `json:"users_list"`
+	GroupsList []Group `json:"groups_list"`
 }

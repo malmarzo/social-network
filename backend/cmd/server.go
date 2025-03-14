@@ -29,6 +29,7 @@ func main() {
 	http.HandleFunc("/dislike/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.DislikePostHandler)))
 	http.HandleFunc("/comment", middleware.CorsMiddleware(middleware.AuthMiddleware(api.NewComment)))
 	http.HandleFunc("/comments/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetPostComments)))
+	http.HandleFunc("/explore", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ExploreHandler)))
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
 	http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))
 

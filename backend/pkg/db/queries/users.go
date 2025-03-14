@@ -136,3 +136,37 @@ func GetUserAvatar(userID string) ([]byte, string, error) {
 
 	return avatar, mimeType, nil
 }
+
+func GetUserList(userID string) ([]datamodels.User, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	defer db.Close()
+
+	rows, err := db.Query("SELECT id, nickname FROM users WHERE id != ?", userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var usersList []datamodels.User
+	//Store the data in a slice
+	for rows.Next() {
+		var user datamodels.User
+		err = rows.Scan(&user.ID, &user.Nickname)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		usersList = append(usersList, user)
+	}
+
+	return usersList, nil
+}
