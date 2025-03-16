@@ -56,6 +56,31 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	// Register the client connection with the userID
 	clients[userID] = ws
+
+	// here i will add the code responsible for sending invition when user logs in
+	// After validating session and registering user
+go func() {
+	pendingInvites, err := queries.GetPendingInvitations(userID)
+	if err != nil {
+		log.Printf("Error fetching pending invites for user %s: %v", userID, err)
+		return
+	}
+	for _, invite := range pendingInvites {
+		
+		inviteMsg := SocketMessage{
+			Type:    "invite",
+			Content: fmt.Sprintf("You have been invited to group %d", invite.GroupID), 
+			Invite:  invite,
+		}
+		err := ws.WriteJSON(inviteMsg)
+		if err != nil {
+			log.Printf("Error sending stored invitation to user %s: %v", userID, err)
+		}
+	}
+}()
+//--------------------------
+
+	// end of test 
 	mu.Unlock()
 	msg := SocketMessage{}
 	userDetails := UserDetails{}
@@ -104,7 +129,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 	
 }
-
+// this function to invite users when they are online 
 func InvitePeople(msg SocketMessage, w http.ResponseWriter){
 	fmt.Println("Invitation function triggered")
 			mu.Lock()
@@ -124,11 +149,12 @@ func InvitePeople(msg SocketMessage, w http.ResponseWriter){
 					}
 			} else {
 				log.Printf("User %s is not online", recipientID)
+				
 			}
 			mu.Unlock()
 }
 
-
+/////------------------
 
 // Sends msgs
 func HandleMessages() {

@@ -280,3 +280,46 @@ func GroupsToRequest(userID string )( []datamodels.Group, error){
 
 	return groups, nil
 }
+
+
+func GetPendingInvitations(userID string)([]datamodels.Invite, error){
+	var invites []datamodels.Invite
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return  nil, err
+	}
+	defer db.Close()
+	query := `
+		SELECT group_id, user_id, invited_by 
+		FROM group_members 
+		WHERE user_id = ? AND status = 'pending'`
+
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		log.Println("Error querying pending invites:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var invite datamodels.Invite
+		if err := rows.Scan(&invite.GroupID, &invite.UserID, &invite.InvitedBy); err != nil {
+			log.Println("Error scanning invite row:", err)
+			return nil, err
+		}
+		invites = append(invites, invite)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over invite rows:", err)
+		return nil, err
+	}
+
+	return invites, nil
+
+	
+
+
+}
