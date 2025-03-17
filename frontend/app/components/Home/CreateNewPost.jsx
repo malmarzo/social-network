@@ -21,6 +21,9 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
   const { userID } = useAuth();
 
   useEffect(() => {
+    if (isGroup) {
+      return;
+    }
     async function getFollowers() {
       setFetchError("");
       try {

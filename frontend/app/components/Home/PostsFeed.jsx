@@ -5,7 +5,7 @@ import CreateNewPost from "./CreateNewPost";
 import Link from "next/link";
 import PostActionButtons from "./PostActionButtons";
 
-const PostsFeed = ({isGroup, groupID}) => {
+const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
   const [activeTab, setActiveTab] = useState("latest");
   const [createNewPost, setCreateNewPost] = useState(false);
   const [posts, setPosts] = useState([]);
@@ -28,10 +28,16 @@ const PostsFeed = ({isGroup, groupID}) => {
           return;
         }
         response = await invokeAPI(`groupPosts/${groupID}`, null, "GET");
+      } else if (isProfile) {
+        if (!profileID) {
+          setError("Failed to fetch posts");
+          return;
+        }
+        response = await invokeAPI(`profilePosts/${profileID}`, null, "GET");
       } else {
         const queryParams = {
           tab: activeTab,
-        }
+        };
         response = await invokeAPI("posts", null, "GET", null, queryParams);
       }
       if (response.code === 200) {
@@ -52,11 +58,17 @@ const PostsFeed = ({isGroup, groupID}) => {
   }, [fetchPosts]);
 
   const refreshPosts = useCallback(() => {
-    setActiveTab("latest")
+    setActiveTab("latest");
     fetchPosts();
   }, [fetchPosts]);
 
-
+  // Show create post button based on context
+  const shouldShowCreatePost = () => {
+    if (!isGroup && !isProfile) return true; // Home page
+    if (isGroup) return true; // Group page
+    if (isProfile && myProfile) return true; // My profile page
+    return false;
+  };
 
   if (loading) {
     return <div className={styles.loading}>Loading posts...</div>;
@@ -68,35 +80,40 @@ const PostsFeed = ({isGroup, groupID}) => {
 
   return (
     <div className={styles.feedContainer}>
-      <h1 className={styles.title}>Posts</h1>
+      <h1 className={styles.title}>
+        {" "}
+        {isGroup || isProfile ? "Activity" : "Posts"}
+      </h1>
       <nav className={styles.toggleNav}>
-      {!isGroup && (
-        <>
-          <div className={styles.toggleButtons}>
-            {toggles.map((toggle) => (
-              <button
-                key={toggle.id}
-                className={`${styles.toggleButton} ${
-                  activeTab === toggle.id ? styles.activeToggle : ""
-                }`}
-                onClick={() => setActiveTab(toggle.id)}
-              >
-                {toggle.label}
-              </button>
-            ))}
-          </div>
+        {!isGroup && !isProfile && (
+          <>
+            <div className={styles.toggleButtons}>
+              {toggles.map((toggle) => (
+                <button
+                  key={toggle.id}
+                  className={`${styles.toggleButton} ${
+                    activeTab === toggle.id ? styles.activeToggle : ""
+                  }`}
+                  onClick={() => setActiveTab(toggle.id)}
+                >
+                  {toggle.label}
+                </button>
+              ))}
+            </div>
           </>
-          )}
+        )}
+        {shouldShowCreatePost() && (
           <button
             className={styles.createPostButton}
-            onClick={() => setCreateNewPost(true)} // Add click handler
+            onClick={() => setCreateNewPost(true)}
           >
             Create Post
           </button>
+        )}
       </nav>
 
-      {/* Keep only one instance of CreateNewPost */}
-      {createNewPost && (
+      {/* Modal rendering condition */}
+      {createNewPost && shouldShowCreatePost() && (
         <CreateNewPost
           onClose={() => setCreateNewPost(false)}
           onPostCreated={refreshPosts}
@@ -132,7 +149,7 @@ const PostsFeed = ({isGroup, groupID}) => {
                 <p className={styles.postCaption}>{post.content}</p>
               </div>
 
-              <PostActionButtons postID={post.post_id} isGroup={isGroup}/>
+              <PostActionButtons postID={post.post_id} isGroup={isGroup} />
             </div>
           ))}
       </div>

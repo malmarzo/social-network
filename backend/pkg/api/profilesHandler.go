@@ -254,3 +254,54 @@ func UpdateProfilePrivacy(w http.ResponseWriter, r *http.Request) {
 
 	utils.SendResponse(w, datamodels.Response{Code: 200, Status: "Success"})
 }
+
+func ProfileStatsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		return
+	}
+
+	//The sent user/profile id
+	profileID := pathParts[len(pathParts)-1]
+	if profileID == "" {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		return
+	}
+
+	validUser, err := queries.DoesUserExists(profileID)
+	if err != nil {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+		return
+	}
+	if !validUser {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusNotFound, Status: "Failed", ErrorMsg: "user does not exist"})
+		return
+	}
+
+	stats := datamodels.ProfileCard{}
+
+	numOfPosts, err := queries.GetNumOfPosts(profileID)
+	if err != nil {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+		return
+	}
+
+	numOfFollowers, numOfFollowing, err := queries.GetNumofFollowersAndFollowing(profileID)
+	if err != nil {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+		return
+	}
+
+	stats.NumOfPosts = numOfPosts
+	stats.NumOfFollowers = numOfFollowers
+	stats.NumOfFollowing = numOfFollowing
+
+	utils.SendResponse(w, datamodels.Response{Code: 200, Status: "Success", Data: stats})
+
+}

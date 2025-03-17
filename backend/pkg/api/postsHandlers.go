@@ -236,3 +236,82 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		Data:   posts,
 	})
 }
+
+func ProfilePostsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := queries.ValidateSession(cookie.Value)
+	if err != nil || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		return
+	}
+
+	//The sent user/profile id
+	profileID := pathParts[len(pathParts)-1]
+	if profileID == "" {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		return
+	}
+
+	validUser, err := queries.DoesUserExists(profileID)
+	if err != nil {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+		return
+	}
+	if !validUser {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusNotFound, Status: "Failed", ErrorMsg: "user does not exist"})
+		return
+	}
+
+	myProfile := userID == profileID
+
+	posts, err := queries.GetProfilePosts(profileID, userID, myProfile)
+	if err != nil {
+		log.Println("Failed to get posts:", err)
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusInternalServerError,
+			Status:   "Failed",
+			ErrorMsg: "Failed to get posts",
+		})
+		return
+	}
+
+	//reverse the posts array
+	for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
+		posts[i], posts[j] = posts[j], posts[i]
+	}
+
+	// Convert images to base64 for each post
+	for i := range posts {
+		if posts[i].ImageDataURL != nil {
+			// Convert the image byte array to base64 string
+			imageBase64 := base64.StdEncoding.EncodeToString(posts[i].ImageDataURL)
+			// Update the post with base64 string instead of byte array
+			posts[i].PostImage = imageBase64
+			// Clear the byte array as it's no longer needed
+			posts[i].ImageDataURL = nil
+		}
+	}
+
+	utils.SendResponse(w, datamodels.Response{
+		Code:   http.StatusOK,
+		Status: "Success",
+		Data:   posts,
+	})
+
+}

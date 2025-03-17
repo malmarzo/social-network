@@ -32,6 +32,8 @@ func main() {
 	http.HandleFunc("/explore", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ExploreHandler)))
 	http.HandleFunc("/profile/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.UsersProfileHandler)))
 	http.HandleFunc("/updatePrivacy", middleware.CorsMiddleware(middleware.AuthMiddleware(api.UpdateProfilePrivacy)))
+	http.HandleFunc("/profilePosts/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ProfilePostsHandler)))
+	http.HandleFunc("/profileStats/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ProfileStatsHandler)))
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
 	http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))
 

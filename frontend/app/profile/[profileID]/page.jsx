@@ -8,6 +8,8 @@ import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/outline";
 import PostsFeed from "@/app/components/Home/PostsFeed";
 import Explore from "@/app/components/Home/Explore";
 import { useAlert } from "@/app/components/Alerts/PopUp";
+import { useWebSocket } from "@/context/Websocket";
+import { set } from "lodash";
 
 const ProfilePage = () => {
   const { showAlert } = useAlert();
@@ -37,10 +39,37 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const { addMessageHandler } = useWebSocket();
+
+  addMessageHandler("new_post", async () => {
+    await fetchStats();
+  });
+
   useEffect(() => {
     fetchUserData();
     // fetchUserPosts();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await invokeAPI(
+        `profileStats/${profileID}`,
+        null,
+        "GET"
+      );
+      if (response.code === 200) {
+        setUser((prev) => ({
+          ...prev,
+          num_of_followers: response.data.num_of_followers,
+          num_of_following: response.data.num_of_following,
+          num_of_posts: response.data.num_of_posts,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+      setError("Failed to fetch stats");
+    }
+  };
 
   const fetchUserData = async () => {
     console.log(profileID);
@@ -226,7 +255,11 @@ const ProfilePage = () => {
         </div>
       </div>
       <div className={styles.postsFeed}>
-        <PostsFeed />
+        <PostsFeed
+          isProfile={true}
+          profileID={profileID}
+          myProfile={isMyProfile}
+        />
       </div>
       <div className={styles.followersFollowing}>
         {" "}
