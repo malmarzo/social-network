@@ -2,6 +2,8 @@ package queries
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"fmt"
 	"log"
 	"mime"
 	"os"
@@ -169,4 +171,169 @@ func GetUserList(userID string) ([]datamodels.User, error) {
 	}
 
 	return usersList, nil
+}
+
+func IsProfilePrivate(userID string) (bool, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	defer db.Close()
+	var isPrivate bool
+	err = db.QueryRow("SELECT is_private FROM users WHERE id = ?", userID).Scan(&isPrivate)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return isPrivate, nil
+}
+
+func GetProfileDetails(profileID string) (datamodels.Profile, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return datamodels.Profile{}, err
+	}
+	defer db.Close()
+
+	var profile datamodels.Profile
+	err = db.QueryRow("SELECT id, email, first_name, last_name, date_of_birth, avatar, nickname, about_me, is_private FROM users WHERE id = ?", profileID).Scan(
+		&profile.UserID,
+		&profile.UserEmail,
+		&profile.UserFirstName,
+		&profile.UserLastName,
+		&profile.UserDOB,
+		&profile.UserAvatar,
+		&profile.UserNickname,
+		&profile.UserAbout,
+		&profile.IsPrivate,
+	)
+
+	if err != nil {
+		log.Println(err)
+		return datamodels.Profile{}, err
+	}
+
+	if profile.UserAvatar != "" {
+		avatar, mimeType, err := GetUserAvatar(profileID)
+		if err != nil {
+			log.Println(err)
+			return datamodels.Profile{}, err
+		}
+		// Convert the avatar byte array to a base64 string
+		avatarBase64 := base64.StdEncoding.EncodeToString(avatar)
+		avatarDataURL := avatarBase64
+
+		profile.UserAvatarURL = avatarDataURL
+		profile.UserAvatarMimeType = mimeType
+	}
+
+	return profile, nil
+}
+
+// Ued if the profile is private and not following
+func GetLimitedProfileDetails(profileID string) (datamodels.Profile, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return datamodels.Profile{}, err
+	}
+	defer db.Close()
+
+	var profile datamodels.Profile
+	err = db.QueryRow("SELECT id, avatar, nickname, is_private FROM users WHERE id = ?", profileID).Scan(
+		&profile.UserID,
+		&profile.UserEmail,
+		&profile.UserFirstName,
+		&profile.UserLastName,
+		&profile.UserDOB,
+		&profile.UserAvatar,
+		&profile.UserNickname,
+		&profile.UserAbout,
+		&profile.IsPrivate,
+	)
+
+	if err != nil {
+		log.Println(err)
+		return datamodels.Profile{}, err
+	}
+
+	if profile.UserAvatar != "" {
+		avatar, mimeType, err := GetUserAvatar(profileID)
+		if err != nil {
+			log.Println(err)
+			return datamodels.Profile{}, err
+		}
+		// Convert the avatar byte array to a base64 string
+		avatarBase64 := base64.StdEncoding.EncodeToString(avatar)
+		avatarDataURL := avatarBase64
+
+		profile.UserAvatarURL = avatarDataURL
+		profile.UserAvatarMimeType = mimeType
+	}
+
+	return profile, nil
+}
+
+func DoesUserExists(userID string) (bool, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	defer db.Close()
+
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", userID).Scan(&count)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func UpdateProfilePrivacy(userID string, privacy bool) error {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer db.Close()
+
+	privacyInt := 0
+	if privacy {
+		privacyInt = 1
+	}
+
+	stmt, err := db.Prepare("UPDATE users SET is_private = ? WHERE id = ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(privacyInt, userID)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no user found with ID: %s", userID)
+	}
+
+	return nil
 }

@@ -5,6 +5,11 @@ import { AuthProvider } from "@/context/AuthContext";
 import Header from "./components/Headers/Header";
 import WebsocketProvider from "@/context/Websocket";
 import UserNotifier from "./components/Alerts/UserNotifier";
+import {
+  AlertProvider,
+  ConfirmAction,
+  Notification,
+} from "./components/Alerts/PopUp";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +30,13 @@ export default function RootLayout({ children }) {
         <div className="main-container">
           <AuthProvider>
             <WebsocketProvider>
-              <Header />
-              <UserNotifier />
-              {children}
+              <AlertProvider>
+                <Header />
+                <UserNotifier />
+                <ConfirmAction />
+                <Notification />
+                {children}
+              </AlertProvider>
             </WebsocketProvider>
           </AuthProvider>
         </div>

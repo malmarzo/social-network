@@ -90,3 +90,29 @@ type ExploreLists struct {
 	UsersList  []User  `json:"users_list"`
 	GroupsList []Group `json:"groups_list"`
 }
+
+type Profile struct {
+	UserID             string `json:"id"`
+	UserEmail          string `json:"email"`
+	UserNickname       string `json:"nickname"`
+	UserFirstName      string `json:"first_name"`
+	UserLastName       string `json:"last_name"`
+	UserDOB            string `json:"dob"`
+	UserAvatar         string `json:"avatar"`
+	UserAvatarMimeType string `json:"avatar_mime_type"`
+	UserAbout          string `json:"about"`
+	IsPrivate          bool   `json:"is_private"`
+	UserCreatedAt      string `json:"created_at"`
+	IsMyProfile        bool   `json:"is_my_profile"`
+	IsFollowingMe      bool   `json:"is_following_me"`
+	IsFollowingHim     bool   `json:"is_following_him"`
+	IsRequestSent      bool   `json:"is_request_sent"`
+	UserAvatarURL      string `json:"avatar_url"`
+	NumOfFollowers     int    `json:"num_of_followers"`
+	NumOfFollowing     int    `json:"num_of_following"`
+	NumOfPosts         int    `json:"num_of_posts"`
+}
+
+type PrivacyUpdateRequest struct {
+	IsPrivate bool `json:"is_private"`
+}

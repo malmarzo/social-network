@@ -56,3 +56,43 @@ func GetFollowersList(userID string) ([]datamodels.User, error) {
 
 	return followersList, nil
 }
+
+// Checks if two users follow each other
+func CheckFollowStatus(followerID string, followingID string) (bool, error) {
+	if followerID == followingID {
+		return true, nil
+	}
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return false, err
+	}
+
+	defer db.Close()
+
+	var followStatus bool
+	err = db.QueryRow("SELECT COUNT(*) FROM followers WHERE follower_id = ? AND following_id = ? AND status = 'accepted'", followerID, followingID).Scan(&followStatus)
+	if err != nil {
+		return false, err
+	}
+
+	return followStatus, nil
+}
+
+func CheckFollowRequest(followerID string, followingID string) (bool, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return false, err
+	}
+
+	defer db.Close()
+
+	var followStatus bool
+	err = db.QueryRow("SELECT COUNT(*) FROM followers WHERE follower_id = ? AND following_id = ? AND status = 'pending'", followerID, followingID).Scan(&followStatus)
+	if err != nil {
+		return false, err
+	}
+
+	return followStatus, nil
+}
