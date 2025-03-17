@@ -10,6 +10,7 @@ import Explore from "@/app/components/Home/Explore";
 import { useAlert } from "@/app/components/Alerts/PopUp";
 import { useWebSocket } from "@/context/Websocket";
 import { set } from "lodash";
+import FollowersAndFollowingList from "@/app/components/Profiles/FollowersAndFollowingList";
 
 const ProfilePage = () => {
   const { showAlert } = useAlert();
@@ -30,11 +31,9 @@ const ProfilePage = () => {
     num_of_following: 0,
     num_of_posts: 0,
   });
-  const [posts, setPosts] = useState([]);
   const [isMyProfile, setIsMyProfile] = useState(false);
   const [followedByMe, setFollowedByMe] = useState(false);
   const [followsMe, setFollowsMe] = useState(false);
-  const [imageSrc, setImageSrc] = useState("/imgs/defaultAvatar.jpg");
   const [isRequestSent, setIsRequestSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -79,7 +78,7 @@ const ProfilePage = () => {
         console.log(response.data);
         setUser(response.data);
         setIsMyProfile(response.data.is_my_profile);
-        setFollowedByMe(response.data.followed_by_me);
+        setFollowedByMe(response.data.is_following_him);
         setFollowsMe(response.data.is_following_me);
         setIsRequestSent(response.data.is_request_sent);
       } else if (
@@ -92,17 +91,6 @@ const ProfilePage = () => {
       setError("Failed to load profile");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUserPosts = async () => {
-    try {
-      const response = await invokeAPI(`posts/${profileID}`, null, "GET");
-      if (response.code === 200) {
-        setPosts(response.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch posts:", error);
     }
   };
 
@@ -143,19 +131,126 @@ const ProfilePage = () => {
   };
 
   const handleFollow = async () => {
-    try {
-      const response = await invokeAPI(`follow/${profileID}`, {}, "POST");
-      if (response.code === 200) {
-        setFollowedByMe(!followedByMe);
-        setUser((prev) => ({
-          ...prev,
-          num_followers: followedByMe
-            ? prev.num_followers - 1
-            : prev.num_followers + 1,
-        }));
+    if (isRequestSent) {
+      showAlert({
+        type: "confirm",
+        message: "Are you sure you want to cancel the follow request?",
+        action: async () => {
+          try {
+            const response = await invokeAPI(
+              `followRequest/cancel/${profileID}`,
+              null,
+              "POST"
+            );
+            if (response.code === 200) {
+              setIsRequestSent(false);
+              showAlert({
+                type: "success",
+                message: "Request cancelled successfully",
+              });
+            } else {
+              showAlert({
+                type: "error",
+                message: response.error_msg || "Failed to cancel request",
+              });
+            }
+          } catch (error) {
+            console.error("Failed to cancel request:", error);
+            showAlert({
+              type: "error",
+              message: "Failed to cancel request",
+            });
+          }
+        },
+      });
+    } else if (followedByMe) {
+      showAlert({
+        type: "confirm",
+        message: `Are you sure you want to unfollow @${user.nickname}?`,
+        action: async () => {
+          try {
+            const response = await invokeAPI(
+              `follow/${profileID}`,
+              {},
+              "DELETE"
+            );
+            if (response.code === 200) {
+              setFollowedByMe(false);
+              setUser((prev) => ({
+                ...prev,
+                num_followers: prev.num_followers - 1,
+              }));
+              showAlert({
+                type: "success",
+                message: `Unfollowed @${user.nickname}`,
+              });
+            } else {
+              showAlert({
+                type: "error",
+                message: response.error_msg || "Failed to unfollow user",
+              });
+            }
+          } catch (error) {
+            console.error("Failed to unfollow:", error);
+            showAlert({
+              type: "error",
+              message: "Failed to unfollow user",
+            });
+          }
+        },
+      });
+    } else if (!followedByMe && user.is_private) {
+      try {
+        const response = await invokeAPI(
+          `followRequest/send/${profileID}`,
+          {},
+          "POST"
+        );
+        if (response.code === 200) {
+          setIsRequestSent(true);
+          showAlert({
+            type: "success",
+            message: "Request sent successfully",
+          });
+        } else {
+          showAlert({
+            type: "error",
+            message: response.error_msg || "Failed to send request",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to send request:", error);
+        showAlert({
+          type: "error",
+          message: "Failed to send follow request",
+        });
       }
-    } catch (error) {
-      console.error("Failed to follow/unfollow:", error);
+    } else {
+      try {
+        const response = await invokeAPI(`follow/${profileID}`, {}, "POST");
+        if (response.code === 200) {
+          setFollowedByMe(true);
+          setUser((prev) => ({
+            ...prev,
+            num_followers: prev.num_followers + 1,
+          }));
+          showAlert({
+            type: "success",
+            message: `Following @${user.nickname}`,
+          });
+        } else {
+          showAlert({
+            type: "error",
+            message: response.error_msg || "Failed to follow user",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to follow:", error);
+        showAlert({
+          type: "error",
+          message: "Failed to follow user",
+        });
+      }
     }
   };
 
@@ -190,20 +285,34 @@ const ProfilePage = () => {
                     <LockOpenIcon className={styles.lockIcon} />
                   )}
                 </div>
-                <h2 className={styles.name}>
-                  {user.first_name} {user.last_name}
-                </h2>
+                {(!user.is_private || followedByMe || isMyProfile) && (
+                  <h2 className={styles.name}>
+                    {user.first_name} {user.last_name}
+                  </h2>
+                )}
               </div>
             </div>
 
-            <div className={styles.details}>
-              <p>{user.email}</p>
-              <p>{user.dob}</p>
-            </div>
-            {user.aboutMe && (
-              <div className={styles.aboutMe}>
-                <p>{user.aboutMe}</p>
-              </div>
+            {(!user.is_private || followedByMe || isMyProfile) && (
+              <>
+                <div className={styles.details}>
+                  <p className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Email:</span>{" "}
+                    {user.email}
+                  </p>
+                  <p className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Date of Birth:</span>{" "}
+                    {user.dob}
+                  </p>
+                </div>
+
+                {user.aboutMe && (
+                  <div className={styles.aboutMe}>
+                    <h3 className={styles.aboutMeTitle}>About Me</h3>
+                    <p>{user.aboutMe}</p>
+                  </div>
+                )}
+              </>
             )}
 
             <div className={styles.stats}>
@@ -225,32 +334,43 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            {isMyProfile ? (
-              <button
-                onClick={togglePrivacy}
-                className={`${styles.actionButton} ${styles.editButton}`}
-              >
-                Change Privacy
-              </button>
-            ) : (
-              <button
-                onClick={handleFollow}
-                className={`${styles.actionButton} ${
-                  isRequestSent
-                    ? styles.requestedButton
-                    : followedByMe
-                    ? styles.unfollowButton
-                    : styles.followButton
-                }`}
-                disabled={isRequestSent}
-              >
-                {isRequestSent
-                  ? "Requested"
-                  : followedByMe
-                  ? "Following"
-                  : "Follow"}
-              </button>
-            )}
+            <div className={styles.actions}>
+              {isMyProfile ? (
+                <button
+                  onClick={togglePrivacy}
+                  className={`${styles.actionButton} ${styles.editButton}`}
+                >
+                  Change Privacy
+                </button>
+              ) : (
+                <div className={styles.actionButtons}>
+                  <button
+                    onClick={handleFollow}
+                    className={`${styles.actionButton} ${
+                      isRequestSent
+                        ? styles.requestedButton
+                        : followedByMe
+                        ? styles.unfollowButton
+                        : styles.followButton
+                    }`}
+                  >
+                    {isRequestSent
+                      ? "Requested"
+                      : followedByMe
+                      ? "Following"
+                      : "Follow"}
+                  </button>
+                  {(followedByMe || followsMe) && (
+                    <button
+                      onClick={() => router.push(`/messages/${profileID}`)}
+                      className={`${styles.actionButton} ${styles.messageButton}`}
+                    >
+                      Message
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -263,7 +383,10 @@ const ProfilePage = () => {
       </div>
       <div className={styles.followersFollowing}>
         {" "}
-        <Explore />{" "}
+        <FollowersAndFollowingList
+          profileID={profileID}
+          myProfile={isMyProfile}
+        />{" "}
       </div>
     </div>
   );

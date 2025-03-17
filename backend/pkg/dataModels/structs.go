@@ -116,3 +116,19 @@ type Profile struct {
 type PrivacyUpdateRequest struct {
 	IsPrivate bool `json:"is_private"`
 }
+
+
+type FollowRequest struct {
+	RequestID string `json:"request_id"`
+	UserID    string `json:"user_id"`
+	UserNickname string `json:"nickname"`
+}
+
+type FollowersFollowingRequests struct {
+	FollowersList []User `json:"followers_list"`
+	FollowingList []User `json:"following_list"`
+	RequestsList  []FollowRequest `json:"requests_list"`
+}
+
+
+

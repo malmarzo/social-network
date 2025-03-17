@@ -247,13 +247,8 @@ func GetLimitedProfileDetails(profileID string) (datamodels.Profile, error) {
 	var profile datamodels.Profile
 	err = db.QueryRow("SELECT id, avatar, nickname, is_private FROM users WHERE id = ?", profileID).Scan(
 		&profile.UserID,
-		&profile.UserEmail,
-		&profile.UserFirstName,
-		&profile.UserLastName,
-		&profile.UserDOB,
 		&profile.UserAvatar,
 		&profile.UserNickname,
-		&profile.UserAbout,
 		&profile.IsPrivate,
 	)
 

@@ -252,6 +252,14 @@ func UpdateProfilePrivacy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if privacy.IsPrivate == false {
+		err = queries.AcceptAllFollowRequests(userID)
+		if err != nil {
+			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+			return
+		}
+	}
+
 	utils.SendResponse(w, datamodels.Response{Code: 200, Status: "Success"})
 }
 

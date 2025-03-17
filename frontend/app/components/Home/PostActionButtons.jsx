@@ -39,7 +39,6 @@ const PostActionButtons = ({ postID, isGroup }) => {
         response = await invokeAPI(`postInteractions/${postID}`, {}, "GET");
       }
       if (response.code === 200) {
-        console.log(response);
         setLikes(response.data.likes);
         setDislikes(response.data.dislikes);
         setComments(response.data.comments);
@@ -170,7 +169,6 @@ const PostActionButtons = ({ postID, isGroup }) => {
       try {
         const response = await invokeAPI(`comments/${postID}`, {}, "GET");
         if (response.code === 200) {
-          console.log(response);
           setCommentsList(response.data);
         }
       } catch (error) {

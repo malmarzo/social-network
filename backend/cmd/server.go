@@ -34,6 +34,12 @@ func main() {
 	http.HandleFunc("/updatePrivacy", middleware.CorsMiddleware(middleware.AuthMiddleware(api.UpdateProfilePrivacy)))
 	http.HandleFunc("/profilePosts/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ProfilePostsHandler)))
 	http.HandleFunc("/profileStats/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ProfileStatsHandler)))
+	http.HandleFunc("/profileUsersLists/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetFollowersFollowingRequests)))
+	http.HandleFunc("/followRequest/send/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.SendFollowRequest)))
+	http.HandleFunc("/followRequest/cancel/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CancelFollowRequest)))
+	http.HandleFunc("/followRequest/accept/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.AcceptFollowRequest)))
+	http.HandleFunc("/followRequest/reject/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.RejectFollowRequest)))
+	http.HandleFunc("/follow/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.FollowUser))) //Handle POST and DELETE
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
 	http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))
 

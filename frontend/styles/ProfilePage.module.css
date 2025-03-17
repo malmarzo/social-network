@@ -108,7 +108,7 @@
 }
 
 .requestedButton {
-  @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+  @apply bg-gray-100 text-gray-500;
 }
 
 .postsFeed {
@@ -208,4 +208,14 @@
   .followersFollowing {
     display: none;
   }
+}
+
+
+.actionButtons {
+  @apply flex gap-2;
+}
+
+.messageButton {
+  @apply bg-gray-100 text-gray-800 hover:bg-gray-200 
+    transition-colors duration-200;
 }

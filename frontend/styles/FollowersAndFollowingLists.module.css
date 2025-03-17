@@ -1,0 +1,75 @@
+.container {
+  @apply flex flex-col gap-4;
+}
+
+.toggleContainer {
+  @apply flex gap-2 mb-4;
+}
+
+.active {
+  @apply px-4 py-2 bg-indigo-600 text-white rounded-lg 
+    transition-all duration-200 font-medium
+    hover:bg-indigo-700;
+}
+
+.inactive {
+  @apply px-4 py-2 bg-gray-100 text-gray-600 rounded-lg 
+    transition-all duration-200 font-medium
+    hover:bg-gray-200;
+}
+
+.searchInput {
+  @apply w-full mb-4 px-4 py-2 rounded-lg border border-gray-200
+    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+    transition-all duration-200;
+}
+
+.usersList {
+  @apply space-y-2;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.userCard {
+  @apply flex items-center gap-3 p-4 bg-white rounded-xl
+    border border-gray-100 shadow-sm hover:shadow-md
+    transition-all duration-200;
+}
+
+.userImage {
+  @apply w-12 h-12 rounded-full object-cover;
+}
+
+.userInfo {
+  @apply flex flex-grow items-center justify-between;
+}
+
+.userName {
+  @apply text-gray-800 font-medium;
+}
+
+.requestActions {
+  @apply flex gap-2;
+}
+
+.acceptButton {
+  @apply px-3 py-1 bg-green-500 text-white rounded-lg
+    hover:bg-green-600 transition-colors duration-200;
+}
+
+.rejectButton {
+  @apply px-3 py-1 bg-red-500 text-white rounded-lg
+    hover:bg-red-600 transition-colors duration-200;
+}
+
+.error {
+  @apply text-red-500 text-center;
+}
+
+.emptyMessage {
+  @apply text-gray-500 text-center py-4;
+}
+
+.loaderContainer {
+  @apply space-y-2;
+}
