@@ -4,7 +4,11 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Header from "./components/Headers/Header";
 import WebsocketProvider from "@/context/Websocket";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { ChatPageProvider } from "@/context/ChatPageContext";
 import UserNotifier from "./components/Alerts/UserNotifier";
+import ChatNotifier from "./components/chat/ChatNotifier";
+import { usePathname } from 'next/navigation';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +21,10 @@ const geistMono = Geist_Mono({
 });
 
 export default function RootLayout({ children }) {
+  // Use pathname to determine if we're on the chat page
+  const pathname = usePathname();
+  const isChatPage = pathname === '/chat';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -25,9 +33,15 @@ export default function RootLayout({ children }) {
         <div className="main-container">
           <AuthProvider>
             <WebsocketProvider>
-              <Header />
-              <UserNotifier />
-              {children}
+              <NotificationProvider>
+                <ChatPageProvider>
+                  {/* Only render the header if we're not on the chat page */}
+                  {!isChatPage && <Header />}
+                  <UserNotifier />
+                  <ChatNotifier />
+                  {children}
+                </ChatPageProvider>
+              </NotificationProvider>
             </WebsocketProvider>
           </AuthProvider>
         </div>
