@@ -258,7 +258,13 @@ const ProfilePage = () => {
   if (error) return <div className={styles.error}>{error}</div>;
 
   return (
-    <div className={styles.container}>
+    <div
+      className={`${styles.container} ${
+        user.is_private && !followedByMe && !isMyProfile
+          ? styles.privateContainer
+          : ""
+      }`}
+    >
       <div className={styles.profileDetails}>
         <div className={styles.profileCard}>
           <div className={styles.profileImage}>
@@ -374,20 +380,25 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-      <div className={styles.postsFeed}>
-        <PostsFeed
-          isProfile={true}
-          profileID={profileID}
-          myProfile={isMyProfile}
-        />
-      </div>
-      <div className={styles.followersFollowing}>
-        {" "}
-        <FollowersAndFollowingList
-          profileID={profileID}
-          myProfile={isMyProfile}
-        />{" "}
-      </div>
+      {(!user.is_private || isMyProfile || (user.is_private && followedByMe)) && (
+          <>
+            <div className={styles.postsFeed}>
+              <PostsFeed
+                isProfile={true}
+                profileID={profileID}
+                myProfile={isMyProfile}
+              />
+            </div>
+            <div className={styles.followersFollowing}>
+              {" "}
+              <FollowersAndFollowingList
+                profileID={profileID}
+              myProfile={isMyProfile}
+              isPrivate={user.is_private}
+              />{" "}
+            </div>
+          </>
+        )}
     </div>
   );
 };

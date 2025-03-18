@@ -6,7 +6,7 @@ import styles from "@/styles/Explore.module.css";
 import UserLoader from "../loaders/UserLoader";
 import { useAlert } from "@/app/components/Alerts/PopUp";
 
-const FollowersAndFollowingList = ({ profileID, myProfile }) => {
+const FollowersAndFollowingList = ({ profileID, myProfile, isPrivate }) => {
   const [toggleType, setToggleType] = useState("followers");
   const [followersList, setFollowersList] = useState([]);
   const [followingList, setFollowingList] = useState([]);
@@ -144,7 +144,7 @@ const FollowersAndFollowingList = ({ profileID, myProfile }) => {
         >
           Following
         </button>
-        {myProfile && (
+        {myProfile && isPrivate && (
           <button
             onClick={() => setToggleType("requests")}
             className={
