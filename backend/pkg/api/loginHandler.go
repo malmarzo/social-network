@@ -38,7 +38,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Generate session ID
-			sessionID := utils.GenerateSessionID()
+			sessionID := utils.GenerateUUID()
 
 			//Set time to never expire
 			expirationTime := time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).Format("2006-01-02 15:04:05")
