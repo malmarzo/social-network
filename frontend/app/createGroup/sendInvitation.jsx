@@ -3,17 +3,6 @@ import { invokeAPI } from "@/utils/invokeAPI";
 import { useWebSocket } from "@/context/Websocket";
 
 
-// export const sendInvitations = async (groupId, invitedBy, users) => {
-//     await Promise.all(
-//         users.map((userId) =>
-//             invokeAPI("groups/invite", {
-//                 group_id: groupId,
-//                 user_id: userId,
-//                 invited_by: invitedBy,
-//             }, "POST")
-//         )
-//     );
-// };
 
 export const sendInvitations = async (users, sendMessage, groupID,invitedBy) => {
     // const { sendMessage } = useWebSocket();
@@ -34,19 +23,3 @@ export const sendInvitations = async (users, sendMessage, groupID,invitedBy) => 
     });
 };
 
-
-// function sendInvitation(recipientId) {
-//     // let inviteMsg = {
-//     //     type: "invite",
-//     //     userDetails: { id: currentUserId, nickname: currentUserNickname },
-//     //     recipientId: recipientId,
-//     //     content: "You have been invited to join the group."
-//     // };
-
-//     const inviteMsg = {};
-//     inviteMsg.type = "invite";
-//     inviteMsg.recipientIds = recipientId;
-//     inviteMsg.content = "inviting someone";
-//     sendMessage(inviteMsg);
-    
-// }

@@ -43,6 +43,25 @@ func InviteUser(GroupID int, UserID, InvitedBy string)error{
 }
 
 
+func RequestToJoin(GroupID int, UserID string)error{
+	dbPath := getDBPath()
+	db, err1 := sql.Open("sqlite3", dbPath)
+	if err1 != nil {
+		log.Println(err1)
+		return err1
+	}
+	defer db.Close()
+    _, err2 := db.Exec("INSERT INTO group_members (group_id, user_id, invited_by, status) VALUES (?, ?,'undefined', 'pending')",GroupID, UserID)
+    if err2 != nil {
+        log.Println(err2)
+		return err2
+    }
+	return nil
+
+}
+
+
+
 func AcceptInvitation(GroupID int, UserID, InvitedBy string)error{
 	dbPath := getDBPath()
 	db, err1 := sql.Open("sqlite3", dbPath)
@@ -71,6 +90,46 @@ func DeclineInvitation(GroupID int, UserID, InvitedBy string)error{
 	defer db.Close()
     _, err2 := db.Exec("UPDATE group_members SET status = ? WHERE group_id = ? AND user_id = ? AND invited_by = ?",
         "declined", GroupID, UserID, InvitedBy,)
+    if err2 != nil {
+        log.Println(err2)
+		return err2
+    }
+	return nil
+}
+
+
+
+
+func AcceptRequest(GroupID int, UserID string, InvitedBy string) error {
+	dbPath := getDBPath()
+	db, err1 := sql.Open("sqlite3", dbPath)
+	if err1 != nil {
+		log.Println(err1)
+		return err1
+	}
+	defer db.Close()
+
+	_, err2 := db.Exec("UPDATE group_members SET status = ?, invited_by = ? WHERE group_id = ? AND user_id = ?",
+		"accepted", InvitedBy, GroupID, UserID) // Set invited_by to a provided value
+
+	if err2 != nil {
+		log.Println(err2)
+		return err2
+	}
+	return nil
+}
+
+
+func DeclineRequest(GroupID int, UserID string, InvitedBy string)error{
+	dbPath := getDBPath()
+	db, err1 := sql.Open("sqlite3", dbPath)
+	if err1 != nil {
+		log.Println(err1)
+		return err1
+	}
+	defer db.Close()
+    _, err2 := db.Exec("UPDATE group_members SET status = ?, invited_by = ? WHERE group_id = ? AND user_id = ?",
+		"declined", InvitedBy, GroupID, UserID)
     if err2 != nil {
         log.Println(err2)
 		return err2
@@ -247,7 +306,7 @@ func GroupsToRequest(userID string )( []datamodels.Group, error){
 	defer db.Close()
 
 	query := `
-		SELECT id, title 
+		SELECT id, title, creator_id
 		FROM groups
 		WHERE id NOT IN (
 			SELECT group_id FROM group_members 
@@ -266,7 +325,7 @@ func GroupsToRequest(userID string )( []datamodels.Group, error){
 	var groups []datamodels.Group
 	for rows.Next() {
 		var group datamodels.Group
-		if err := rows.Scan(&group.ID, &group.Title); err != nil {
+		if err := rows.Scan(&group.ID, &group.Title, &group.CreatorID ); err != nil {
 			log.Println("Error scanning row:", err)
 			return nil, err
 		}
@@ -319,7 +378,43 @@ func GetPendingInvitations(userID string)([]datamodels.Invite, error){
 
 	return invites, nil
 
+}
+
+
+
+
+func ListMyGroups(userID string) ([]datamodels.Group, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+		SELECT g.id, g.title, g.description, g.creator_id
+		FROM group_members gm
+		JOIN groups g ON gm.group_id = g.id
+		WHERE gm.user_id = ? AND gm.status = 'accepted'`
 	
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		return nil, err
+	}
+	defer rows.Close()
 
+	var groups []datamodels.Group
+	for rows.Next() {
+		var group datamodels.Group
+		err := rows.Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID)
+		if err != nil {
+			log.Println("Error scanning row:", err)
+			continue
+		}
+		groups = append(groups, group)
+	}
 
+	return groups, nil
 }

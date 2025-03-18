@@ -1,14 +1,14 @@
 import { invokeAPI } from "@/utils/invokeAPI";
 import { useState, useEffect } from "react";
 
-export default function DisplayInvitationCard({ invitation,onRespond }) {
+export default function DisplayRequestCard({ request,onRespond }) {
     const [showCard, setShowCard] = useState(false);
 
     useEffect(() => {
-        if (invitation) {
+        if (request) {
             setShowCard(true);
         }
-    }, [invitation]);
+    }, [request]);
 
     
     const handleResponse = async (accepted) => {
@@ -17,17 +17,14 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
         try {
             
             // Call the Golang API
-            console.log(invitation.invite.invited_by);
-          const response = await invokeAPI("groups/invitation", {
-            "type": "invite",
-                 "userDetails": {
-                 "username": "john_doe"
-                     },
-                    "content": "You have a new invitation!",
-                    "invite": {
-                     "group_id": invitation.invite.group_id,
-                     "user_id": invitation.invite.user_id,
-                     "invited_by": invitation.invite.invited_by,
+           // console.log(invitation.invite.invited_by);
+           console.log( request.request.group_id);
+           console.log(request.request.user_id);
+          const response = await invokeAPI("groups/request", {
+            "type": "request",
+                    "request": {
+                     "group_id": request.request.group_id,
+                     "user_id": request.request.user_id,
                      "accepted": accepted
                     }
                 }
@@ -44,11 +41,11 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
         }
     };
     
-    if (!showCard || !invitation) return null;
+    if (!showCard || !request) return null;
 
     return (
         <div style={styles.card}>
-            <p>{invitation.content}</p>
+            <p>{request.content}</p>
             <button style={styles.acceptBtn} onClick={() => handleResponse(true)}>Accept</button>
             <button style={styles.declineBtn} onClick={() => handleResponse(false)}>Decline</button>
         </div>

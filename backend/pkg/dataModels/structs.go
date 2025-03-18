@@ -42,3 +42,12 @@ type Invite struct {
 	InvitedBy string `json:"invited_by"`
 	Accepted bool `json:"accepted"`
 }
+
+
+type Request struct {
+	GroupID  int `json:"group_id"`
+	GroupCreator string `json:"group_creator"`
+	UserID 		 string  `json:"user_id"`
+	Accepted bool `json:"accepted"`
+}
+

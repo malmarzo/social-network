@@ -1,58 +1,58 @@
- package api
-
-import(
-	"net/http"
-	"encoding/json"
-	datamodels "social-network/pkg/dataModels"
-	"social-network/pkg/db/queries"
-	"social-network/pkg/utils"
+package api 
+import ("net/http"
+"fmt"
+"social-network/pkg/utils"
+datamodels "social-network/pkg/dataModels"
+"social-network/pkg/db/queries"
+"encoding/json"
 )
 
-type UserDetails struct {
-	ID       string `json:"id"`
-	Nickname string `json:"nickname"`
-}
-
-type SocketMessage struct {
+type RequestResponse struct {
 	Type        string      `json:"type"`
 	UserDetails UserDetails `json:"userDetails"`
-	Content     string      `json:"content"`
-	//InvitedUser string  `json:"invited_user"`
-	Invite 		datamodels.Invite  `json:"invite"`
+	Request     datamodels.Request  `json:"request"`
 }
-// Handle invitation response
-func InvitationResponseHandler(w http.ResponseWriter, r *http.Request) {
+
+
+func RequestResponseHandler(w http.ResponseWriter, r *http.Request){
+	fmt.Println("the request response function is functioning")
+
 	if r.Method != http.MethodPost {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusMethodNotAllowed, Status: "Failed", ErrorMsg: "Invalid request method"})
 		return
 	}
 
-	// Decode JSON request
-	var req SocketMessage
+	var req RequestResponse
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
 		return
 	}
-
-	if req.Invite.Accepted {
+	if req.Request.Accepted {
+		fmt.Println("accepted is triggered")
+		fmt.Println(req.Request.GroupID)
+		fmt.Println(req.Request.UserID)
 		// Accept: Update invitation status & add user to group
-		err:= queries.AcceptInvitation(req.Invite.GroupID,req.Invite.UserID,req.Invite.InvitedBy)
+		err:= queries.AcceptRequest(req.Request.GroupID,req.Request.UserID, "undefined")
 		if err != nil {
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
 			return
 		}
 
 	} else {
+		fmt.Println("declined is triggered")
+		
 		// Decline: Just update the invitation status
-		err:= queries.DeclineInvitation(req.Invite.GroupID,req.Invite.UserID,req.Invite.InvitedBy)
+		err:= queries.DeclineRequest(req.Request.GroupID,req.Request.UserID,"undefined")
 		if err != nil {
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
 			return
 		}
 	}
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Invitation response updated."})
+	json.NewEncoder(w).Encode(map[string]string{"message": "Request response updated."})
+	
+
 }
+
 

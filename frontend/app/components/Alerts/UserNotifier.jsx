@@ -1,12 +1,14 @@
 import { useWebSocket } from "@/context/Websocket";
 import  DisplayInvitationCard from "../../createGroup/invitationCard"
 import { useState, useEffect } from "react";
+import  DisplayRequestCard from "../../requestGroup/RequestCard"
 
 
 //Used this component in the layout.js file to notify users
 const UserNotifier = () => {
   const { addMessageHandler } = useWebSocket();
   const [invitation, setInvitation] = useState(null);
+  const [request, setRequest] = useState(null);
 
   
 
@@ -28,13 +30,23 @@ const UserNotifier = () => {
      
     });
 
+    addMessageHandler("request", (msg) => {
+      //alert(msg.content);
+      setRequest(msg);
+      
+     
+    });
+
     addMessageHandler("hello", (msg) => {
       alert(msg.content);
     });
   }, [addMessageHandler]);
 
   return (
+   
     <div>
+      {/* this id for the invitation card */}
+      <>
         {invitation && (
             <DisplayInvitationCard invitation={invitation} onRespond={(userId, accepted) => {
         console.log(`User ${userId} ${accepted ? "accepted" : "declined"} the invitation`);
@@ -42,7 +54,26 @@ const UserNotifier = () => {
         setInvitation(null); // Remove invitation after response
     }}  />
         )}
+        </>
+        
+        <>
+        {/* this for the request card  */}
+        {request && (
+          <DisplayRequestCard
+            request={request}
+            onRespond={(userId, accepted) => {
+              console.log(
+                `User ${userId} ${accepted ? "accepted" : "declined"} the request`
+              );
+              setRequest(null); // Remove request after response
+            }}
+          />
+        )}
+        
+        </>
     </div>
+
+    // this is for the request card
 );
 };
 

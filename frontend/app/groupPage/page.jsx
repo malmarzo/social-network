@@ -12,6 +12,7 @@ export default function GroupsPage() {
         <div>
         <AuthButton text="create group" href="/createGroup" />
         <AuthButton text="request group" href="/requestGroup" />
+        <AuthButton text="my groups" href="/myGroups" />
         </div>
        
     );

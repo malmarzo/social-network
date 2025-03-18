@@ -1,20 +1,24 @@
 "use client";
 import { useEffect, useState } from "react";
 import { invokeAPI } from "@/utils/invokeAPI";
+import { useWebSocket } from "@/context/Websocket";
 
 export default function GroupsToJoin() {
     console.log("Rendering GroupsToJoin component...");
     const [groups, setGroups] = useState([]);
+    const [currentUser, setCurrentUser] = useState([]);
+     const { sendMessage } = useWebSocket();
     
 
     // Fetch groups when component loads
     useEffect(() => {
         async function fetchGroups() {
             try {
-                const data = await invokeAPI("groups/request", null, "GET");
-                if (Array.isArray(data)) {
+                const data = await invokeAPI("groups/list", null, "GET");
+                if (Array.isArray(data.groups)) {
                     //return data;
-                    setGroups(data);
+                    setGroups(data.groups);
+                    setCurrentUser(data.current_user)
                 } else {
                     console.error("Error fetching groups:", data.error_msg);
                     return [];
@@ -28,27 +32,25 @@ export default function GroupsToJoin() {
         fetchGroups();
     }, []);
 
-    // Handle Request to Join
-    // const handleRequestJoin = async (groupId) => {
-    //     try {
-    //         const response = await fetch("/api/request-join", {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify({ group_id: groupId }),
-    //         });
+   
 
-    //         if (!response.ok) {
-    //             throw new Error("Failed to request to join group");
-    //         }
-
-    //         alert("Request sent successfully!");
-    //     } catch (err) {
-    //         alert("Error: " + err.message);
-    //     }
-    // };
-
+    const handleRequestJoin = async ( groupID,groupCreator,currentUser) => {
+        // const { sendMessage } = useWebSocket();
+            console.log("the function is functioning");
+            const requestMsg = {
+                type: "request",
+               //invited_user: user, // Ensure it's a single recipient ID
+                content: "a user request to join a group",
+                request: {
+                    group_id: groupID,
+                    group_creator: groupCreator,  // The user who is sending the invite
+                    user_id:currentUser,
+                },
+            };
+            sendMessage(requestMsg);  // Send each invitation
+    };
+    
+    
   
 
     return (
@@ -62,8 +64,8 @@ export default function GroupsToJoin() {
                     {groups.map((group) => (
                         <li key={group.id} style={{ marginBottom: "10px" }}>
                             <strong>{group.title}</strong>
-                            {/* <button
-                                onClick={() => handleRequestJoin(group.id)}
+                            <button
+                                onClick={() => handleRequestJoin(group.id, group.creator_id, currentUser)}
                                 style={{
                                     marginLeft: "10px",
                                     padding: "5px 10px",
@@ -74,7 +76,7 @@ export default function GroupsToJoin() {
                                 }}
                             >
                                 Request to Join
-                            </button> */}
+                            </button>
                         </li>
                     ))}
                 </ul>
