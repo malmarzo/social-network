@@ -24,6 +24,14 @@ func main() {
 	http.HandleFunc("/followersList", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetFollowersListHandler)))
 	http.HandleFunc("/createPost", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateNewPostHandler)))
 	http.HandleFunc("/posts", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetPostsHandler)))
+	
+	// Chat API endpoints
+	http.HandleFunc("/chat/history", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetChatHistoryHandler)))
+	http.HandleFunc("/chat/users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUserChatsHandler)))
+	http.HandleFunc("/chat/online", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetOnlineUsersHandler)))
+	http.HandleFunc("/chat/status", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUserStatusHandler)))
+	http.HandleFunc("/chat/all-users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetAllUsersHandler)))
+	http.HandleFunc("/chat/group/history", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetGroupChatHistoryHandler)))
 
 	//Handles validating user session
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
