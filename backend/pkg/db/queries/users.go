@@ -96,6 +96,53 @@ func GetNickname(userID string) (string, error) {
 	return nickname, nil
 }
 
+// GetAllUsers returns a list of all users in the database with basic information
+func GetAllUsers() ([]datamodels.UserBasicInfo, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT id, nickname, avatar FROM users ORDER BY nickname")
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []datamodels.UserBasicInfo{}
+	for rows.Next() {
+		var user datamodels.UserBasicInfo
+		var avatar sql.NullString
+		var userID string
+		
+		err := rows.Scan(&userID, &user.Nickname, &avatar)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+
+		// Store user ID as string
+		user.UserID = userID
+
+		if avatar.Valid {
+			user.Avatar = avatar.String
+		}
+
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return users, nil
+}
+
 // GetUserAvatar returns the user's avatar as a base64 encoded string and its extention type
 func GetUserAvatar(userID string) ([]byte, string, error) {
 	dbPath := getDBPath()

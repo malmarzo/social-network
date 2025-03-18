@@ -39,6 +39,13 @@ type ProfileCard struct {
 }
 
 // Post struct
+// UserBasicInfo struct for returning basic user information in listings
+type UserBasicInfo struct {
+	UserID   string `json:"user_id"`
+	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar"`
+}
+
 type Post struct {
 	PostID        string `json:"post_id"`
 	UserID        string `json:"user_id"`
