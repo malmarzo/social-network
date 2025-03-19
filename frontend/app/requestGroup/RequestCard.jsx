@@ -24,6 +24,7 @@ export default function DisplayRequestCard({ request,onRespond }) {
             "type": "request",
                     "request": {
                      "group_id": request.request.group_id,
+                     "group_creator":request.request.group_creator,
                      "user_id": request.request.user_id,
                      "accepted": accepted
                     }

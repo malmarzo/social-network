@@ -36,10 +36,6 @@ func ListMyGroupsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// for i:= 0; i < len(myGroups); i++ {
-	// 	fmt.Println(myGroups[i].Title)
-	// }
-
 	// Send JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(myGroups)

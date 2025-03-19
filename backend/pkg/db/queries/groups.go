@@ -33,7 +33,7 @@ func InviteUser(GroupID int, UserID, InvitedBy string)error{
 		return err1
 	}
 	defer db.Close()
-    _, err2 := db.Exec("INSERT INTO group_members (group_id, user_id, invited_by, status) VALUES (?, ?, ?, 'pending')",GroupID, UserID, InvitedBy)
+    _, err2 := db.Exec("INSERT INTO group_members (group_id, user_id, invited_by, status, type) VALUES (?, ?, ?, 'pending','invitation')",GroupID, UserID, InvitedBy)
     if err2 != nil {
         log.Println(err2)
 		return err2
@@ -43,7 +43,7 @@ func InviteUser(GroupID int, UserID, InvitedBy string)error{
 }
 
 
-func RequestToJoin(GroupID int, UserID string)error{
+func RequestToJoin(GroupID int, UserID, groupCreator string)error{
 	dbPath := getDBPath()
 	db, err1 := sql.Open("sqlite3", dbPath)
 	if err1 != nil {
@@ -51,7 +51,7 @@ func RequestToJoin(GroupID int, UserID string)error{
 		return err1
 	}
 	defer db.Close()
-    _, err2 := db.Exec("INSERT INTO group_members (group_id, user_id, invited_by, status) VALUES (?, ?,'undefined', 'pending')",GroupID, UserID)
+    _, err2 := db.Exec("INSERT INTO group_members (group_id, user_id, invited_by, status, type) VALUES (?, ?, ?, 'pending', 'request')",GroupID, UserID, groupCreator)
     if err2 != nil {
         log.Println(err2)
 		return err2
@@ -100,7 +100,7 @@ func DeclineInvitation(GroupID int, UserID, InvitedBy string)error{
 
 
 
-func AcceptRequest(GroupID int, UserID string, InvitedBy string) error {
+func AcceptRequest( InvitedBy string, GroupID int, UserID string) error {
 	dbPath := getDBPath()
 	db, err1 := sql.Open("sqlite3", dbPath)
 	if err1 != nil {
@@ -109,7 +109,7 @@ func AcceptRequest(GroupID int, UserID string, InvitedBy string) error {
 	}
 	defer db.Close()
 
-	_, err2 := db.Exec("UPDATE group_members SET status = ?, invited_by = ? WHERE group_id = ? AND user_id = ?",
+	_, err2 := db.Exec("UPDATE group_members SET status = ? WHERE invited_by = ? AND group_id = ? AND user_id = ?",
 		"accepted", InvitedBy, GroupID, UserID) // Set invited_by to a provided value
 
 	if err2 != nil {
@@ -120,7 +120,7 @@ func AcceptRequest(GroupID int, UserID string, InvitedBy string) error {
 }
 
 
-func DeclineRequest(GroupID int, UserID string, InvitedBy string)error{
+func DeclineRequest( InvitedBy string, GroupID int, UserID string)error{
 	dbPath := getDBPath()
 	db, err1 := sql.Open("sqlite3", dbPath)
 	if err1 != nil {
@@ -128,7 +128,7 @@ func DeclineRequest(GroupID int, UserID string, InvitedBy string)error{
 		return err1
 	}
 	defer db.Close()
-    _, err2 := db.Exec("UPDATE group_members SET status = ?, invited_by = ? WHERE group_id = ? AND user_id = ?",
+    _, err2 := db.Exec("UPDATE group_members SET status = ? WHERE invited_by = ? AND group_id = ? AND user_id = ?",
 		"declined", InvitedBy, GroupID, UserID)
     if err2 != nil {
         log.Println(err2)
@@ -341,19 +341,60 @@ func GroupsToRequest(userID string )( []datamodels.Group, error){
 }
 
 
-func GetPendingInvitations(userID string)([]datamodels.Invite, error){
+// func GetPendingInvitations(userID string)([]datamodels.Invite, error){
+// 	var invites []datamodels.Invite
+// 	dbPath := getDBPath()
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return  nil, err
+// 	}
+// 	defer db.Close()
+// 	query := `
+// 		SELECT group_id, user_id, invited_by 
+// 		FROM group_members 
+// 		WHERE user_id = ? AND status = 'pending'`
+
+// 	rows, err := db.Query(query, userID)
+// 	if err != nil {
+// 		log.Println("Error querying pending invites:", err)
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	for rows.Next() {
+// 		var invite datamodels.Invite
+// 		if err := rows.Scan(&invite.GroupID, &invite.UserID, &invite.InvitedBy); err != nil {
+// 			log.Println("Error scanning invite row:", err)
+// 			return nil, err
+// 		}
+// 		invites = append(invites, invite)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		log.Println("Error iterating over invite rows:", err)
+// 		return nil, err
+// 	}
+
+// 	return invites, nil
+
+// }
+
+
+func GetPendingInvitations(userID string) ([]datamodels.Invite, error) {
 	var invites []datamodels.Invite
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Println(err)
-		return  nil, err
+		return nil, err
 	}
 	defer db.Close()
+
 	query := `
 		SELECT group_id, user_id, invited_by 
 		FROM group_members 
-		WHERE user_id = ? AND status = 'pending'`
+		WHERE user_id = ? AND status = 'pending' AND type = 'invitation'`
 
 	rows, err := db.Query(query, userID)
 	if err != nil {
@@ -377,10 +418,125 @@ func GetPendingInvitations(userID string)([]datamodels.Invite, error){
 	}
 
 	return invites, nil
+}
 
+// func GetPendingRequests(userID string) ([]datamodels.Request, error) {
+// 	var requests []datamodels.Request
+// 	dbPath := getDBPath()
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return nil, err
+// 	}
+// 	defer db.Close()
+
+// 	query := `
+// 		SELECT group_id, user_id
+// 		FROM group_members 
+// 		WHERE user_id = ? AND status = 'pending' AND type = 'request'`
+
+// 	rows, err := db.Query(query, userID)
+// 	if err != nil {
+// 		log.Println("Error querying pending invites:", err)
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	for rows.Next() {
+// 		var request datamodels.Request
+// 		if err := rows.Scan(&request.GroupID, &request.UserID,); err != nil {
+// 			log.Println("Error scanning invite row:", err)
+// 			return nil, err
+// 		}
+// 		requests = append(requests, request)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		log.Println("Error iterating over invite rows:", err)
+// 		return nil, err
+// 	}
+
+// 	return requests, nil
+// }
+
+
+func GetPendingRequests(userID string) ([]datamodels.Request, error) {
+	var requests []datamodels.Request
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+		SELECT group_id, invited_by, user_id
+		FROM group_members 
+		WHERE invited_by = ? AND status = 'pending' AND type = 'request'`
+
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		log.Println("Error querying pending invites:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var request datamodels.Request
+		if err := rows.Scan(&request.GroupID, &request.GroupCreator,&request.UserID); err != nil {
+			log.Println("Error scanning invite row:", err)
+			return nil, err
+		}
+		requests = append(requests, request)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over invite rows:", err)
+		return nil, err
+	}
+
+	return requests, nil
 }
 
 
+
+
+// func ListMyGroups(userID string) ([]datamodels.Group, error) {
+// 	dbPath := getDBPath()
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println("Error opening DB:", err)
+// 		return nil, err
+// 	}
+// 	defer db.Close()
+
+// 	query := `
+// 		SELECT g.id, g.title, g.description, g.creator_id
+// 		FROM group_members gm
+// 		JOIN groups g ON gm.group_id = g.id
+// 		WHERE gm.user_id = ? AND gm.status = 'accepted'`
+	
+// 	rows, err := db.Query(query, userID)
+// 	if err != nil {
+// 		log.Println("Error executing query:", err)
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var groups []datamodels.Group
+// 	for rows.Next() {
+// 		var group datamodels.Group
+// 		err := rows.Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID)
+// 		if err != nil {
+// 			log.Println("Error scanning row:", err)
+// 			continue
+// 		}
+// 		groups = append(groups, group)
+// 	}
+
+// 	return groups, nil
+// }
 
 
 func ListMyGroups(userID string) ([]datamodels.Group, error) {
@@ -396,9 +552,10 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 		SELECT g.id, g.title, g.description, g.creator_id
 		FROM group_members gm
 		JOIN groups g ON gm.group_id = g.id
-		WHERE gm.user_id = ? AND gm.status = 'accepted'`
+		WHERE (gm.user_id = ? AND gm.status = 'accepted') 
+		      OR gm.invited_by = ?`
 	
-	rows, err := db.Query(query, userID)
+	rows, err := db.Query(query, userID, userID)  // Pass userID twice for both conditions
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, err

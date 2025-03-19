@@ -33,7 +33,7 @@ func RequestResponseHandler(w http.ResponseWriter, r *http.Request){
 		fmt.Println(req.Request.GroupID)
 		fmt.Println(req.Request.UserID)
 		// Accept: Update invitation status & add user to group
-		err:= queries.AcceptRequest(req.Request.GroupID,req.Request.UserID, "undefined")
+		err:= queries.AcceptRequest(req.Request.GroupCreator,req.Request.GroupID, req.Request.UserID)
 		if err != nil {
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
 			return
@@ -43,7 +43,7 @@ func RequestResponseHandler(w http.ResponseWriter, r *http.Request){
 		fmt.Println("declined is triggered")
 		
 		// Decline: Just update the invitation status
-		err:= queries.DeclineRequest(req.Request.GroupID,req.Request.UserID,"undefined")
+		err:= queries.DeclineRequest(req.Request.GroupCreator,req.Request.GroupID, req.Request.UserID)
 		if err != nil {
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
 			return
