@@ -31,6 +31,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <WebsocketProvider>
               <AlertProvider>
+                <UserNotifier />
                 <Header />
                 <ConfirmAction />
                 <Notification />

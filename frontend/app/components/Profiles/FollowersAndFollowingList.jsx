@@ -5,6 +5,8 @@ import debounce from "lodash/debounce";
 import styles from "@/styles/Explore.module.css";
 import UserLoader from "../loaders/UserLoader";
 import { useAlert } from "@/app/components/Alerts/PopUp";
+import { useWebSocket } from "@/context/Websocket";
+import { useAuth } from "@/context/AuthContext";
 
 const FollowersAndFollowingList = ({ profileID, myProfile, isPrivate }) => {
   const [toggleType, setToggleType] = useState("followers");
@@ -18,6 +20,20 @@ const FollowersAndFollowingList = ({ profileID, myProfile, isPrivate }) => {
   const [filteredFollowing, setFilteredFollowing] = useState([]);
 
   const { showAlert } = useAlert();
+
+  const { addMessageHandler, sendMessage } = useWebSocket();
+
+  const { userID } = useAuth();
+
+  // Add message handlers for updating the lists
+  addMessageHandler("update_requests_list", async () => {
+    await fetchData();
+  });
+
+  // Add message handlers for updating the lists
+  addMessageHandler("update_follower_list", async () => {
+    await fetchData();
+  });
 
   //Fetches the followers and following and pending requets on component mount
   async function fetchData() {
@@ -38,8 +54,8 @@ const FollowersAndFollowingList = ({ profileID, myProfile, isPrivate }) => {
         setLoading(false);
       } else {
         setError("Failed to fetch...");
-          setLoading(false);
-          console.log(response);
+        setLoading(false);
+        console.log(response);
       }
     } catch (error) {
       console.error("Failed to fetch users data:", error);
@@ -110,11 +126,24 @@ const FollowersAndFollowingList = ({ profileID, myProfile, isPrivate }) => {
       );
       if (response.code === 200) {
         // Remove the request from the list
-        setRequestsList((prev) => prev.filter((req) => req.id !== requestID));
+        setRequestsList((prev) =>
+          prev.filter((req) => req.request_id !== requestID)
+        );
         showAlert({
           type: "success",
           message: `Request ${action}ed successfully`,
         });
+
+        if (action === "accept") {
+          sendMessage({
+            type: "update_profile_stats",
+            userDetails: {
+              id: userID,
+            },
+          });
+
+          await fetchData();
+        }
       }
     } catch (error) {
       console.error(`Failed to ${action} request:`, error);
@@ -224,13 +253,17 @@ const FollowersAndFollowingList = ({ profileID, myProfile, isPrivate }) => {
                   <h3 className={styles.userName}>@{request.nickname}</h3>
                   <div className={styles.requestActions}>
                     <button
-                      onClick={() => handleFollowRequest(request.request_id, "accept")}
+                      onClick={() =>
+                        handleFollowRequest(request.request_id, "accept")
+                      }
                       className={styles.acceptButton}
                     >
                       Accept
                     </button>
                     <button
-                      onClick={() => handleFollowRequest(request.request_id, "reject")}
+                      onClick={() =>
+                        handleFollowRequest(request.request_id, "reject")
+                      }
                       className={styles.rejectButton}
                     >
                       Reject

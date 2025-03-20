@@ -15,9 +15,16 @@ type UserDetails struct {
 	Nickname string `json:"nickname"`
 }
 type SocketMessage struct {
-	Type        string      `json:"type"`
-	UserDetails UserDetails `json:"userDetails"`
-	Content     string      `json:"content"`
+	Type          string        `json:"type"`
+	UserDetails   UserDetails   `json:"userDetails"`
+	Content       string        `json:"content"`
+	FollowRequest FollowRequest `json:"followRequest"`
+}
+
+type FollowRequest struct {
+	From           string `json:"from"`
+	To             string `json:"to"`
+	SenderNickname string `json:"senderNickname"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -87,50 +94,24 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		socketMessages <- msg
-		
+		if msg.Type == "new_follow_request" {
+			fmt.Println(msg)
+			msg.FollowRequest.SenderNickname, err = queries.GetNickname(msg.FollowRequest.From)
+			if err != nil {
+				log.Println("Error getting nickname:", err)
+			}
+
+			validUser, err := queries.DoesUserExists(msg.FollowRequest.To)
+			if err != nil {
+				log.Println("Error validating user:", err)
+			}
+			if validUser {
+				socketMessages <- msg
+			}
+		} else {
+			socketMessages <- msg
+		}
 	}
-
-	// for {
-	//This is where the message is read from the WebSocket
-	//Msgs could be of type private msg,notification, typing, requests, etc...
-
-	// var msg DB.PrivateMessage //TODO: Change to new privateMsg struct
-	// // Read the message from WebSocket
-	// err := ws.ReadJSON(&msg)
-	// if err != nil {
-	// 	log.Printf("error: %v", err)
-	// 	break
-	// }
-	// newMsg := SocketMessage{}
-	// newMsg.NewUser = false
-	// newMsg.RemoveUser = false
-
-	// senderUsername, err := DB.GetUsername(msg.SenderID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// recUsername, err := DB.GetUsername(msg.RecID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// date := time.Now()
-	// formattedDate := date.Format("01-02-2006 15:04:05")
-	// msg.Date = formattedDate
-	// msg.RecUsername = recUsername
-	// msg.SenderUsername = senderUsername
-	// if !msg.Typing {
-	// 	err = DB.AddMsg(msg)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }
-	// msg.Date = formattedDate[:len(formattedDate)-3]
-	// newMsg.Message = msg
-	// Send the message to the channel
-	// socketMessages <- newMsg
-	// }
 }
 
 // Sends msgs
@@ -150,13 +131,29 @@ func HandleMessages() {
 					}
 				}
 			}
-		}else if newMsg.Type == "new_post"{
+		} else if newMsg.Type == "new_post" || newMsg.Type == "update_profile_stats" || newMsg.Type == "update_follower_list" {
 			err := clients[newMsg.UserDetails.ID].WriteJSON(newMsg)
 			if err != nil {
 				log.Printf("Error sending message to user %s: %v", newMsg.UserDetails.ID, err)
 				clients[newMsg.UserDetails.ID].Close()
 				delete(clients, newMsg.UserDetails.ID)
 			}
+		} else if newMsg.Type == "new_follow_request" || newMsg.Type == "cancel_follow_request"{
+			err := clients[newMsg.FollowRequest.To].WriteJSON(newMsg)
+			if err != nil {
+				log.Printf("Error sending message to user %s: %v", newMsg.UserDetails.ID, err)
+				clients[newMsg.UserDetails.ID].Close()
+				delete(clients, newMsg.UserDetails.ID)
+			}
+
+			newMsg.Type = "update_requests_list"
+			err = clients[newMsg.FollowRequest.To].WriteJSON(newMsg)
+			if err != nil {
+				log.Printf("Error sending message to user %s: %v", newMsg.UserDetails.ID, err)
+				clients[newMsg.UserDetails.ID].Close()
+				delete(clients, newMsg.UserDetails.ID)
+			}
+
 		} else {
 			for id, c := range clients {
 				if c != clients[newMsg.UserDetails.ID] {

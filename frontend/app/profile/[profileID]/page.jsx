@@ -6,10 +6,10 @@ import { invokeAPI } from "@/utils/invokeAPI";
 import styles from "@/styles/ProfilePage.module.css";
 import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/outline";
 import PostsFeed from "@/app/components/Home/PostsFeed";
-import Explore from "@/app/components/Home/Explore";
+import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/app/components/Alerts/PopUp";
 import { useWebSocket } from "@/context/Websocket";
-import { set } from "lodash";
+
 import FollowersAndFollowingList from "@/app/components/Profiles/FollowersAndFollowingList";
 
 const ProfilePage = () => {
@@ -38,17 +38,24 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const { addMessageHandler } = useWebSocket();
+  const { addMessageHandler, sendMessage } = useWebSocket();
+  const { userID } = useAuth();
 
+  //Handles stats update when a new post is added
   addMessageHandler("new_post", async () => {
+    await fetchStats();
+  });
+
+  //Handles stats update when a follow request is sent
+  addMessageHandler("update_profile_stats", async () => {
     await fetchStats();
   });
 
   useEffect(() => {
     fetchUserData();
-    // fetchUserPosts();
   }, []);
 
+  //Fetches the stats of the user
   const fetchStats = async () => {
     try {
       const response = await invokeAPI(
@@ -70,6 +77,7 @@ const ProfilePage = () => {
     }
   };
 
+  //Fetches the user data
   const fetchUserData = async () => {
     console.log(profileID);
     try {
@@ -94,6 +102,7 @@ const ProfilePage = () => {
     }
   };
 
+  //Toggles the privacy of the profile
   const togglePrivacy = async () => {
     console.log(user.is_private);
     showAlert({
@@ -130,6 +139,8 @@ const ProfilePage = () => {
     });
   };
 
+
+  //Handles the follow/unfollow request
   const handleFollow = async () => {
     if (isRequestSent) {
       showAlert({
@@ -148,6 +159,21 @@ const ProfilePage = () => {
                 type: "success",
                 message: "Request cancelled successfully",
               });
+
+              sendMessage({
+                type: "cancel_follow_request",
+                userDetails: {
+                  id: "",
+                  nickname: "",
+                },
+                content: "",
+                followRequest: {
+                  from: userID,
+                  to: profileID,
+                  senderNickname: "", // This will be set in the backend
+                },
+              });
+              
             } else {
               showAlert({
                 type: "error",
@@ -180,9 +206,19 @@ const ProfilePage = () => {
                 ...prev,
                 num_followers: prev.num_followers - 1,
               }));
-              showAlert({
-                type: "success",
-                message: `Unfollowed @${user.nickname}`,
+
+              sendMessage({
+                type: "update_profile_stats",
+                userDetails: {
+                  id: userID,
+                },
+              });
+
+              sendMessage({
+                type: "update_follower_list",
+                userDetails: {
+                  id: userID,
+                },
               });
             } else {
               showAlert({
@@ -212,6 +248,20 @@ const ProfilePage = () => {
             type: "success",
             message: "Request sent successfully",
           });
+
+          sendMessage({
+            type: "new_follow_request",
+            userDetails: {
+              id: "",
+              nickname: "",
+            },
+            content: "",
+            followRequest: {
+              from: userID,
+              to: profileID,
+              senderNickname: "", // This will be set in the backend
+            },
+          });
         } else {
           showAlert({
             type: "error",
@@ -234,9 +284,19 @@ const ProfilePage = () => {
             ...prev,
             num_followers: prev.num_followers + 1,
           }));
-          showAlert({
-            type: "success",
-            message: `Following @${user.nickname}`,
+
+          sendMessage({
+            type: "update_profile_stats",
+            userDetails: {
+              id: userID,
+            },
+          });
+
+          sendMessage({
+            type: "update_follower_list",
+            userDetails: {
+              id: userID,
+            },
           });
         } else {
           showAlert({
@@ -380,25 +440,27 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-      {(!user.is_private || isMyProfile || (user.is_private && followedByMe)) && (
-          <>
-            <div className={styles.postsFeed}>
-              <PostsFeed
-                isProfile={true}
-                profileID={profileID}
-                myProfile={isMyProfile}
-              />
-            </div>
-            <div className={styles.followersFollowing}>
-              {" "}
-              <FollowersAndFollowingList
-                profileID={profileID}
+      {(!user.is_private ||
+        isMyProfile ||
+        (user.is_private && followedByMe)) && (
+        <>
+          <div className={styles.postsFeed}>
+            <PostsFeed
+              isProfile={true}
+              profileID={profileID}
+              myProfile={isMyProfile}
+            />
+          </div>
+          <div className={styles.followersFollowing}>
+            {" "}
+            <FollowersAndFollowingList
+              profileID={profileID}
               myProfile={isMyProfile}
               isPrivate={user.is_private}
-              />{" "}
-            </div>
-          </>
-        )}
+            />{" "}
+          </div>
+        </>
+      )}
     </div>
   );
 };
