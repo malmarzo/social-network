@@ -7,7 +7,7 @@ import (
 	"social-network/pkg/db/queries"
 	"sync"
 	"github.com/gorilla/websocket"
-	"social-network/pkg/utils"
+	//"social-network/pkg/utils"
 	datamodels "social-network/pkg/dataModels"
 )
 
@@ -22,6 +22,7 @@ type SocketMessage struct {
 	//InvitedUser string  `json:"invited_user"`
 	Invite 		datamodels.Invite  `json:"invite"`
 	Request  	datamodels.Request  `json:"request"`
+	MyGroups    []datamodels.Group `json:"my_groups"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -58,49 +59,59 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	// Register the client connection with the userID
 	clients[userID] = ws
 
+//-------------------------------------------------------------------------------------------
+	// here i will add the code responsible for sending invition when user logs in
+	SendPendingInvitations(ws,userID)
+	// here i will add the code responsible for sending the pending requests
+	SendPendingRequests(ws,userID)
+	
+	
+//--------------------------------------------------------------------------------------------
+
+
 // here i will add the code responsible for sending invition when user logs in
 //---------------------------------
-go func() {
-	pendingInvitations, err := queries.GetPendingInvitations(userID)
-	if err != nil {
-		log.Printf("Error fetching pending invites for user %s: %v", userID, err)
-		return
-	}
-	for _, invite := range pendingInvitations {
-		inviteMsg := SocketMessage{
-			Type:    "invite",
-			Content: fmt.Sprintf("You have been invited to group %d", invite.GroupID), 
-			Invite:  invite,
-		}
-		err := ws.WriteJSON(inviteMsg)
-		if err != nil {
-			log.Printf("Error sending stored invitation to user %s: %v", userID, err)
-		}
-	}
-}()
-//--------------------------
-// here i will add the code responsible for sending the pending requests
-//-----------------------------------------------------
-go func() {
-	fmt.Println("the current user id",userID)
-	pendingRequests, err := queries.GetPendingRequests(userID)
-	fmt.Println(pendingRequests)
-	if err != nil {
-		log.Printf("Error fetching pending requests for user %s: %v", userID, err)
-		return
-	}
-	for _, request := range pendingRequests {
-		requestMsg := SocketMessage{
-			Type:    "request",
-			Content: fmt.Sprintf("someone requested to join the group %d", request.GroupID), 
-			Request:  request,
-		}
-		err := ws.WriteJSON(requestMsg)
-		if err != nil {
-			log.Printf("Error sending stored requests to user %s: %v", userID, err)
-		}
-	}
-}()
+// go func() {
+// 	pendingInvitations, err := queries.GetPendingInvitations(userID)
+// 	if err != nil {
+// 		log.Printf("Error fetching pending invites for user %s: %v", userID, err)
+// 		return
+// 	}
+// 	for _, invite := range pendingInvitations {
+// 		inviteMsg := SocketMessage{
+// 			Type:    "invite",
+// 			Content: fmt.Sprintf("You have been invited to group %d", invite.GroupID), 
+// 			Invite:  invite,
+// 		}
+// 		err := ws.WriteJSON(inviteMsg)
+// 		if err != nil {
+// 			log.Printf("Error sending stored invitation to user %s: %v", userID, err)
+// 		}
+// 	}
+// }()
+// //--------------------------
+// // here i will add the code responsible for sending the pending requests
+// //-----------------------------------------------------
+// go func() {
+// 	fmt.Println("the current user id",userID)
+// 	pendingRequests, err := queries.GetPendingRequests(userID)
+// 	fmt.Println(pendingRequests)
+// 	if err != nil {
+// 		log.Printf("Error fetching pending requests for user %s: %v", userID, err)
+// 		return
+// 	}
+// 	for _, request := range pendingRequests {
+// 		requestMsg := SocketMessage{
+// 			Type:    "request",
+// 			Content: fmt.Sprintf("someone requested to join the group %d", request.GroupID), 
+// 			Request:  request,
+// 		}
+// 		err := ws.WriteJSON(requestMsg)
+// 		if err != nil {
+// 			log.Printf("Error sending stored requests to user %s: %v", userID, err)
+// 		}
+// 	}
+// }()
 //-----------------------------------------------------
 
 	// end of test 
@@ -147,69 +158,17 @@ go func() {
 			
 		}else if msg.Type == "request" {
 				RequestToJoinGroup(msg,w)
-		}else {
+		}else if  msg.Type == "myGroups" {
+			SendMyGroups(msg,w, userID)
+
+		}else{
 			socketMessages <- msg
 		}
 		
 	}
 	
+	
 }
-// this function to invite users and insert pending invitations whether 
-// they are online or not 
-
-func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
-	fmt.Println("Invitation function triggered")
-	mu.Lock()
-	recipientID := msg.Invite.UserID
-	fmt.Println(recipientID)
-	recipientConn, exists := clients[recipientID]
-	// Insert into the database FIRST, regardless of user status
-	err1 := queries.InviteUser(msg.Invite.GroupID, recipientID, msg.Invite.InvitedBy)
-	if err1 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
-		mu.Unlock()
-		return
-	}
-	// Now, check if the user is online and send the invite if they are
-	if exists {
-		err := recipientConn.WriteJSON(msg)
-		if err != nil {
-			log.Printf("Error sending invitation to user %s: %v", recipientID, err)
-		}
-	} else {
-		log.Printf("User %s is not online", recipientID)
-	}
-
-	mu.Unlock()
-}
-
-
-func RequestToJoinGroup(msg SocketMessage, w http.ResponseWriter){
-	fmt.Println("Request to join group function triggered")
-			mu.Lock()
-			recipientID := msg.Request.GroupCreator
-			fmt.Println(recipientID)
-			fmt.Println(recipientID)
-			recipientConn, exists := clients[recipientID]
-			err1:= queries.RequestToJoin(msg.Request.GroupID, msg.Request.UserID, recipientID)
-				if err1 != nil {
-				utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
-					return
-					}
-			if exists {
-				err := recipientConn.WriteJSON(msg)
-				if err != nil {
-					log.Printf("Error sending request to user %s: %v", recipientID, err)
-				}
-				
-			} else {
-				log.Printf("User %s is not online", recipientID)
-				
-			}
-			mu.Unlock()
-}
-
-/////------------------
 
 // Sends msgs
 func HandleMessages() {

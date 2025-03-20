@@ -1,18 +1,24 @@
 //import { useState, useEffect } from "react";
-import { invokeAPI } from "@/utils/invokeAPI"; // Ensure this function exists
+"use client"; // <-- Add this at the very top
 import AuthButton from "../components/Buttons/AuthButtons";
+import Link from "next/link";
+import { useWebSocket } from "@/context/Websocket";
+import MyGroups from "@/app/myGroups/page";
+import { useEffect, useState, useRef } from "react";
 export default function GroupsPage() {
-    
-    // Create a new group
-    const createGroup = async () => {
-       
-    };
-
+   
     return (
         <div>
         <AuthButton text="create group" href="/createGroup" />
         <AuthButton text="request group" href="/requestGroup" />
-        <AuthButton text="my groups" href="/myGroups" />
+        {/* <AuthButton text="my groups" href="/myGroups" /> */}
+        <Link href="/myGroups">
+     <button
+    //  onClick={getMyGroups} 
+     style={{ padding: "10px", backgroundColor: "#1e90ff", color: "white", border: "none", cursor: "pointer" }}>
+        My Groups
+     </button>
+        </Link>
         </div>
        
     );

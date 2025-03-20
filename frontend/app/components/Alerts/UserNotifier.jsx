@@ -2,6 +2,9 @@ import { useWebSocket } from "@/context/Websocket";
 import  DisplayInvitationCard from "../../createGroup/invitationCard"
 import { useState, useEffect } from "react";
 import  DisplayRequestCard from "../../requestGroup/RequestCard"
+import Link from "next/link";
+import MyGroups from "@/app/myGroups/page";
+
 
 
 //Used this component in the layout.js file to notify users
@@ -9,6 +12,8 @@ const UserNotifier = () => {
   const { addMessageHandler } = useWebSocket();
   const [invitation, setInvitation] = useState(null);
   const [request, setRequest] = useState(null);
+  
+ 
 
   
 
@@ -69,11 +74,9 @@ const UserNotifier = () => {
             }}
           />
         )}
-        
         </>
     </div>
 
-    // this is for the request card
 );
 };
 
