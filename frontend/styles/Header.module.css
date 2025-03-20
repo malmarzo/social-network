@@ -2,17 +2,43 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--background);
+  padding: 0.75rem 2rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 50;
+  height: 64px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .logoCont {
   flex: 1;
-  padding-left: 1rem;
+}
+
+.homeLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--foreground);
+  font-family: var(--font-geist-sans);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.homeLink:hover {
+  color: #3949ab;
+}
+
+.homeIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.homeText {
+  font-size: 1rem;
+  display: inline-block;
 }
 
 .logo {
@@ -29,9 +55,16 @@
 
 .buttons {
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  gap: 0.75rem;
   align-items: center;
-  padding-right: 1rem;
-  min-width: 200px;
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: 0.75rem 1rem;
+  }
+
+  .homeText {
+    display: none;
+  }
 }
