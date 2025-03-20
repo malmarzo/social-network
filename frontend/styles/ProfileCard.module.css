@@ -1,25 +1,24 @@
 .card {
-  width: 300px;
-  height: 270px;
-  background: rgb(39, 39, 39);
-  border-radius: 12px;
-  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.123);
+  width: 100%;
+  max-width: 300px;
+  background: var(--background);
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  transition-duration: 0.5s;
-  margin: 0 auto;
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
 }
 
 .profileImage {
-  background: linear-gradient(to right, rgb(54, 54, 54), rgb(32, 32, 32));
-  margin-top: 20px;
-  width: 100px;
-  height: 100px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.329);
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
 }
 
 .profileImage img {
@@ -31,58 +30,85 @@
 .textContainer {
   width: 100%;
   text-align: center;
-  padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 1.5rem;
 }
 
 .name {
-  font-size: 0.9em;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: white;
+  color: var(--foreground);
+  font-family: var(--font-geist-sans);
 }
 
 .stats {
-  display: flex;
-  justify-content: space-around;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
   width: 100%;
-  font-size: 0.85em;
-  color: rgb(200, 200, 200);
+  padding: 1rem 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .stats span {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.25rem;
 }
 
 .statNumber {
-  font-size: 1.1em;
-  font-weight: bold;
-  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+  font-family: var(--font-geist-sans);
 }
 
 .statLabel {
-  font-size: 0.7em;
-  color: rgb(180, 180, 180);
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-family: var(--font-geist-sans);
 }
 
 .viewProfileButton {
-  margin-top: 10px;
-  padding: 6px 10px;
-  font-size: 0.75em;
-  font-weight: bold;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: white;
-  background: rgb(54, 54, 54);
+  background: #3949ab;
   border: none;
-  border-radius: 6px;
+  border-radius: 0.75rem;
   cursor: pointer;
-  transition: 0.3s;
-  display: inline-block;
+  transition: all 0.2s ease;
   text-decoration: none;
+  text-align: center;
+  font-family: var(--font-geist-sans);
 }
 
 .viewProfileButton:hover {
-  background: rgb(75, 75, 75);
+  background: #283593;
+  transform: translateY(-1px);
+}
+
+.viewProfileButton:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 1024px) {
+  .card {
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    max-width: 100%;
+  }
+
+  .stats {
+    gap: 0.5rem;
+  }
 }

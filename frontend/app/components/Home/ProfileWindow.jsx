@@ -7,7 +7,7 @@ const ProfileWindow = () => {
           <h1
           style={{fontSize:"1.8rem", fontWeight:"bold"}}
           >Profile</h1>
-      <ProfileCard imageSrc="https://www.w3schools.com/howto/img_avatar.png" />
+      <ProfileCard />
     </div>
   );
 };

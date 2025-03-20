@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useWebSocket } from "@/context/Websocket";
 
-const Card = () => {
+const ProfileCard = () => {
   //Data for the profile card
   const [imageSrc, setImageSrc] = useState("/imgs/defaultAvatar.jpg");
   const [loading, setIsLoading] = useState(true);
@@ -97,4 +97,4 @@ const Card = () => {
   );
 };
 
-export default Card;
+export default ProfileCard;
