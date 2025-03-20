@@ -161,122 +161,121 @@ const SignUpForm = () => {
   };
 
   return (
-    <>
-      {!success && errorMsg && <FailAlert msg={errorMsg} />}
+    <main className={styles.main}>
+      <div className={styles.formCard}>
+        <h1 className={styles.title}>Create Account</h1>
+        {!success && errorMsg && <FailAlert msg={errorMsg} />}
 
-      <div className={styles.wrapper}>
         <form className={styles.form} onSubmit={handleFormSubmit}>
-          <p className={styles.title}>Signup</p>
           <div className={styles.flex}>
-            <label>
+            <div className={styles.inputGroup}>
               <input
                 className={styles.input}
                 type="text"
+                placeholder="First Name"
                 value={firstName}
                 onChange={handleFirstNameChange}
                 required
               />
-              <span>
-                First Name <span className={styles.errMsg}>{firstErr}</span>
-              </span>
-            </label>
-            <label>
+              {firstErr && <span className={styles.errMsg}>{firstErr}</span>}
+            </div>
+            <div className={styles.inputGroup}>
               <input
                 className={styles.input}
                 type="text"
-                required
+                placeholder="Last Name"
                 value={lastName}
                 onChange={handleLastNameChange}
+                required
               />
-              <span>
-                Last Name <span className={styles.errMsg}>{lastErr}</span>
-              </span>
-            </label>
+              {lastErr && <span className={styles.errMsg}>{lastErr}</span>}
+            </div>
           </div>
-          <label>
+
+          <div className={styles.inputGroup}>
             <input
               className={styles.input}
               type="text"
+              placeholder="Nickname"
               value={nickname}
               onChange={handleNicknameChange}
               required
             />
-            <span>
-              Nickname <span className={styles.errMsg}>{nickErr}</span>
-            </span>
-          </label>
-          <label>
+            {nickErr && <span className={styles.errMsg}>{nickErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
             <input
               className={styles.input}
               type="email"
-              required
+              placeholder="Email"
               value={email}
               onChange={handleEmailChange}
-            />
-            <span>
-              Email <span className={styles.errMsg}>{emailErr}</span>
-            </span>
-          </label>
-
-          <label>
-            <input
-              className={styles.input}
-              type="date"
               required
-              value={dob}
-              onChange={handleDobChange}
             />
-            <span>
-              Date of Birth <span className={styles.errMsg}>{dateErr}</span>
-            </span>
-          </label>
+            {emailErr && <span className={styles.errMsg}>{emailErr}</span>}
+          </div>
 
-          <label>
-            <input
-              className={styles.input}
-              type="file"
-              accept="image/jpeg, image/png, image/gif"
-              onChange={handleAvatarChange}
-            />
-            <span>
-              Avatar (Optional){" "}
-              <span className={styles.errMsg}>{avatarErr}</span>
-            </span>
-          </label>
-          <label>
+          <div className={styles.inputGroup}>
+            <div className={styles.specialInput}>
+              <small className={styles.specialLabel}>Date of Birth</small>
+              <input
+                className={styles.input}
+                type="date"
+                value={dob}
+                onChange={handleDobChange}
+                required
+              />
+            </div>
+            {dateErr && <span className={styles.errMsg}>{dateErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <div className={styles.specialInput}>
+              <small className={styles.specialLabel}>Avatar (Optional)</small>
+              <input
+                className={`${styles.input} ${styles.fileInput}`}
+                type="file"
+                accept="image/jpeg, image/png, image/gif"
+                onChange={handleAvatarChange}
+              />
+            </div>
+            {avatarErr && <span className={styles.errMsg}>{avatarErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
             <textarea
-              className={styles.input}
-              rows="1"
-              style={{ resize: "none" }}
+              className={`${styles.input} ${styles.textarea}`}
+              placeholder="About (Optional)"
               value={aboutMe}
               onChange={handleAboutMeChange}
-              maxLength="100"
-            ></textarea>
-            <span>
-              About (Optional) <span className={styles.errMsg}>{aboutErr}</span>
-            </span>
-          </label>
-          <label>
+              maxLength="50"
+            />
+            {aboutErr && <span className={styles.errMsg}>{aboutErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
             <input
               className={styles.input}
               type="password"
-              required
+              placeholder="Password"
               value={password}
               onChange={handlePasswordChange}
+              required
             />
-            <span>
-              Password <span className={styles.errMsg}>{passErr}</span>
-            </span>
-          </label>
-          <button className={styles.submit} type="submit">
-            Submit
+            {passErr && <span className={styles.errMsg}>{passErr}</span>}
+          </div>
+
+          <button className={styles.button} type="submit">
+            Create Account
           </button>
+
           <p className={styles.signin}>
-            Already have an account? <Link href="/login">Signin</Link>
+            Already have an account? <Link href="/login">Sign in</Link>
           </p>
         </form>
       </div>
-    </>
+    </main>
   );
 };
 

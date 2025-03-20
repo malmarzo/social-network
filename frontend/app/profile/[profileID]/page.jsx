@@ -372,10 +372,10 @@ const ProfilePage = () => {
                   </p>
                 </div>
 
-                {user.aboutMe && (
+                {user.about && (
                   <div className={styles.aboutMe}>
-                    <h3 className={styles.aboutMeTitle}>About Me</h3>
-                    <p>{user.aboutMe}</p>
+                    <h3 className={styles.aboutMeTitle}>About:</h3>
+                    <p>{user.about}</p>
                   </div>
                 )}
               </>
