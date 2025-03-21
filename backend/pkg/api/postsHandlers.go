@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -220,13 +221,6 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 			posts[i].PostImage = imageBase64
 			// Clear the byte array as it's no longer needed
 			posts[i].ImageDataURL = nil
-		}
-	}
-
-	if activeTab != "trending" {
-		//reverse the posts array
-		for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
-			posts[i], posts[j] = posts[j], posts[i]
 		}
 	}
 

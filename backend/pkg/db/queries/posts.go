@@ -78,13 +78,20 @@ func GetAllPosts(userID, tab string) ([]datamodels.Post, error) {
 	var errFetch error
 
 	baseQuery := `
-        SELECT p.* FROM posts p
-        LEFT JOIN followers f ON p.user_id = f.following_id 
-        WHERE 
-            p.user_id = ? OR
-            p.privacy = 'public' OR
-            (p.privacy = 'almost_private' AND f.follower_id = ? AND f.status = 'accepted') OR
-            (p.privacy = 'private' AND p.allowedUsers LIKE ?)`
+    SELECT p.* FROM posts p
+    LEFT JOIN (
+        SELECT DISTINCT following_id FROM followers 
+        WHERE follower_id = ? AND status = 'accepted'
+    ) f ON p.user_id = f.following_id
+    WHERE 
+        (p.user_id = ? OR
+        p.privacy = 'public' OR
+        (p.privacy = 'almost_private' AND f.following_id IS NOT NULL) OR
+        (p.privacy = 'private' AND p.allowedUsers LIKE ?))
+    GROUP BY p.id
+    `
+
+
 
 	switch tab {
 	case "trending":
@@ -92,9 +99,9 @@ func GetAllPosts(userID, tab string) ([]datamodels.Post, error) {
             ORDER BY (p.num_likes + p.num_dislikes + p.num_comments) DESC`,
 			userID, userID, "%"+userID+"%")
 	case "my-posts":
-		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ?", userID)
+		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC", userID)
 	default: // "latest" or empty
-		rows, errFetch = db.Query(baseQuery,
+		rows, errFetch = db.Query(baseQuery+`ORDER BY p.created_at DESC`,
 			userID, userID, "%"+userID+"%")
 	}
 

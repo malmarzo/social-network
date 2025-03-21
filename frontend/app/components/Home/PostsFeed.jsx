@@ -42,6 +42,7 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
       }
       if (response.code === 200) {
         setPosts(response.data);
+        console.log(response.data);
       } else {
         setError("Failed to fetch posts");
       }

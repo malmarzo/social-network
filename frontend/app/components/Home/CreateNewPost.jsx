@@ -98,7 +98,7 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
             type: "new_post",
             userDetails: {
               id: userID,
-            }
+            },
           });
         }
       }
@@ -182,7 +182,9 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
               className={`${styles.inputField} ${
                 errors.content ? styles.errorInput : ""
               }`}
-              rows="4"
+              rows="2"
+              maxLength={"100"}
+              style={{ resize: "none" }}
               required
             />
             {errors.content && (
@@ -209,7 +211,10 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
             <div className={styles.input}>
               <label className={styles.inputLabel}>Post Privacy</label>
               <div className={styles.radioGroup}>
-                <label>
+                <label
+                  className={styles.radioLabel}
+                  aria-checked={postPrivacy === "public"}
+                >
                   <input
                     type="radio"
                     value="public"
@@ -217,9 +222,12 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
                     onChange={(e) => setPostPrivacy(e.target.value)}
                     name="privacy"
                   />
-                  Public
+                  <span>Public</span>
                 </label>
-                <label>
+                <label
+                  className={styles.radioLabel}
+                  aria-checked={postPrivacy === "almost_private"}
+                >
                   <input
                     type="radio"
                     value="almost_private"
@@ -227,11 +235,13 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
                     onChange={(e) => setPostPrivacy(e.target.value)}
                     name="privacy"
                   />
-                  Almost-private (Only followers)
+                  <span>Followers</span>
                 </label>
-
                 {followersList && followersList.length !== 0 && (
-                  <label>
+                  <label
+                    className={styles.radioLabel}
+                    aria-checked={postPrivacy === "private"}
+                  >
                     <input
                       type="radio"
                       value="private"
@@ -239,7 +249,7 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
                       onChange={(e) => setPostPrivacy(e.target.value)}
                       name="privacy"
                     />
-                    Private (Selected followers)
+                    <span>Private</span>
                   </label>
                 )}
               </div>
