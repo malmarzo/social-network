@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
