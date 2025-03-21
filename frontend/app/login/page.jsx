@@ -3,6 +3,7 @@ import { React, useState } from "react";
 import { invokeAPI } from "@/utils/invokeAPI";
 import SuccessAlert from "../components/Alerts/SuccessAlert";
 import FailAlert from "../components/Alerts/FailAlert";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "@/styles/Login.module.css";
@@ -12,11 +13,14 @@ const LogInForm = () => {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { setIsLoggedIn } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setLoading(true);
     if (!email || !password || email.trim() === "" || password.trim() === "") {
       setErrorMsg("Please fill in all required fields.");
       setSuccess(false);
@@ -27,16 +31,23 @@ const LogInForm = () => {
     formData.append("email_nickname", email.trim());
     formData.append("password", password.trim());
 
-    const response = await invokeAPI("login", formData, "POST");
-    if (response.code === 200) {
-      setSuccess(true);
-      setEmail("");
-      setPassword("");
-      setIsLoggedIn(true, response.data);
-      router.push("/");
-    } else {
+    try {
+      const response = await invokeAPI("login", formData, "POST");
+      if (response.code === 200) {
+        setSuccess(true);
+        setEmail("");
+        setPassword("");
+        setIsLoggedIn(true, response.data);
+        router.push("/");
+      } else {
+        setSuccess(false);
+        setErrorMsg(response.error_msg);
+      }
+    } catch (error) {
+      setErrorMsg("An error occurred. Please try again later.");
       setSuccess(false);
-      setErrorMsg(response.error_msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,8 +75,18 @@ const LogInForm = () => {
               className={styles.input}
             />
           </div>
-          <button type="submit" className={styles.button}>
-            Sign In
+          <button
+            type="submit"
+            className={`${styles.button} ${loading ? styles.loading : ""}`}
+            disabled={loading}
+          >
+            {loading ? (
+              <div className={styles.buttonContent}>
+                <LoadingSpinner />
+              </div>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
       </div>

@@ -4,6 +4,7 @@ import { invokeAPI } from "@/utils/invokeAPI";
 import CreateNewPost from "./CreateNewPost";
 import Link from "next/link";
 import PostActionButtons from "./PostActionButtons";
+import PostLoader from "../loaders/PostLoader";
 
 const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
   const [activeTab, setActiveTab] = useState("latest");
@@ -71,9 +72,6 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
     return false;
   };
 
-  if (loading) {
-    return <div className={styles.loading}>Loading posts...</div>;
-  }
 
   if (error) {
     return <div className={styles.error}>{error}</div>;
@@ -81,58 +79,62 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
 
   return (
     <div className={styles.feedContainer}>
-      <h1 className={styles.title}>
-        {" "}
-        {isGroup || isProfile ? "Activity" : "Posts"}
-      </h1>
-      <nav className={styles.toggleNav}>
-        {!isGroup && !isProfile && (
-          <>
-            <div className={styles.toggleButtons}>
-              {toggles.map((toggle) => (
-                <button
-                  key={toggle.id}
-                  className={`${styles.toggleButton} ${
-                    activeTab === toggle.id ? styles.activeToggle : ""
-                  }`}
-                  onClick={() => setActiveTab(toggle.id)}
-                >
-                  {toggle.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-        {shouldShowCreatePost() && (
-          <button
-            className={styles.createPostButton}
-            onClick={() => setCreateNewPost(true)}
-          >
-            Create Post
-          </button>
-        )}
-      </nav>
+      <div className={styles.headerContainer}>
+        <h1 className={styles.title}>
+          {" "}
+          {isGroup || isProfile ? "Activity" : "Posts"}
+        </h1>
+        <nav className={styles.toggleNav}>
+          {!isGroup && !isProfile && (
+            <>
+              <div className={styles.toggleButtons}>
+                {toggles.map((toggle) => (
+                  <button
+                    key={toggle.id}
+                    className={`${styles.toggleButton} ${
+                      activeTab === toggle.id ? styles.activeToggle : ""
+                    }`}
+                    onClick={() => setActiveTab(toggle.id)}
+                  >
+                    {toggle.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {shouldShowCreatePost() && (
+            <button
+              className={styles.createPostButton}
+              onClick={() => setCreateNewPost(true)}
+            >
+              Create Post
+            </button>
+          )}
+        </nav>
 
-      {/* Modal rendering condition */}
-      {createNewPost && shouldShowCreatePost() && (
-        <CreateNewPost
-          onClose={() => setCreateNewPost(false)}
-          onPostCreated={refreshPosts}
-          isGroup={isGroup}
-          groupID={groupID}
-        />
-      )}
+        {createNewPost && shouldShowCreatePost() && (
+          <CreateNewPost
+            onClose={() => setCreateNewPost(false)}
+            onPostCreated={refreshPosts}
+            isGroup={isGroup}
+            groupID={groupID}
+          />
+        )}
+      </div>
 
       <div className={styles.postsGrid}>
         {posts &&
+          !loading &&
           posts.map((post) => (
             <div key={post.post_id} className={styles.postCard}>
               {post.post_image && (
-                <img
-                  src={`data:${post.image_mime_type};base64,${post.post_image}`}
-                  alt={post.post_title}
-                  className={styles.postImage}
-                />
+                <div className={styles.postImageContainer}>
+                  <img
+                    src={`data:${post.image_mime_type};base64,${post.post_image}`}
+                    alt={post.post_title}
+                    className={styles.postImage}
+                  />
+                </div>
               )}
 
               <div className={styles.postContent}>
@@ -153,6 +155,8 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
               <PostActionButtons postID={post.post_id} isGroup={isGroup} />
             </div>
           ))}
+
+        {loading && !error && <PostLoader />}
       </div>
     </div>
   );

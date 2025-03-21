@@ -11,6 +11,7 @@ import {
   validateTextOnly,
 } from "@/utils/formValidators";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const SignUpForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -31,6 +32,7 @@ const SignUpForm = () => {
   const [avatarErr, setAvatarErr] = useState("");
   const [aboutErr, setAboutErr] = useState("");
   const [passErr, setPassErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
@@ -112,6 +114,8 @@ const SignUpForm = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
+    setLoading(true);
+
     const formData = new FormData();
     formData.append("first_name", firstName);
     formData.append("last_name", lastName);
@@ -139,24 +143,33 @@ const SignUpForm = () => {
       formData.append("avatar", avatar);
     }
 
-    const response = await invokeAPI("signup", formData, "POST");
-    if (response.code === 200) {
-      setSuccess(true);
+    try {
+      setTimeout(() => {});
+      const response = await invokeAPI("signup", formData, "POST");
+      if (response.code === 200) {
+        setSuccess(true);
 
-      // Clear the form
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
-      setDob("");
-      setNickname("");
-      setAvatar("");
-      setAboutMe("");
-      router.push("/login");
-    } else {
+        // Clear the form
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPassword("");
+        setDob("");
+        setNickname("");
+        setAvatar("");
+        setAboutMe("");
+        router.push("/login");
+      } else {
+        setSuccess(false);
+        // Display the error message
+        setErrorMsg(response.error_msg);
+      }
+    } catch (error) {
+      setErrorMsg("Something went wrong. Please try again later.");
       setSuccess(false);
-      // Display the error message
-      setErrorMsg(response.error_msg);
+      return;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -266,8 +279,18 @@ const SignUpForm = () => {
             {passErr && <span className={styles.errMsg}>{passErr}</span>}
           </div>
 
-          <button className={styles.button} type="submit">
-            Create Account
+          <button
+            className={`${styles.button} ${loading ? styles.loading : ""}`}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className={styles.buttonContent}>
+                <LoadingSpinner />
+              </div>
+            ) : (
+              "Create Account"
+            )}
           </button>
 
           <p className={styles.signin}>
