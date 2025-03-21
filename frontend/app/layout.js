@@ -8,7 +8,7 @@ import UserNotifier from "./components/Alerts/UserNotifier";
 import {
   AlertProvider,
   ConfirmAction,
-  Notification,
+  PopUp,
 } from "./components/Alerts/PopUp";
 
 const geistSans = Geist({
@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
                 <UserNotifier />
                 <Header />
                 <ConfirmAction />
-                <Notification />
+                <PopUp />
                 {children}
               </AlertProvider>
             </WebsocketProvider>
