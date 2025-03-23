@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { invokeAPI } from "@/utils/invokeAPI"; // API helper function
 import Link from "next/link";
 import { useWebSocket } from "@/context/Websocket";
 
@@ -21,7 +20,12 @@ export default function MyGroups() {
 
         // Adding message handler
         addMessageHandler("myGroups", (msg) => {
-            setMyGroups(msg);
+            if (!msg || msg.length === 0) {
+                setMyGroups([]); // Set groups as empty
+            } else {
+                setMyGroups(msg);
+            }
+            //setMyGroups(msg);
         });
 
         // Cleanup function (optional but good practice)

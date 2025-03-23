@@ -39,12 +39,15 @@ export default function CreateGroup() {
        
         const body = { title, description };
         const response = await invokeAPI("groups", body, "POST");
+
+      
         
         if (response.code === 200) {
             console.log("Group created successfully:", response.group);
             setGroupID(response.group.id);
             setGroupCreatorID(response.group.creator_id);
             console.log(groupCreatorID);
+           
 
            
            router.push(`/groupChat/${response.group.id}`);
@@ -65,6 +68,8 @@ export default function CreateGroup() {
             console.log("Could not create the group");
         }
     };
+
+    
 
     return (
         <div className="max-w-md mx-auto p-6 bg-gray-900 rounded-lg shadow-md text-white">
@@ -94,7 +99,12 @@ export default function CreateGroup() {
             />
 
             <button 
-                onClick={createGroup}
+                // onClick={createGroup}
+
+                onClick={() => {
+                    createGroup();
+                    // getGroupsToRequest();
+                }}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200"
             >
                 Create Group

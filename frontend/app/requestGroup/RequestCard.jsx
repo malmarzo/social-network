@@ -1,8 +1,10 @@
 import { invokeAPI } from "@/utils/invokeAPI";
 import { useState, useEffect } from "react";
+// import { useWebSocket } from "@/context/Websocket";
 
 export default function DisplayRequestCard({ request,onRespond }) {
     const [showCard, setShowCard] = useState(false);
+    // const { sendMessage } = useWebSocket();
 
     useEffect(() => {
         if (request) {
@@ -34,6 +36,14 @@ export default function DisplayRequestCard({ request,onRespond }) {
 
             // Call parent function to remove the invitation from the list
             onRespond(response.user_id, accepted);
+            // if (!accepted) {
+            //     // Request updated group list
+            //     const getGroupsToRequest = () => {
+            //         const GroupsToRequestMsg = { type: "groupsToRequest" };
+            //         sendMessage(GroupsToRequestMsg);
+            //     };
+            //     getGroupsToRequest();
+            // }
 
             // Hide the card after responding
             setShowCard(false);

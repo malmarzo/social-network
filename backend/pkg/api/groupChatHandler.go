@@ -132,6 +132,26 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			users5= append(users5,users3[i])
 		}
 	}
+
+	// getGroupMembers, err7:= queries.GroupMembers(Id)
+	// if err7 != nil {
+	// 	fmt.Println("Error retreving group members", err7)
+    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+    //     return
+
+	// }
+	// getFirstName, err8:= queries.GetFirstNameById(CreatorID)
+	// if err8 != nil {
+	// 	fmt.Println("Error retriving first name by id", err8)
+    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+    //     return
+
+	// }
+	// admin := datamodels.User{
+	// 	ID:        CreatorID,      // Assuming newUserID contains the user ID
+	// 	FirstName: getFirstName,   // Assuming newFirstName contains the user's first name
+	// }
+	// getGroupMembers = append(getGroupMembers, admin)
 	// end of test 
 	// fmt.Println("-------------------------------------------")
 	// fmt.Println("users5",users5)
@@ -147,6 +167,8 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
             Description: Description,
 			FirstName: firstName,
 			LastName: lastName,
+			//GroupMembers: getGroupMembers,
+			CurrentUser: currentUser,
         },
 		Users: users5,
     }

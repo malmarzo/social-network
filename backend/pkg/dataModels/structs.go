@@ -33,6 +33,8 @@ type Group struct {
     CreatedAt   string `json:"created_at"`
 	FirstName       string    `json:"firstname"`
 	LastName       string    `json:"lastname"`
+	// GroupMembers  []User      `json:"group_members"` 
+	 CurrentUser   string       `json:"current_user"` 
 }
 
 // Invite to invite a person to join a group
@@ -51,3 +53,11 @@ type Request struct {
 	Accepted bool `json:"accepted"`
 }
 
+type GroupMessage struct {
+    GroupID          int       `json:"group_id"`
+	SenderID		 string 	`json:"sender_id"`
+	RecevierID		 string 	`json:"recevier_id"`
+	Message 		 string      `json:"message"`
+	FirstName		 string    	 `json:"first_name"`
+	DateTime		 string       `json:"date_time"`
+}

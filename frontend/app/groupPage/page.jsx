@@ -1,23 +1,27 @@
-//import { useState, useEffect } from "react";
-"use client"; // <-- Add this at the very top
+
+"use client"; 
 import AuthButton from "../components/Buttons/AuthButtons";
 import Link from "next/link";
-import { useWebSocket } from "@/context/Websocket";
-import MyGroups from "@/app/myGroups/page";
-import { useEffect, useState, useRef } from "react";
 export default function GroupsPage() {
    
     return (
         <div>
         <AuthButton text="create group" href="/createGroup" />
-        <AuthButton text="request group" href="/requestGroup" />
-        {/* <AuthButton text="my groups" href="/myGroups" /> */}
+        {/* <AuthButton text="request group" href="/requestGroup" /> */}
         <Link href="/myGroups">
-     <button
-    //  onClick={getMyGroups} 
-     style={{ padding: "10px", backgroundColor: "#1e90ff", color: "white", border: "none", cursor: "pointer" }}>
-        My Groups
-     </button>
+        <button
+        //  onClick={getMyGroups} 
+        style={{ padding: "10px", backgroundColor: "#1e90ff", color: "white", border: "none", cursor: "pointer" }}>
+            My Groups
+        </button>
+        </Link>
+
+        <Link href="/requestGroup">
+        <button
+        //  onClick={getMyGroups} 
+        style={{ padding: "10px", backgroundColor: "#1e90ff", color: "white", border: "none", cursor: "pointer" }}>
+            Request Groups
+        </button>
         </Link>
         </div>
        

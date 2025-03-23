@@ -23,6 +23,7 @@ type SocketMessage struct {
 	Invite 		datamodels.Invite  `json:"invite"`
 	Request  	datamodels.Request  `json:"request"`
 	MyGroups    []datamodels.Group `json:"my_groups"`
+	GroupMessage datamodels.GroupMessage `json:"group_message"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -63,58 +64,9 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	// here i will add the code responsible for sending invition when user logs in
 	SendPendingInvitations(ws,userID)
 	// here i will add the code responsible for sending the pending requests
-	SendPendingRequests(ws,userID)
-	
-	
+	SendPendingRequests(ws,userID)	
 //--------------------------------------------------------------------------------------------
 
-
-// here i will add the code responsible for sending invition when user logs in
-//---------------------------------
-// go func() {
-// 	pendingInvitations, err := queries.GetPendingInvitations(userID)
-// 	if err != nil {
-// 		log.Printf("Error fetching pending invites for user %s: %v", userID, err)
-// 		return
-// 	}
-// 	for _, invite := range pendingInvitations {
-// 		inviteMsg := SocketMessage{
-// 			Type:    "invite",
-// 			Content: fmt.Sprintf("You have been invited to group %d", invite.GroupID), 
-// 			Invite:  invite,
-// 		}
-// 		err := ws.WriteJSON(inviteMsg)
-// 		if err != nil {
-// 			log.Printf("Error sending stored invitation to user %s: %v", userID, err)
-// 		}
-// 	}
-// }()
-// //--------------------------
-// // here i will add the code responsible for sending the pending requests
-// //-----------------------------------------------------
-// go func() {
-// 	fmt.Println("the current user id",userID)
-// 	pendingRequests, err := queries.GetPendingRequests(userID)
-// 	fmt.Println(pendingRequests)
-// 	if err != nil {
-// 		log.Printf("Error fetching pending requests for user %s: %v", userID, err)
-// 		return
-// 	}
-// 	for _, request := range pendingRequests {
-// 		requestMsg := SocketMessage{
-// 			Type:    "request",
-// 			Content: fmt.Sprintf("someone requested to join the group %d", request.GroupID), 
-// 			Request:  request,
-// 		}
-// 		err := ws.WriteJSON(requestMsg)
-// 		if err != nil {
-// 			log.Printf("Error sending stored requests to user %s: %v", userID, err)
-// 		}
-// 	}
-// }()
-//-----------------------------------------------------
-
-	// end of test 
 	mu.Unlock()
 	msg := SocketMessage{}
 	userDetails := UserDetails{}
@@ -160,6 +112,12 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				RequestToJoinGroup(msg,w)
 		}else if  msg.Type == "myGroups" {
 			SendMyGroups(msg,w, userID)
+
+		}else if msg.Type == "groupsToRequest" {
+			SendGroupsToRequest(msg,w,userID)
+
+		}else if msg.Type == "groupMessage" {
+			SendGroupMessage(msg,w)
 
 		}else{
 			socketMessages <- msg

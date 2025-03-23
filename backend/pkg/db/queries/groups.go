@@ -3,6 +3,7 @@ package queries
 import ("log"
 "database/sql"
 datamodels "social-network/pkg/dataModels"
+"fmt"
 )
 
 
@@ -41,6 +42,55 @@ func InviteUser(GroupID int, UserID, InvitedBy string)error{
 	return nil
 
 }
+
+func InsertGroupMessage(groupID int, senderID, receiverID, message string) error {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return err
+	}
+	defer db.Close()
+
+	query := `
+		INSERT INTO group_chats (group_id, user_id, to_user_id, message, status)
+		VALUES (?, ?, ?, ?, 'pending')
+	`
+	
+	_, execErr := db.Exec(query, groupID, senderID, receiverID, message)
+	if execErr != nil {
+		log.Println("Error inserting message:", execErr)
+		return execErr
+	}
+
+	return nil
+}
+
+func UpdateMessageStatusToDelivered(groupID int, senderID, receiverID, message string) error {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return err
+	}
+	defer db.Close()
+
+	query := `
+		UPDATE group_chats 
+		SET status = 'delivered' 
+		WHERE group_id = ? AND user_id = ? AND to_user_id = ? AND message = ? AND status = 'pending'
+	`
+	
+	_, execErr := db.Exec(query, groupID, senderID, receiverID, message)
+	if execErr != nil {
+		log.Println("Error updating message status:", execErr)
+		return execErr
+	}
+
+	return nil
+}
+
+
 
 
 func RequestToJoin(GroupID int, UserID, groupCreator string)error{
@@ -341,45 +391,6 @@ func GroupsToRequest(userID string )( []datamodels.Group, error){
 }
 
 
-// func GetPendingInvitations(userID string)([]datamodels.Invite, error){
-// 	var invites []datamodels.Invite
-// 	dbPath := getDBPath()
-// 	db, err := sql.Open("sqlite3", dbPath)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return  nil, err
-// 	}
-// 	defer db.Close()
-// 	query := `
-// 		SELECT group_id, user_id, invited_by 
-// 		FROM group_members 
-// 		WHERE user_id = ? AND status = 'pending'`
-
-// 	rows, err := db.Query(query, userID)
-// 	if err != nil {
-// 		log.Println("Error querying pending invites:", err)
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	for rows.Next() {
-// 		var invite datamodels.Invite
-// 		if err := rows.Scan(&invite.GroupID, &invite.UserID, &invite.InvitedBy); err != nil {
-// 			log.Println("Error scanning invite row:", err)
-// 			return nil, err
-// 		}
-// 		invites = append(invites, invite)
-// 	}
-
-// 	if err := rows.Err(); err != nil {
-// 		log.Println("Error iterating over invite rows:", err)
-// 		return nil, err
-// 	}
-
-// 	return invites, nil
-
-// }
-
 
 func GetPendingInvitations(userID string) ([]datamodels.Invite, error) {
 	var invites []datamodels.Invite
@@ -419,45 +430,6 @@ func GetPendingInvitations(userID string) ([]datamodels.Invite, error) {
 
 	return invites, nil
 }
-
-// func GetPendingRequests(userID string) ([]datamodels.Request, error) {
-// 	var requests []datamodels.Request
-// 	dbPath := getDBPath()
-// 	db, err := sql.Open("sqlite3", dbPath)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return nil, err
-// 	}
-// 	defer db.Close()
-
-// 	query := `
-// 		SELECT group_id, user_id
-// 		FROM group_members 
-// 		WHERE user_id = ? AND status = 'pending' AND type = 'request'`
-
-// 	rows, err := db.Query(query, userID)
-// 	if err != nil {
-// 		log.Println("Error querying pending invites:", err)
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	for rows.Next() {
-// 		var request datamodels.Request
-// 		if err := rows.Scan(&request.GroupID, &request.UserID,); err != nil {
-// 			log.Println("Error scanning invite row:", err)
-// 			return nil, err
-// 		}
-// 		requests = append(requests, request)
-// 	}
-
-// 	if err := rows.Err(); err != nil {
-// 		log.Println("Error iterating over invite rows:", err)
-// 		return nil, err
-// 	}
-
-// 	return requests, nil
-// }
 
 
 func GetPendingRequests(userID string) ([]datamodels.Request, error) {
@@ -500,45 +472,6 @@ func GetPendingRequests(userID string) ([]datamodels.Request, error) {
 }
 
 
-
-
-// func ListMyGroups(userID string) ([]datamodels.Group, error) {
-// 	dbPath := getDBPath()
-// 	db, err := sql.Open("sqlite3", dbPath)
-// 	if err != nil {
-// 		log.Println("Error opening DB:", err)
-// 		return nil, err
-// 	}
-// 	defer db.Close()
-
-// 	query := `
-// 		SELECT g.id, g.title, g.description, g.creator_id
-// 		FROM group_members gm
-// 		JOIN groups g ON gm.group_id = g.id
-// 		WHERE gm.user_id = ? AND gm.status = 'accepted'`
-	
-// 	rows, err := db.Query(query, userID)
-// 	if err != nil {
-// 		log.Println("Error executing query:", err)
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	var groups []datamodels.Group
-// 	for rows.Next() {
-// 		var group datamodels.Group
-// 		err := rows.Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID)
-// 		if err != nil {
-// 			log.Println("Error scanning row:", err)
-// 			continue
-// 		}
-// 		groups = append(groups, group)
-// 	}
-
-// 	return groups, nil
-// }
-
-
 func ListMyGroups(userID string) ([]datamodels.Group, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
@@ -574,4 +507,181 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 	}
 
 	return groups, nil
+}
+
+
+func GroupMembers(groupID int)([]datamodels.User, error){
+	dbPath := getDBPath() // Function to get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	// query := `
+	// 	SELECT gm.user_id
+	// 	FROM group_members gm
+	// 	WHERE gm.group_id = ? AND gm.status = 'accepted'
+	// `
+	query := `
+		SELECT u.id, u.first_name 
+		FROM group_members gm
+		JOIN users u ON gm.user_id = u.id
+		WHERE gm.group_id = ? AND gm.status = 'accepted'
+	`
+
+	rows, err := db.Query(query, groupID)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []datamodels.User
+	for rows.Next() {
+		var user datamodels.User
+		err := rows.Scan(&user.ID, &user.FirstName)
+		if err != nil {
+			log.Println("Error scanning row:", err)
+			continue
+		}
+		users= append(users, user)
+	}
+
+	return users, nil
+
+}
+
+func GetFirstNameById(userID string)(string, error){
+	dbPath := getDBPath() // Function to get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return "empty", err
+	}
+	defer db.Close()
+	query := "SELECT first_name FROM users WHERE id = ?"
+	 var firstName string
+    // Use PostgreSQL's `$1` if you're on PostgreSQL, or keep `?` for SQLite/MySQL
+    err = db.QueryRow(query, userID).Scan(&firstName)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return "", fmt.Errorf("no user found with ID %s", userID)
+        }
+        return "", fmt.Errorf("error fetching firstname: %v", err)
+    }
+
+    return firstName, nil
+
+}
+
+
+func GetCreatorIDByGroupID(GroupID int)(string, error){
+	dbPath := getDBPath() // Function to get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return "empty", err
+	}
+	defer db.Close()
+	query := "SELECT creator_id FROM groups WHERE id = ?"
+	 var creatorID string
+    // Use PostgreSQL's `$1` if you're on PostgreSQL, or keep `?` for SQLite/MySQL
+    err = db.QueryRow(query, GroupID).Scan(&creatorID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return "", fmt.Errorf("no group found with ID %d", GroupID)
+        }
+        return "", fmt.Errorf("error fetching creatorID: %v", err)
+    }
+
+    return creatorID, nil
+
+}
+
+// here i will add the function to get the pending group messsages 
+// after i addb the message handler in the frontend
+
+
+
+// func GetPendingGroupMessages(userID string) ([]datamodels.GroupMessage, error) {
+// 	var groupMessages []datamodels.GroupMessage
+// 	dbPath := getDBPath()
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return nil, err
+// 	}
+// 	defer db.Close()
+
+// 	query := `
+// 		SELECT group_id, user_id, to_user_id, message 
+// 		FROM group_chats 
+// 		WHERE to_user_id = ? AND status = 'pending'`
+
+// 	rows, err := db.Query(query, userID)
+// 	if err != nil {
+// 		log.Println("Error querying pending invites:", err)
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	for rows.Next() {
+// 		var groupMessage datamodels.GroupMessage
+// 		if err := rows.Scan(&groupMessage.GroupID, &GroupMessage.); err != nil {
+// 			log.Println("Error scanning invite row:", err)
+// 			return nil, err
+// 		}
+// 		invites = append(invites, invite)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		log.Println("Error iterating over invite rows:", err)
+// 		return nil, err
+// 	}
+
+// 	return invites, nil
+// }
+
+
+// func OldGroupChats()error{
+// 	dbPath := getDBPath() // Function to get the database path
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println("Error opening DB:", err)
+// 		return  err
+// 	}
+// 	defer db.Close()
+
+// }
+
+func GetMessageCreatedAt(groupID int, senderID, receiverID string, message string) (string, error) {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return "", err
+	}
+	defer db.Close()
+
+	var createdAt string
+
+	query := `
+		SELECT created_at 
+		FROM group_chats 
+		WHERE group_id = ? AND user_id = ? AND to_user_id = ? AND message = ?
+	`
+
+	err = db.QueryRow(query, groupID, senderID, receiverID, message).Scan(&createdAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("No message found with the given parameters.")
+		} else {
+			log.Println("Error retrieving message timestamp:", err)
+		}
+		return "", err
+	}
+
+	return createdAt, nil
 }

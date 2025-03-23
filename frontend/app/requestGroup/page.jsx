@@ -3,35 +3,40 @@ import { useEffect, useState } from "react";
 import { invokeAPI } from "@/utils/invokeAPI";
 import { useWebSocket } from "@/context/Websocket";
 
+
+
 export default function GroupsToJoin() {
     console.log("Rendering GroupsToJoin component...");
     const [groups, setGroups] = useState([]);
     const [currentUser, setCurrentUser] = useState([]);
      const { sendMessage } = useWebSocket();
+     const { addMessageHandler } = useWebSocket();
     
+    const getGroupsToRequest = () => {
+        const GroupsToRequestMsg = { type: "groupsToRequest" };
+        sendMessage(GroupsToRequestMsg);
+    };
 
-    // Fetch groups when component loads
     useEffect(() => {
-        async function fetchGroups() {
-            try {
-                const data = await invokeAPI("groups/list", null, "GET");
-                if (Array.isArray(data.groups)) {
-                    //return data;
-                    setGroups(data.groups);
-                    setCurrentUser(data.current_user)
-                } else {
-                    console.error("Error fetching groups:", data.error_msg);
-                    return [];
-                }
-            } catch (error) {
-                console.error("Error fetching error:", error);
-                return [];
+        getGroupsToRequest(); 
+
+        // Adding message handler
+        addMessageHandler("groupsToRequest", (msg) => {
+            //setGroups(msg.my_groups);
+
+            if (!msg.my_groups || msg.my_groups.length === 0) {
+                setGroups([]); // Set groups as empty
+            } else {
+                setGroups(msg.my_groups);
             }
-        }
+            setCurrentUser(msg.userDetails.id)
+        });
 
-        fetchGroups();
-    }, []);
-
+        // Cleanup function (optional but good practice)
+        return () => {
+            // Remove the message handler if your WebSocket context supports it
+        };
+    }, [addMessageHandler, sendMessage]); 
    
 
     const handleRequestJoin = async ( groupID,groupCreator,currentUser) => {
@@ -65,7 +70,10 @@ export default function GroupsToJoin() {
                         <li key={group.id} style={{ marginBottom: "10px" }}>
                             <strong>{group.title}</strong>
                             <button
-                                onClick={() => handleRequestJoin(group.id, group.creator_id, currentUser)}
+                                onClick={() => {
+                                    handleRequestJoin(group.id, group.creator_id, currentUser);
+                                    getGroupsToRequest();
+                                }}
                                 style={{
                                     marginLeft: "10px",
                                     padding: "5px 10px",
