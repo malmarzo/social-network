@@ -35,6 +35,7 @@ type Group struct {
 	LastName       string    `json:"lastname"`
 	// GroupMembers  []User      `json:"group_members"` 
 	 CurrentUser   string       `json:"current_user"` 
+	 ChatHistory	[]GroupMessage `json:"chat_history"` 
 }
 
 // Invite to invite a person to join a group
@@ -54,6 +55,7 @@ type Request struct {
 }
 
 type GroupMessage struct {
+	ID 				 int		`json:"id"`
     GroupID          int       `json:"group_id"`
 	SenderID		 string 	`json:"sender_id"`
 	RecevierID		 string 	`json:"recevier_id"`

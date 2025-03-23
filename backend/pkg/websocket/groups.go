@@ -94,6 +94,13 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	}
 	msg.GroupMessage.FirstName = senderName
 	msg.GroupMessage.DateTime = string(dateTime)
+	messageID, err4:= queries.GetMessageGroupId(msg.GroupMessage.GroupID,  msg.GroupMessage.SenderID, user.ID,msg.GroupMessage.Message)
+	if err4 != nil {
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		mu.Unlock()
+		return
+	}
+	msg.GroupMessage.ID = messageID
 	// Now, check if the user is online and send the invite if they are
 	if exists {
 		err := recipientConn.WriteJSON(msg)

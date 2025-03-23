@@ -18,6 +18,7 @@ export default function GroupChat() {
      const [message, setMessage] = useState(""); // State for the input message
      const { addMessageHandler } = useWebSocket();
      const [messages, setMessages] = useState([]);
+     const [messages1, setMessages1] = useState([]);
     useEffect(() => {
         const fetchGroup = async () => {
             if (!id) {
@@ -32,13 +33,23 @@ export default function GroupChat() {
                 setGroup(response);
                 setUsers(response);
                 
+                if (response.group && response.group.chat_history) {
+                    // console.log(response.group.chat_history); 
+                    //setMessages1(response.group.chat_history); // Populate initial chat history
+                    // response.group.chat_history.forEach((msg) => {
+                    //     setMessages1((prev) => [...prev, msg]); // Append each message one by one
+                    // });
+                    //console.log("hellloooo",messages1);
+                    setMessages(response.group.chat_history.map((msg) => ({ group_message: msg })));
+
+                }
                
             } else {
                 console.log("hellooooooo");
                 router.push("/"); // Redirect if group not found
             }
         };
-
+       // setMessages(group.group.chat_history)
           addMessageHandler("groupMessage", (msg) => {
             console.log("Received message:", msg); // Debug log
             setMessages((prev) => [...prev, msg]); // Append new messages
@@ -46,7 +57,7 @@ export default function GroupChat() {
 
         if (id) fetchGroup();
     }, [id, router,addMessageHandler]);
-
+   //console.log("hellloooo",messages1);
     // Function to handle sending invitations
     const handleInviteUsers = async () => {
         if (!group || !group.group || !group.group.creator_id) {
@@ -98,8 +109,8 @@ export default function GroupChat() {
                 {/* Messages display */}
                     <div className="h-40 overflow-y-auto bg-gray-800 p-3 rounded-lg border border-gray-700 mt-2">
                     {messages.length > 0 ? (
-                    messages.map((msg, index) => (
-                        <div key={index} className={`mb-3 ${msg.group_message.sender_id === group.group.current_user ? "text-right" : ""}`}>
+                    messages.map((msg) => (
+                        <div key={msg.group_message.id} className={`mb-3 ${msg.group_message.sender_id === group.group.current_user ? "text-right" : ""}`}>
                             <p className={`text-sm font-semibold ${msg.group_message.sender_id === group.group.current_user ? "text-green-400" : "text-blue-400"}`}>
                                 {msg.group_message.sender_id === group.group.current_user ? "You" : msg.group_message.first_name}
                             </p>
@@ -110,6 +121,23 @@ export default function GroupChat() {
 ) : (
     <p className="text-gray-400 italic">No messages yet...</p>
                     )}
+                    {/* {messages.length > 0 ? (
+                        messages.map((msg, index) => (
+                            <div 
+                                key={msg?.group_message?.id || `msg-${index}`} // Fallback key if id is missing
+                                className={`mb-3 ${msg?.group_message?.sender_id === group.group.current_user ? "text-right" : ""}`}
+                            >
+                                <p className={`text-sm font-semibold ${msg?.group_message?.sender_id === group.group.current_user ? "text-green-400" : "text-blue-400"}`}>
+                                    {msg?.group_message?.sender_id === group.group.current_user ? "You" : msg?.group_message?.first_name}
+                                </p>
+                                <p className="text-sm text-white-300">{msg?.group_message?.message}</p>
+                                <p className="text-xs text-white-500">{msg?.group_message?.date_time}</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-400 italic">No messages yet...</p>
+                    )} */}
+
                 </div>
 
 

@@ -156,7 +156,26 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println("-------------------------------------------")
 	// fmt.Println("users5",users5)
 	// fmt.Println("-------------------------------------------")
+	getChatHistory, err8:= queries.OldGroupChats(Id)
+	if err8!= nil {
+		fmt.Println("Error retreving the chat history")
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+        return
 
+	}
+	fmt.Println("------------------------------")
+	fmt.Println(getChatHistory)
+
+	for i:= 0 ; i < len(getChatHistory); i++ {
+		firstName,err:=queries.GetFirstNameById(getChatHistory[i].SenderID)
+		if err != nil {
+			fmt.Println("Error retreving first name")
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+        return
+
+		}
+		getChatHistory[i].FirstName = firstName
+	}
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",
@@ -169,6 +188,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			LastName: lastName,
 			//GroupMembers: getGroupMembers,
 			CurrentUser: currentUser,
+			ChatHistory:getChatHistory,
         },
 		Users: users5,
     }
