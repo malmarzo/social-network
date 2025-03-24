@@ -42,6 +42,7 @@ const LogInForm = () => {
       } else {
         setSuccess(false);
         setErrorMsg(response.error_msg);
+        setLoading(false);
       }
     } catch (error) {
       setErrorMsg("An error occurred. Please try again later.");

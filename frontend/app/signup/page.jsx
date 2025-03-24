@@ -167,6 +167,7 @@ const SignUpForm = () => {
     } catch (error) {
       setErrorMsg("Something went wrong. Please try again later.");
       setSuccess(false);
+      setLoading(false);
       return;
     } finally {
       setLoading(false);

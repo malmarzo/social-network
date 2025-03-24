@@ -91,8 +91,6 @@ func GetAllPosts(userID, tab string) ([]datamodels.Post, error) {
     GROUP BY p.id
     `
 
-
-
 	switch tab {
 	case "trending":
 		rows, errFetch = db.Query(baseQuery+` 
@@ -304,20 +302,24 @@ func GetProfilePosts(profileID, userID string, isMyProfile bool) ([]datamodels.P
 
 	var rows *sql.Rows
 	if isMyProfile {
-		// Return all my posts
-		rows, err = db.Query(`SELECT * FROM posts WHERE user_id = ?`, profileID)
+		rows, err = db.Query(`
+            SELECT * FROM posts 
+            WHERE user_id = ? 
+            GROUP BY id 
+            ORDER BY created_at DESC`, profileID)
 	} else {
-		// For other profiles, check various conditions
 		rows, err = db.Query(`
             SELECT p.* FROM posts p
-            LEFT JOIN followers f ON p.user_id = f.following_id 
+            LEFT JOIN followers f ON p.user_id = f.following_id AND f.follower_id = ?
             WHERE p.user_id = ? 
             AND (
                 p.privacy = 'public' 
-                OR (p.privacy = 'almost_private' AND f.follower_id = ? AND f.status = 'accepted')
+                OR (p.privacy = 'almost_private' AND f.status = 'accepted')
                 OR (p.privacy = 'private' AND p.allowedUsers LIKE ?)
-            )`,
-			profileID, userID, "%"+userID+"%")
+            )
+            GROUP BY p.id
+            ORDER BY p.created_at DESC`,
+			userID, profileID, "%"+userID+"%")
 	}
 
 	if err != nil {
