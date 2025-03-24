@@ -12,11 +12,14 @@
   display: flex;
   justify-content: center;
   grid-template-columns: none;
+  height: auto; /* Remove fixed height */
 }
 
 .privateContainer .profileDetails {
   width: 100%;
   max-width: 600px;
+  height: auto; /* Override height for private profiles */
+  min-height: min(50vh, 400px); /* Set minimum height */
 }
 
 .profileDetails {
@@ -248,8 +251,7 @@
 .followersFollowing {
   position: sticky;
   top: 80px;
-  height: calc(100vh - 96px);
-  overflow-y: auto;
+  height: min(90vh, 600px);
   background: var(--background);
   border-radius: 1rem;
   border: 1px solid #e5e7eb;
@@ -331,6 +333,10 @@
     height: auto;
     min-height: min(50vh, 400px);
     position: static;
+  }
+
+  .privateContainer .profileDetails {
+    min-height: min(40vh, 300px); /* Even smaller on mobile */
   }
 
   .details {
