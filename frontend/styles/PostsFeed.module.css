@@ -34,6 +34,13 @@
   padding: 0 0.5rem;
 }
 
+.profileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 .toggleNav {
   display: flex;
   justify-content: space-between;
@@ -41,6 +48,12 @@
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.profileNav {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .toggleButtons {

@@ -72,7 +72,6 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
     return false;
   };
 
-
   if (error) {
     return <div className={styles.error}>{error}</div>;
   }
@@ -80,47 +79,58 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
   return (
     <div className={styles.feedContainer}>
       <div className={styles.headerContainer}>
-        <h1 className={styles.title}>
-          {" "}
-          {isGroup || isProfile ? "Activity" : "Posts"}
-        </h1>
-        <nav className={styles.toggleNav}>
-          {!isGroup && !isProfile && (
-            <>
-              <div className={styles.toggleButtons}>
-                {toggles.map((toggle) => (
-                  <button
-                    key={toggle.id}
-                    className={`${styles.toggleButton} ${
-                      activeTab === toggle.id ? styles.activeToggle : ""
-                    }`}
-                    onClick={() => setActiveTab(toggle.id)}
-                  >
-                    {toggle.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-          {shouldShowCreatePost() && (
-            <button
-              className={styles.createPostButton}
-              onClick={() => setCreateNewPost(true)}
-            >
-              Create Post
-            </button>
-          )}
-        </nav>
-
-        {createNewPost && shouldShowCreatePost() && (
-          <CreateNewPost
-            onClose={() => setCreateNewPost(false)}
-            onPostCreated={refreshPosts}
-            isGroup={isGroup}
-            groupID={groupID}
-          />
+        {isProfile ? (
+          <div className={styles.profileHeader}>
+            <h1 className={styles.title}>Activity</h1>
+            {shouldShowCreatePost() && (
+              <button
+                className={styles.createPostButton}
+                onClick={() => setCreateNewPost(true)}
+              >
+                Create Post
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <h1 className={styles.title}>{isGroup ? "Activity" : "Posts"}</h1>
+            <nav className={styles.toggleNav}>
+              {!isGroup && (
+                <div className={styles.toggleButtons}>
+                  {toggles.map((toggle) => (
+                    <button
+                      key={toggle.id}
+                      className={`${styles.toggleButton} ${
+                        activeTab === toggle.id ? styles.activeToggle : ""
+                      }`}
+                      onClick={() => setActiveTab(toggle.id)}
+                    >
+                      {toggle.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {shouldShowCreatePost() && (
+                <button
+                  className={styles.createPostButton}
+                  onClick={() => setCreateNewPost(true)}
+                >
+                  Create Post
+                </button>
+              )}
+            </nav>
+          </>
         )}
       </div>
+
+      {createNewPost && shouldShowCreatePost() && (
+        <CreateNewPost
+          onClose={() => setCreateNewPost(false)}
+          onPostCreated={refreshPosts}
+          isGroup={isGroup}
+          groupID={groupID}
+        />
+      )}
 
       <div className={styles.postsGrid}>
         {posts &&
