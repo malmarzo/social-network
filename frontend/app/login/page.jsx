@@ -3,7 +3,7 @@ import { React, useState } from "react";
 import { invokeAPI } from "@/utils/invokeAPI";
 import SuccessAlert from "../components/Alerts/SuccessAlert";
 import FailAlert from "../components/Alerts/FailAlert";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../components/loaders/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "@/styles/Login.module.css";

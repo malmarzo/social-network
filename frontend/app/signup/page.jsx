@@ -11,7 +11,7 @@ import {
   validateTextOnly,
 } from "@/utils/formValidators";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../components/loaders/LoadingSpinner";
 
 const SignUpForm = () => {
   const [firstName, setFirstName] = useState("");
