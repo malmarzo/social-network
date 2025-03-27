@@ -24,6 +24,9 @@ type SocketMessage struct {
 	Request  	datamodels.Request  `json:"request"`
 	MyGroups    []datamodels.Group `json:"my_groups"`
 	GroupMessage datamodels.GroupMessage `json:"group_message"`
+	TypingMessage datamodels.TypingMessage `json:"typing_message"`
+	EventMessage datamodels.EventMessage `json:"event_message"`
+	EventResponseMessage datamodels.EventResponseMessage `json:"event_response_message"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -64,7 +67,9 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	// here i will add the code responsible for sending invition when user logs in
 	SendPendingInvitations(ws,userID)
 	// here i will add the code responsible for sending the pending requests
-	SendPendingRequests(ws,userID)	
+	SendPendingRequests(ws,userID)
+	// here i will add the code responsible for sending the pending groupMessages
+	//SendPendingGroupMessages(ws,userID,w)		
 //--------------------------------------------------------------------------------------------
 
 	mu.Unlock()
@@ -112,6 +117,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				RequestToJoinGroup(msg,w)
 		}else if  msg.Type == "myGroups" {
 			SendMyGroups(msg,w, userID)
+			//BroadcastMyGroupsUpdate()
 
 		}else if msg.Type == "groupsToRequest" {
 			SendGroupsToRequest(msg,w,userID)
@@ -119,6 +125,14 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		}else if msg.Type == "groupMessage" {
 			SendGroupMessage(msg,w)
 
+		}else if msg.Type == "typingMessage" {
+			SendTypingMessage(msg,w)
+
+		}else if msg.Type == "eventMessage" {
+			SendEventMessage(msg,w)
+
+		}else if msg.Type == "eventResponseMessage" {
+			SendEventResponseMessage(msg,w)
 		}else{
 			socketMessages <- msg
 		}

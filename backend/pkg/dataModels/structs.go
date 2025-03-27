@@ -63,3 +63,41 @@ type GroupMessage struct {
 	FirstName		 string    	 `json:"first_name"`
 	DateTime		 string       `json:"date_time"`
 }
+
+type TypingMessage struct {
+    GroupID          int       `json:"group_id"`
+	SenderID		 string 	`json:"sender_id"`
+	Content 		 string     `json:"content"`
+	//FirstName 		 string      `json:"first_name"`
+}
+
+
+
+type EventMessage struct {
+    ID          int      `json:"id"`
+	GroupID     int    `json:"group_id"`
+    Title       string   `json:"title"`
+    Description string   `json:"description"`
+    DateTime    string   `json:"date_time"`
+    Options     []Option `json:"options"`
+    SenderID     string   `json:"sender_id"`
+	FirstName	 string   `json:"first_name"`
+	CreatedAt    string    `json:"created_at"`
+	EventID      int 		`json:"event_id"`
+	Day          string    	`json:"day"`
+}
+
+
+
+type Option struct {
+    ID   int    `json:"id"`
+    Text string `json:"text"`
+}
+
+type EventResponseMessage struct {
+	GroupID  int `json:"group_id"`
+    EventID  int `json:"event_id"`
+    OptionID int `json:"option_id"`
+    SenderID   string `json:"sender_id"`
+	FirstName  string `json:"first_name"`
+}

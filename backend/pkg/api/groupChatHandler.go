@@ -164,7 +164,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 	fmt.Println("------------------------------")
-	fmt.Println(getChatHistory)
+	//fmt.Println(getChatHistory)
 
 	for i:= 0 ; i < len(getChatHistory); i++ {
 		firstName,err:=queries.GetFirstNameById(getChatHistory[i].SenderID)

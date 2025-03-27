@@ -2,7 +2,13 @@
 "use client"; 
 import AuthButton from "../components/Buttons/AuthButtons";
 import Link from "next/link";
+import GroupsNotifications from "../components/Alerts/groupsNotifications";
+import { useState, useEffect } from "react";
 export default function GroupsPage() {
+    // const [showGroupsNotifier, setShowGroupsNotifier] = useState(false);
+    // const toggleNotifier = () => {
+    //     setShowGroupsNotifier((prev) => !prev);
+    // };
    
     return (
         <div>
@@ -23,6 +29,16 @@ export default function GroupsPage() {
             Request Groups
         </button>
         </Link>
+
+        {/* Button to toggle the UserNotifier */}
+        {/* <button
+                onClick={toggleNotifier}
+                style={styles.button}>
+                {showGroupsNotifier ? "Hide Notifications" : "Show Notifications"}
+            </button> */}
+
+            {/* Conditionally render UserNotifier */}
+            { <GroupsNotifications />}
         </div>
        
     );
@@ -31,9 +47,5 @@ export default function GroupsPage() {
 // Basic Styles
 const styles = {
     container: { padding: "20px", textAlign: "center" },
-    createSection: { marginBottom: "20px" },
-    input: { padding: "8px", marginRight: "10px" },
-    buttonContainer: { marginBottom: "20px" },
-    button: { padding: "10px 15px", margin: "5px", cursor: "pointer" },
-    listContainer: { marginTop: "20px", border: "1px solid #ddd", padding: "10px" }
+    button: { padding: "10px 15px", margin: "10px", backgroundColor: "#1e90ff", color: "white", border: "none", cursor: "pointer" },
 };

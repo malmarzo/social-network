@@ -37,10 +37,10 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
 
             // Call parent function to remove the invitation from the list
             onRespond(response.user_id, accepted);
-            if (accepted) {
-                // Request updated group list
-                sendMessage({ type: "myGroups" });
-            }
+            // if (accepted) {
+            //     // Request updated group list
+            //     sendMessage({ type: "myGroups" });
+            // }
             // Hide the card after responding
             setShowCard(false);
         } catch (error) {

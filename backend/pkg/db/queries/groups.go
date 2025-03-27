@@ -481,14 +481,33 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 	}
 	defer db.Close()
 
+	// query := `
+	// 	SELECT DISTINCT g.id, g.title, g.description, g.creator_id
+	// 	FROM group_members gm
+	// 	JOIN groups g ON gm.group_id = g.id
+	// 	WHERE (gm.user_id = ? AND gm.status = 'accepted') 
+	// 	   OR  g.creator_id = gm.invited_by`
+
 	query := `
-		SELECT g.id, g.title, g.description, g.creator_id
-		FROM group_members gm
-		JOIN groups g ON gm.group_id = g.id
-		WHERE (gm.user_id = ? AND gm.status = 'accepted') 
-		      OR gm.invited_by = ?`
+	SELECT DISTINCT g.id, g.title, g.description, g.creator_id
+	FROM group_members gm
+	JOIN groups g ON gm.group_id = g.id
+	LEFT JOIN (
+		SELECT group_id, MAX(created_at) AS last_message_time 
+		FROM group_chats 
+		WHERE status = 'delivered'
+		GROUP BY group_id
+	) AS last_msg ON g.id = last_msg.group_id
+	WHERE (gm.user_id = ? AND gm.status = 'accepted') 
+	      OR  g.creator_id = gm.invited_by
+	ORDER BY 
+		CASE WHEN last_msg.last_message_time IS NULL THEN 1 ELSE 0 END,  -- Groups with messages come first
+		last_msg.last_message_time DESC,  -- Order by last message time if it exists
+		g.title ASC  -- Otherwise, order alphabetically
+`
+
 	
-	rows, err := db.Query(query, userID, userID)  // Pass userID twice for both conditions
+	rows, err := db.Query(query, userID)  // Pass userID twice for both conditions
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, err
@@ -605,7 +624,7 @@ func GetCreatorIDByGroupID(GroupID int)(string, error){
 
 
 
-// func GetPendingGroupMessages(userID string) ([]datamodels.GroupMessage, error) {
+// func GetPendingGroupMessages(ToUserID string) ([]datamodels.GroupMessage, error) {
 // 	var groupMessages []datamodels.GroupMessage
 // 	dbPath := getDBPath()
 // 	db, err := sql.Open("sqlite3", dbPath)
@@ -620,28 +639,28 @@ func GetCreatorIDByGroupID(GroupID int)(string, error){
 // 		FROM group_chats 
 // 		WHERE to_user_id = ? AND status = 'pending'`
 
-// 	rows, err := db.Query(query, userID)
+// 	rows, err := db.Query(query, ToUserID)
 // 	if err != nil {
-// 		log.Println("Error querying pending invites:", err)
+// 		log.Println("Error querying pending GroupMessages:", err)
 // 		return nil, err
 // 	}
 // 	defer rows.Close()
 
 // 	for rows.Next() {
 // 		var groupMessage datamodels.GroupMessage
-// 		if err := rows.Scan(&groupMessage.GroupID, &GroupMessage.); err != nil {
-// 			log.Println("Error scanning invite row:", err)
+// 		if err := rows.Scan(&groupMessage.GroupID, &groupMessage.SenderID,&groupMessage.RecevierID,&groupMessage.Message); err != nil {
+// 			log.Println("Error scanning groupMessage row:", err)
 // 			return nil, err
 // 		}
-// 		invites = append(invites, invite)
+// 		groupMessages = append(groupMessages, groupMessage)
 // 	}
 
 // 	if err := rows.Err(); err != nil {
-// 		log.Println("Error iterating over invite rows:", err)
+// 		log.Println("Error iterating over groupMessages rows:", err)
 // 		return nil, err
 // 	}
 
-// 	return invites, nil
+// 	return groupMessages, nil
 // }
 
 
@@ -655,11 +674,19 @@ func OldGroupChats(groupID int) ([]datamodels.GroupMessage, error) {
 	}
 	defer db.Close()
 
+	// query := `
+	// 	SELECT id, group_id, user_id, message, created_at 
+	// 	FROM group_chats 
+	// 	WHERE group_id = ? AND status = 'delivered'
+	// `
+
+
 	query := `
 		SELECT id, group_id, user_id, message, created_at 
 		FROM group_chats 
-		WHERE group_id = ? AND status = 'delivered'
+		WHERE group_id = ? AND status = 'delivered' AND user_id = to_user_id
 	`
+
 	
 	rows, err := db.Query(query, groupID)
 	if err != nil {
@@ -749,4 +776,233 @@ func GetMessageGroupId(groupID int, senderID, receiverID, message string) (int, 
 	}
 
 	return messageID, nil
+}
+
+
+// func InsertEvent(groupID int, senderID string, title, description, dateTime string) error {
+// 	dbPath := getDBPath() // Get the database path
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println("Error opening DB:", err)
+// 		return err
+// 	}
+// 	defer db.Close()
+
+// 	query := `
+// 		INSERT INTO events (group_id, creator_id, title, description, event_date, created_at)
+// 		VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+// 	`
+
+// 	_, execErr := db.Exec(query, groupID, senderID, title, description, dateTime)
+// 	if execErr != nil {
+// 		log.Println("Error inserting event:", execErr)
+// 		return execErr
+// 	}
+
+// 	return nil
+// }
+
+
+func InsertEvent(groupID int, senderID, title, description, dateTime string) (int, error) {
+    dbPath := getDBPath() // Get the database path
+    db, err := sql.Open("sqlite3", dbPath)
+    if err != nil {
+        log.Println("Error opening DB:", err)
+        return 0, err
+    }
+    defer db.Close()
+
+    // Insert the event into the table
+    query := `
+        INSERT INTO events (group_id, creator_id, title, description, event_date)
+        VALUES (?, ?, ?, ?, ?)
+    `
+    result, err := db.Exec(query, groupID, senderID, title, description, dateTime)
+    if err != nil {
+        log.Println("Error inserting event:", err)
+        return 0, err
+    }
+
+    // Get the last inserted event ID using LAST_INSERT_ROWID()
+    lastInsertID, err := result.LastInsertId()
+    if err != nil {
+        log.Println("Error getting last insert ID:", err)
+        return 0, err
+    }
+
+    return int(lastInsertID), nil
+}
+
+func InsertEventOptions(eventID int, option []datamodels.Option) error {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return err
+	}
+	defer db.Close()
+
+	query := `
+		INSERT INTO event_options (event_id, option_text)
+		VALUES (?, ?)
+	`
+
+	for _, option := range option {
+		_, execErr := db.Exec(query, eventID, option.Text)
+		if execErr != nil {
+			log.Printf("Error inserting event option (%s): %v\n", option.Text, execErr)
+			return execErr
+		}
+	}
+
+	return nil
+}
+
+func GetEventCreatedAt(groupID int, senderID, title, description string) (string, error) {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return "", err
+	}
+	defer db.Close()
+
+	var createdAt string
+
+	query := `
+		SELECT created_at 
+		FROM events 
+		WHERE group_id = ? AND creator_id = ? AND title = ? AND description = ?
+	`
+
+	err = db.QueryRow(query, groupID, senderID, title, description).Scan(&createdAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("No event found with the given parameters.")
+		} else {
+			log.Println("Error retrieving event timestamp:", err)
+		}
+		return "", err
+	}
+
+	return createdAt, nil
+}
+
+// func InsertEventResponse(eventID int, senderID string, optionID int) error {
+//     dbPath := getDBPath() // Function to get the DB path.
+//     db, err := sql.Open("sqlite3", dbPath)
+//     if err != nil {
+//         log.Println("Error opening DB:", err)
+//         return err
+//     }
+//     defer db.Close()
+
+//     // Prepare the insert statement for event options
+//     stmt, err := db.Prepare("INSERT INTO event_participation (event_id, user_id, option_id) VALUES (?, ?, ?)")
+//     if err != nil {
+//         log.Println("Error preparing statement:", err)
+//         return err
+//     }
+//     defer stmt.Close()
+
+//     // **Execute the statement** to insert data into the database
+//     _, execErr := stmt.Exec(eventID, senderID, optionID)
+//     if execErr != nil {
+//         log.Println("Error executing statement:", execErr)
+//         return execErr
+//     }
+
+//     log.Println("Insert successful!") // Confirm the insert
+//     return nil
+// }
+func InsertEventResponse(eventID int, senderID string, optionID int) error {
+    dbPath := getDBPath() // Function to get the DB path.
+    db, err := sql.Open("sqlite3", dbPath)
+    if err != nil {
+        log.Println("Error opening DB:", err)
+        return err
+    }
+    defer db.Close()
+
+    // Use INSERT OR REPLACE to update the row if the combination of event_id and user_id already exists
+    stmt, err := db.Prepare(`
+        INSERT INTO event_participation (event_id, user_id, option_id)
+        VALUES (?, ?, ?)
+        ON CONFLICT(event_id, user_id) DO UPDATE SET option_id = excluded.option_id
+    `)
+    if err != nil {
+        log.Println("Error preparing statement:", err)
+        return err
+    }
+    defer stmt.Close()
+
+    // Execute the statement to insert or update the row
+    _, execErr := stmt.Exec(eventID, senderID, optionID)
+    if execErr != nil {
+        log.Println("Error executing statement:", execErr)
+        return execErr
+    }
+
+    log.Println("Insert or update successful!") // Confirm the action
+    return nil
+}
+
+
+// func GetEventID(groupID int, senderID, eventTitle, eventDescription string) (int, error) {
+// 	dbPath := getDBPath() // Get the database path
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println("Error opening DB:", err)
+// 		return 0, err
+// 	}
+// 	defer db.Close()
+
+// 	var eventID int
+// 	query := `
+// 		SELECT id 
+// 		FROM events 
+// 		WHERE group_id = ? AND creator_id = ? AND title = ? AND description = ? 
+// 		LIMIT 1
+// 	`
+// 	err = db.QueryRow(query, groupID, senderID, eventTitle, eventDescription).Scan(&eventID)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			log.Println("No event found matching the given criteria.")
+// 			return 0, nil // No matching event found
+// 		}
+// 		log.Println("Error retrieving event ID:", err)
+// 		return 0, err
+// 	}
+
+// 	return eventID, nil
+// }
+
+
+func GetEventOptionID(eventID int, optionText string) (int, error) {
+    dbPath := getDBPath() // Get the database path
+    db, err := sql.Open("sqlite3", dbPath)
+    if err != nil {
+        log.Println("Error opening DB:", err)
+        return 0, err
+    }
+    defer db.Close()
+
+    var optionID int
+    query := `
+        SELECT id 
+        FROM event_options 
+        WHERE event_id = ? AND option_text = ? 
+        LIMIT 1
+    `
+    err = db.QueryRow(query, eventID, optionText).Scan(&optionID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            log.Println("No matching event option found.")
+            return 0, nil // No matching option found
+        }
+        log.Println("Error retrieving event option ID:", err)
+        return 0, err
+    }
+
+    return optionID, nil
 }

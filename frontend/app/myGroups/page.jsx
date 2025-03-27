@@ -8,6 +8,7 @@ export default function MyGroups() {
     const { addMessageHandler } = useWebSocket();
     const [ myGroups, setMyGroups] = useState(null);
     const { sendMessage } = useWebSocket(); 
+    const [activeGroup, setActiveGroup] = useState(null);
 
     useEffect(() => {
         // Request my groups once when the component mounts
@@ -27,11 +28,12 @@ export default function MyGroups() {
             }
             //setMyGroups(msg);
         });
-
+        addMessageHandler("groupMessage", () => {
+            console.log("New message received, refreshing groups...");
+            getMyGroups(); // Re-fetch the groups to update the list
+        });
         // Cleanup function (optional but good practice)
-        return () => {
-            // Remove the message handler if your WebSocket context supports it
-        };
+       
     }, [addMessageHandler, sendMessage]); 
 
     return (
@@ -45,13 +47,16 @@ export default function MyGroups() {
             <ul>
                 {myGroups.my_groups.map((group) => (
                     <li key={group.id} style={{ marginBottom: "10px" }}>
-                        <Link href={`/groupChat/${group.id}`} style={{ color: "#1e90ff", textDecoration: "underline", cursor: "pointer" }}>
+                         <Link href={`/groupChat/${group.id}`} style={{ color: "#1e90ff", textDecoration: "underline", cursor: "pointer" }}>
                             <strong>{group.title}</strong>
-                        </Link>
+                        </Link> 
+                      
                     </li>
                 ))}
-            </ul>
+            </ul> 
+
         )
+        
     )}
 </div>
 

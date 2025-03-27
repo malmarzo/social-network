@@ -28,19 +28,19 @@ const UserNotifier = () => {
       alert("User left");
     });
 
-    addMessageHandler("invite", (msg) => {
-      //alert(msg.content);
-      setInvitation(msg);
+    // addMessageHandler("invite", (msg) => {
+    //   //alert(msg.content);
+    //   setInvitation(msg);
       
      
-    });
+    // });
 
-    addMessageHandler("request", (msg) => {
-      //alert(msg.content);
-      setRequest(msg);
+    // addMessageHandler("request", (msg) => {
+    //   //alert(msg.content);
+    //   setRequest(msg);
       
      
-    });
+    // });
 
     addMessageHandler("hello", (msg) => {
       alert(msg.content);
@@ -49,33 +49,34 @@ const UserNotifier = () => {
 
   return (
    
-    <div>
-      {/* this id for the invitation card */}
-      <>
-        {invitation && (
-            <DisplayInvitationCard invitation={invitation} onRespond={(userId, accepted) => {
-        console.log(`User ${userId} ${accepted ? "accepted" : "declined"} the invitation`);
-        //console.log("hello", invitation);
-        setInvitation(null); // Remove invitation after response
-    }}  />
-        )}
-        </>
+    // <div>
+    //   {/* this id for the invitation card */}
+    //   <>
+    //     {invitation && (
+    //         <DisplayInvitationCard invitation={invitation} onRespond={(userId, accepted) => {
+    //     console.log(`User ${userId} ${accepted ? "accepted" : "declined"} the invitation`);
+    //     //console.log("hello", invitation);
+    //     setInvitation(null); // Remove invitation after response
+    // }}  />
+    //     )}
+    //     </>
         
-        <>
-        {/* this for the request card  */}
-        {request && (
-          <DisplayRequestCard
-            request={request}
-            onRespond={(userId, accepted) => {
-              console.log(
-                `User ${userId} ${accepted ? "accepted" : "declined"} the request`
-              );
-              setRequest(null); // Remove request after response
-            }}
-          />
-        )}
-        </>
-    </div>
+    //     <>
+    //     {/* this for the request card  */}
+    //     {request && (
+    //       <DisplayRequestCard
+    //         request={request}
+    //         onRespond={(userId, accepted) => {
+    //           console.log(
+    //             `User ${userId} ${accepted ? "accepted" : "declined"} the request`
+    //           );
+    //           setRequest(null); // Remove request after response
+    //         }}
+    //       />
+    //     )}
+    //     </>
+    // </div>
+    <div></div>
 
 );
 };
