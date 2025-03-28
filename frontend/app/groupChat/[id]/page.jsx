@@ -16,13 +16,12 @@ export default function GroupChat() {
     const router = useRouter();
     const { id } = useParams();
     const [group, setGroup] = useState(null);
-    const [selectedUsers, setSelectedUsers] = useState([]); // Track selected users
+    const [selectedUsers, setSelectedUsers] = useState([]); 
     const [users, setUsers] = useState(null);
      const { sendMessage } = useWebSocket();
-     const [message, setMessage] = useState(""); // State for the input message
+     const [message, setMessage] = useState(""); 
      const { addMessageHandler } = useWebSocket();
      const [messages, setMessages] = useState([]);
-     const [messages1, setMessages1] = useState([]);
      const [showEmojiPicker, setShowEmojiPicker] = useState(false);
      const [typingStatus, setTypingStatus] = useState(""); 
      const messagesEndRef = useRef(null);
@@ -32,10 +31,7 @@ export default function GroupChat() {
      const [dateTime, setDateTime] = useState("");
      const [options, setOptions] = useState([""]);
      const [day, setDay] = useState("");
-     const [selectedOption, setSelectedOption] = useState(null); // State to track selected option
-     const [eventResponseName, setEventResponseName] = useState("");
-     const dateTimeInputRef = useRef(null);
-      
+     const [selectedOption, setSelectedOption] = useState({}); 
     
 
      const scrollToBottom = () => {
@@ -63,14 +59,7 @@ export default function GroupChat() {
                 setUsers(response);
                 
                 if (response.group && response.group.chat_history) {
-                    // console.log(response.group.chat_history); 
-                    //setMessages1(response.group.chat_history); // Populate initial chat history
-                    // response.group.chat_history.forEach((msg) => {
-                    //     setMessages1((prev) => [...prev, msg]); // Append each message one by one
-                    // });
-                    //console.log("hellloooo",messages1);
                     setMessages(response.group.chat_history.map((msg) => ({ group_message: msg })));
-
                 }
                
             } else {
@@ -78,7 +67,7 @@ export default function GroupChat() {
                 router.push("/"); // Redirect if group not found
             }
         };
-       // setMessages(group.group.chat_history)
+       
           addMessageHandler("groupMessage", (msg) => {
             console.log("Received message:", msg); // Debug log
             setMessages((prev) => [...prev, msg]); // Append new messages
@@ -86,32 +75,43 @@ export default function GroupChat() {
         });
 
         addMessageHandler("typingMessage", (msg) => {
-           
             setTypingStatus(msg.typing_message.content);
             // Clear typing status after 3 seconds
             setTimeout(() => setTypingStatus(""), 1500);
         });
 
         addMessageHandler("eventMessage", (msg) => {
-           // setEvents(msg.event_message)
             setEvents((prev) => [...prev,msg]);
         });
        
         addMessageHandler("eventResponseMessage", (msg) => {
-            setEventResponseName(msg.event_response_message.first_name);
-            setSelectedOption(msg.event_response_message.option_id);
-         });
+            const { option_id, sender_id, first_name } = msg.event_response_message;
+        
+            setSelectedOption((prev) => {
+                // Create a new object where we first remove the user's previous selection
+                const updatedSelections = Object.keys(prev).reduce((acc, key) => {
+                    acc[key] = prev[key].filter((user) => user.senderId !== sender_id);  // Remove old selection for this user
+                    return acc;
+                }, {});
+        
+                // Add the user's new selection to the correct option
+                return {
+                    ...updatedSelections,
+                    [option_id]: [...(updatedSelections[option_id] || []), { senderId: sender_id, firstName: first_name }],
+                };
+            });
+        });
 
        
 
         if (id) fetchGroup();
     }, [id, router,addMessageHandler]);
 
-  //console.log("current event:",events);
+ 
     const handleEmojiClick = (emojiObject) => {
         setMessage((prevMessage) => prevMessage + emojiObject.emoji); // Add emoji to message
     };
-   //console.log("hellloooo",messages1);
+  
     // Function to handle sending invitations
     const handleInviteUsers = async () => {
         if (!group || !group.group || !group.group.creator_id) {
@@ -219,27 +219,13 @@ export default function GroupChat() {
                 </p>
             </div>
 
-            {/* Chat messages section */}
-            {/* this section wher i will work */}
+            {/* displaying Chat messages section */}
             <div className="mt-6 bg-gray-700 p-4 rounded-lg border border-gray-600">
                 <h3 className="text-xl font-bold text-white">💬 Chat messages</h3>
 
                 {/* Messages display */}
                      <div className="h-40 overflow-y-auto bg-gray-800 p-3 rounded-lg border border-gray-700 mt-2">
-                    {/* {messages.length > 0 ? (
-                    messages.map((msg) => (
-                        <div key={msg.group_message.id} className={`mb-3 ${msg.group_message.sender_id === group.group.current_user ? "text-right" : ""}`}>
-                            <p className={`text-sm font-semibold ${msg.group_message.sender_id === group.group.current_user ? "text-green-400" : "text-blue-400"}`}>
-                                {msg.group_message.sender_id === group.group.current_user ? "You" : msg.group_message.first_name}
-                            </p>
-                            <p className="text-sm text-white-300">{msg.group_message.message}</p>
-                            <p className="text-xs text-white-500">{msg.group_message.date_time}</p>
-                        </div>
-
-    ))
-) : (
-    <p className="text-gray-400 italic">No messages yet...</p>
-                    )} */}
+                    
                     {messages.length > 0 ? (
     messages.map((msg) => (
         msg.group_message ? (  // Add this check
@@ -250,23 +236,13 @@ export default function GroupChat() {
                 <p className="text-sm text-white-300">{msg.group_message.message}</p>
                 <p className="text-xs text-white-500">{msg.group_message.date_time}</p>
             </div>
-        ) : null  // Handle undefined case gracefully
+        ) : null  
     ))
 ) : (
     <p className="text-gray-400 italic">No messages yet...</p>
 )}
-
-
-
                     <div ref={messagesEndRef}></div>
-
-
-
                 </div> 
-
-
-
-
                 {/* end of message displays */}
 
 
@@ -288,7 +264,6 @@ export default function GroupChat() {
                         }}
                         onKeyUp={(e) => e.key === "Enter" && handleSendMessage()} // Send message on Enter
                     />
-
                      <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                         😊
                     </button>
@@ -308,13 +283,10 @@ export default function GroupChat() {
                     </div>
                 )}
             </div>
+            {/* end for input for typing messages */}
 
-
-            {/* end of section where i will work  */}
 
             {/* the section for the event creation  */}
-
-            
             {/* Event Creation Section */}
             <div className="mt-6 bg-gray-700 p-4 rounded-lg border border-gray-600">
                 <h3 className="text-xl font-bold text-white">🎉 Create Event</h3>
@@ -368,15 +340,13 @@ export default function GroupChat() {
                     <button
                         onClick={handleSendEvent}
                         className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        // disabled={!title.trim() || !description.trim() || !dateTime.trim() || options.some(option => !option.trim())}
                     >
                         Create Event
                     </button>
                 </div>
             </div>
-
-
                 {/* end of event creation */}
+
 
                 {/* here i will display the event  */}
                 <div className="event-container p-4">
@@ -395,38 +365,21 @@ export default function GroupChat() {
                                 <span className="font-semibold">Day:</span> {event.event_message.day}
                             </p>
 
-                            {/* <ul className="mt-2 text-sm text-gray-700 space-y-1">
-                                <span className="font-bold">Options:</span>
-                                {event.event_message.options.map((option,index) => (
-                                    <li key={index} className="list-disc list-inside flex justify-between items-center">
-                                        <span>{option.text}</span>
-                                        <button
-                        onClick={() => handleResponseEvent(event.event_message.event_id, option.id,sendMessage)}
-                        className={`ml-4 px-3 py-1 rounded-lg text-white ${
-                            selectedOption === option.id ? 'bg-blue-500' : 'bg-gray-500 hover:bg-blue-400'
-                        }`}
-                    >
-                        {selectedOption === option.id ? 'Selected' : 'Choose'}
-                    </button>
-                                    </li>
-                                ))}
-                            </ul> */}
-
 <ul className="mt-2 text-sm text-gray-700 space-y-2 bg-gray-100 p-4 rounded-lg shadow-md">
             <span className="font-bold text-gray-800">Options:</span>
             {event.event_message.options.map((option, index) => (
                 <li
                     key={index}
                     className="list-disc list-inside flex justify-between items-center p-2 bg-white rounded-md shadow-sm hover:bg-gray-50 transition"
-                >
-                    <div className="flex items-center space-x-3">
-                        <span className="text-gray-900">{option.text}</span>
-                        {selectedOption === option.id && eventResponseName && (
-                            <span className="text-blue-600 font-medium">
-                                - Selected by: {eventResponseName}
-                            </span>
-                        )}
-                    </div>
+                > 
+                 <div>
+                 <span className="text-gray-900">{option.text}</span>
+                    {selectedOption[option.id]?.map((user) => (
+                        <span key={user.senderId} className="text-blue-600 font-medium">
+                             <br></br> {user.firstName}
+                        </span>
+                    ))}
+                </div> 
 
                     <button
                         onClick={() => handleResponseEvent(event.event_message.event_id, option.id,sendMessage)}
@@ -446,9 +399,8 @@ export default function GroupChat() {
                 )}
             </div>
         </div>
-
-
                 {/* end of displaying the event */}
+
                        
             {/* Users List for Invitations */}
             <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
@@ -461,6 +413,7 @@ export default function GroupChat() {
                     Invite Selected Users
                 </button>
             </div>
+            {/* end of users invitation list */}
         </div>
     );
 }
