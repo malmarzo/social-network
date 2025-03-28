@@ -61,6 +61,42 @@ export default function GroupChat() {
                 if (response.group && response.group.chat_history) {
                     setMessages(response.group.chat_history.map((msg) => ({ group_message: msg })));
                 }
+
+                if (response.group && response.group.event_history) {
+                    setEvents(response.group.event_history.map((msg) => ({ event_message: msg })));
+                }
+                
+                if (response.group && response.group.event_responses_history) {
+                    console.log("hello");
+                    const eventResponses = response.group.event_responses_history.map((msg) => ({
+                        option_id: msg.option_id,
+                        sender_id: msg.sender_id,
+                        first_name: msg.first_name,
+                    }));
+                
+                    console.log("Event Responses:", eventResponses); // Debugging the mapped event responses
+                
+                    // Now set the eventResponses
+                    setSelectedOption((prev) => {
+                        // Initialize an accumulator object to update the selections
+                        const updatedSelections = eventResponses.reduce((acc, { option_id, sender_id, first_name }) => {
+                            // If the senderId already exists for this option_id, update the entry; otherwise, add it
+                            const existingUsers = acc[option_id] || [];
+                            const updatedOption = existingUsers.filter((user) => user.senderId !== sender_id);
+                            updatedOption.push({ senderId: sender_id, firstName: first_name });
+                
+                            // Update the accumulator object
+                            acc[option_id] = updatedOption;
+                            return acc;
+                        }, {});
+                
+                        console.log("Updated Selections:", updatedSelections); // Debugging the updated selections
+                
+                        return updatedSelections;
+                    });
+                
+                }
+                
                
             } else {
                 console.log("hellooooooo");

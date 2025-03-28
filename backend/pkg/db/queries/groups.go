@@ -4,6 +4,7 @@ import ("log"
 "database/sql"
 datamodels "social-network/pkg/dataModels"
 "fmt"
+"social-network/pkg/utils"
 )
 
 
@@ -1005,4 +1006,142 @@ func GetEventOptionID(eventID int, optionText string) (int, error) {
     }
 
     return optionID, nil
+}
+
+func OldGroupEvents(groupID int) ([]datamodels.EventMessage, error) {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+		SELECT e.id, e.group_id, e.creator_id, e.title, e.description, e.event_date, e.created_at,
+		       eo.id, eo.option_text
+		FROM events e
+		LEFT JOIN event_options eo ON e.id = eo.event_id
+		WHERE e.group_id = ?
+		ORDER BY e.event_date DESC
+	`
+
+	rows, err := db.Query(query, groupID)
+	if err != nil {
+		log.Println("Error querying old events:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	eventMap := make(map[int]*datamodels.EventMessage)
+
+	// Process rows and build event details with options
+	for rows.Next() {
+		var eventID, optionID int
+		var groupID int
+		var creatorID, title, description, eventDate, createdAt, optionText string
+
+		err := rows.Scan(&eventID, &groupID, &creatorID, &title, &description, &eventDate, &createdAt, &optionID, &optionText)
+		if err != nil {
+			log.Println("Error scanning row:", err)
+			return nil, err
+		}
+		senderName, err := GetFirstNameById(creatorID)
+		if err != nil {
+			log.Println("Error retrieving sender name", err)
+			return nil, err
+		}
+
+		day, err:= utils.ExtractDayFromEvents(eventDate)
+		if err != nil {
+		log.Println("Error extracting the day", err)
+        return nil , err
+		}
+
+
+		// Check if event already exists in the map
+		event, exists := eventMap[eventID]
+		if !exists {
+			event = &datamodels.EventMessage{
+				EventID:     eventID,
+				GroupID:     groupID,
+				SenderID:    creatorID,
+				Title:       title,
+				Description: description,
+				DateTime:    eventDate,
+				CreatedAt:   createdAt,
+				Options:     []datamodels.Option{},
+				Day:day,
+				FirstName:senderName,
+			}
+			eventMap[eventID] = event
+		}
+
+		// Add option if it exists
+		if optionText != "" {
+			event.Options = append(event.Options, datamodels.Option{
+				ID:   optionID,
+				Text: optionText,
+			})
+		}
+	}
+
+	// Convert map to slice
+	var eventHistory []datamodels.EventMessage
+	for _, event := range eventMap {
+		eventHistory = append(eventHistory, *event)
+	}
+
+	return eventHistory, nil
+}
+
+func GetEventResponses(eventID int) ([]datamodels.EventResponseMessage, error) {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+		SELECT ep.user_id, ep.option_id, eo.option_text, ep.event_id, u.first_name
+		FROM event_participation ep
+		LEFT JOIN event_options eo ON ep.option_id = eo.id
+		LEFT JOIN users u ON ep.user_id = u.id
+		WHERE ep.event_id = ?
+	`
+
+	rows, err := db.Query(query, eventID)
+	if err != nil {
+		log.Println("Error querying event responses:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var eventResponses []datamodels.EventResponseMessage
+
+	// Process rows and build event responses
+	for rows.Next() {
+		var userID, optionText, firstName string
+		var optionID, eventID int
+
+		err := rows.Scan(&userID, &optionID, &optionText, &eventID, &firstName)
+		if err != nil {
+			log.Println("Error scanning row:", err)
+			return nil, err
+		}
+
+		eventResponse := datamodels.EventResponseMessage{
+			EventID:   eventID,
+			OptionID:  optionID,
+			SenderID:  userID,
+			//OptionText: optionText,
+			FirstName: firstName,  // Populate the FirstName field
+		}
+
+		eventResponses = append(eventResponses, eventResponse)
+	}
+
+	return eventResponses, nil
 }

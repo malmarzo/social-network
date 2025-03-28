@@ -133,29 +133,6 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// getGroupMembers, err7:= queries.GroupMembers(Id)
-	// if err7 != nil {
-	// 	fmt.Println("Error retreving group members", err7)
-    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
-    //     return
-
-	// }
-	// getFirstName, err8:= queries.GetFirstNameById(CreatorID)
-	// if err8 != nil {
-	// 	fmt.Println("Error retriving first name by id", err8)
-    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
-    //     return
-
-	// }
-	// admin := datamodels.User{
-	// 	ID:        CreatorID,      // Assuming newUserID contains the user ID
-	// 	FirstName: getFirstName,   // Assuming newFirstName contains the user's first name
-	// }
-	// getGroupMembers = append(getGroupMembers, admin)
-	// end of test 
-	// fmt.Println("-------------------------------------------")
-	// fmt.Println("users5",users5)
-	// fmt.Println("-------------------------------------------")
 	getChatHistory, err8:= queries.OldGroupChats(Id)
 	if err8!= nil {
 		fmt.Println("Error retreving the chat history")
@@ -164,7 +141,6 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 	fmt.Println("------------------------------")
-	//fmt.Println(getChatHistory)
 
 	for i:= 0 ; i < len(getChatHistory); i++ {
 		firstName,err:=queries.GetFirstNameById(getChatHistory[i].SenderID)
@@ -176,6 +152,28 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		getChatHistory[i].FirstName = firstName
 	}
+
+
+	getEventHistory, err9:= queries.OldGroupEvents(Id)
+	if err9!= nil {
+		fmt.Println("Error retreving the event history")
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+        return
+
+	}
+	var eventResponsesFinal []datamodels.EventResponseMessage
+	for _, event := range getEventHistory {
+		eventID := event.EventID // Extract the event ID
+	
+		// Call GetEventResponses for the event ID
+		eventResponses, err := queries.GetEventResponses(eventID)
+		if err != nil {
+			log.Println("Error getting event responses for event ID", eventID, err)
+			continue // Skip this event and move to the next one
+		}
+		eventResponsesFinal = append(eventResponsesFinal, eventResponses...)
+	}
+
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",
@@ -186,13 +184,13 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
             Description: Description,
 			FirstName: firstName,
 			LastName: lastName,
-			//GroupMembers: getGroupMembers,
 			CurrentUser: currentUser,
 			ChatHistory:getChatHistory,
+			EventHistory:getEventHistory,
+			EventResponsesHistory:eventResponsesFinal,
         },
 		Users: users5,
     }
 	utils.SendResponse(w, response) //send the response
-    //json.NewEncoder(w).Encode(g)
 }
 }

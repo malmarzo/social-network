@@ -2,6 +2,7 @@ package utils
 
 import (
 	"time"
+	"log"
 
 )
 
@@ -17,4 +18,17 @@ func ExtractDay(dateTime string) (string, error) {
 	// Extract the weekday name (e.g., "Monday")
 	day := parsedTime.Weekday().String()
 	return day, nil
+}
+
+
+func ExtractDayFromEvents(dateStr string) (string, error) {
+	// Define the format that matches your datetime string
+	layout := time.RFC3339 // This corresponds to "2006-01-02T15:04:05Z"
+	t, err := time.Parse(layout, dateStr)
+	if err != nil {
+		log.Println("Error parsing date:", err)
+		return "", err
+	}
+	// Return the full weekday name (e.g., "Monday", "Tuesday", etc.)
+	return t.Weekday().String(), nil
 }
