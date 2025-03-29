@@ -2,7 +2,6 @@
 "use client"; 
 import AuthButton from "../components/Buttons/AuthButtons";
 import Link from "next/link";
-import GroupsNotifications from "../components/Alerts/groupsNotifications";
 import { useState, useEffect } from "react";
 export default function GroupsPage() {
     // const [showGroupsNotifier, setShowGroupsNotifier] = useState(false);
@@ -37,8 +36,7 @@ export default function GroupsPage() {
                 {showGroupsNotifier ? "Hide Notifications" : "Show Notifications"}
             </button> */}
 
-            {/* Conditionally render UserNotifier */}
-            { <GroupsNotifications />}
+           
         </div>
        
     );

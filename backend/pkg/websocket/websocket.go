@@ -27,6 +27,7 @@ type SocketMessage struct {
 	TypingMessage datamodels.TypingMessage `json:"typing_message"`
 	EventMessage datamodels.EventMessage `json:"event_message"`
 	EventResponseMessage datamodels.EventResponseMessage `json:"event_response_message"`
+	//EventNotification    datamodels.EventNotification    `json:"event_notification"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -69,7 +70,9 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	// here i will add the code responsible for sending the pending requests
 	SendPendingRequests(ws,userID)
 	// here i will add the code responsible for sending the pending groupMessages
-	//SendPendingGroupMessages(ws,userID,w)		
+	//SendPendingGroupMessages(ws,userID,w)	
+	// here i will send the event notification 
+	SendPendingEventNotifications(ws,userID)	
 //--------------------------------------------------------------------------------------------
 
 	mu.Unlock()

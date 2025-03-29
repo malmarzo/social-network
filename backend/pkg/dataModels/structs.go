@@ -103,3 +103,15 @@ type EventResponseMessage struct {
     SenderID   string `json:"sender_id"`
 	FirstName  string `json:"first_name"`
 }
+
+
+type EventNotification struct {
+	EventID      int 		`json:"event_id"`
+	GroupID     int    `json:"group_id"`
+    Title       string   `json:"title"`
+    Description string   `json:"description"`
+	 SenderID     string   `json:"sender_id"`
+	FirstName	 string   `json:"first_name"`
+}
+
+

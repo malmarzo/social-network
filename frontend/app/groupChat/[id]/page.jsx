@@ -223,7 +223,6 @@ export default function GroupChat() {
         }
         console.log("Formatted Options:", formattedOptions);
         sendEventMessage(group.group.id, group.group.current_user, title, description, dateTime, formattedOptions, sendMessage);
-    
         console.log("Event is sent");
         
         // Reset form fields after sending the event

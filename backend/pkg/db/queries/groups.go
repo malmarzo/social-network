@@ -1145,3 +1145,106 @@ func GetEventResponses(eventID int) ([]datamodels.EventResponseMessage, error) {
 
 	return eventResponses, nil
 }
+
+
+
+func InsertEventNotification(userID string, eventID int) error {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return err
+	}
+	defer db.Close()
+
+	query := `
+		INSERT INTO event_notification (user_id, event_id, status)
+		VALUES (?, ?, 'pending')
+	`
+
+	_, err = db.Exec(query, userID, eventID)
+	if err != nil {
+		log.Println("Error inserting event notification:", err)
+		return err
+	}
+
+	log.Println("Event notification inserted successfully")
+	return nil
+}
+
+
+func UpdateEventNotificationStatus(userID string, eventID int) error {
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return err
+	}
+	defer db.Close()
+
+	query := `
+		UPDATE event_notification
+		SET status = 'delivered'
+		WHERE user_id = ? AND event_id = ?
+	`
+
+	_, err = db.Exec(query, userID, eventID)
+	if err != nil {
+		log.Println("Error updating event notification status:", err)
+		return err
+	}
+
+	log.Println("Event notification status updated to 'delivered'")
+	return nil
+}
+
+func GetPendingEventNotifications(userID string) ([]datamodels.EventNotification, error) {
+	var eventNotifications []datamodels.EventNotification
+	dbPath := getDBPath() // Get the database path
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	// SQL query to get event details along with the notification details
+	query := `
+		SELECT en.event_id, e.title, e.creator_id
+		FROM event_notification en
+		JOIN events e ON en.event_id = e.id
+		WHERE en.user_id = ? AND en.status = 'pending'
+	`
+
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		log.Println("Error querying pending event notifications with event details:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var eventNotification datamodels.EventNotification
+		var title string
+		var creatorID string
+
+		// Scan the event notification along with the event details (title and creator_id)
+		if err := rows.Scan(&eventNotification.EventID, &title, &creatorID); err != nil {
+			log.Println("Error scanning event notification row:", err)
+			return nil, err
+		}
+
+		// Assign the title and creator_id to the event notification struct
+		eventNotification.Title = title
+		eventNotification.SenderID = creatorID
+
+		eventNotifications = append(eventNotifications, eventNotification)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over event notification rows:", err)
+		return nil, err
+	}
+
+	return eventNotifications, nil
+}

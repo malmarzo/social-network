@@ -204,7 +204,8 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
         log.Println("Error inserting event", err)
         return
     }
-
+	
+	
     if err := queries.InsertEventOptions(eventID, msg.EventMessage.Options); err != nil {
         log.Println("Error inserting event options", err)
         return
@@ -240,14 +241,36 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
     msg.EventMessage.CreatedAt = string(createdAt)
 	msg.EventMessage.EventID = eventID
 	
-
+	eventNotificationMsg := SocketMessage{
+		Type:    "eventNotificationMsg",
+		Content: fmt.Sprintf("there is new event called %s created by %s", msg.EventMessage.Title,senderName),
+		//EventNotification: event,
+	}
     for _, user := range getGroupMembers {
+		err = queries.InsertEventNotification(user.ID,eventID)
+		if err != nil {
+			log.Printf("Error inserting event notification to user %s: %v", user.ID, err)
+				return
+		}
         recipientConn, exists := clients[user.ID]
         if exists {
             // User is online; send the message via WebSocket
             if err := recipientConn.WriteJSON(msg); err != nil {
-                log.Printf("Error sending message to user %s: %v", user.ID, err)
+                log.Printf("Error sending message to user %s: %v", user.ID, err)	
             }
+			if !(user.ID == CreatorID ){
+				err = recipientConn.WriteJSON(eventNotificationMsg)
+			err = queries.UpdateEventNotificationStatus(user.ID, eventID)
+			if err != nil {
+				log.Printf("Error sending stored eventNotification to user %s: %v", user.ID, err)
+				return
+			}
+
+			}
+			
+			if err != nil {
+				log.Printf("Error updating event notification status for user %s: %v", user.ID, err)
+			}
         } else {
             log.Printf("User %s is not online", user.ID)
         }
@@ -255,7 +278,38 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
 }
 
 //end---------------------------------------------------------------------
+// here i will add the code responsible for sending the pending requests
+func SendPendingEventNotifications(ws *websocket.Conn, userID string) {
+	pendingEvents, err := queries.GetPendingEventNotifications(userID)
+	if err != nil {
+		log.Printf("Error fetching pending events for user %s: %v", userID, err)
+		return
+	}
+	for _, event := range pendingEvents {
+		senderName, err := queries.GetFirstNameById(event.SenderID)
+		if err != nil {
+			log.Println("Error retrieving sender name", err)
+			return
+		}
+		eventNotificationMsg := SocketMessage{
+			Type:    "eventNotificationMsg",
+			Content: fmt.Sprintf("there is new event called %s created by %s", event.Title,senderName),
+			//EventNotification: event,
+		}
+		err = ws.WriteJSON(eventNotificationMsg)
+		if err != nil {
+			log.Printf("Error sending stored eventNotification to user %s: %v", userID, err)
+			return
+		}
+		err = queries.UpdateEventNotificationStatus(userID, event.EventID)
+			if err != nil {
+				log.Printf("Error updating event notification status for user %s: %v", userID, err)
+			}
+	}
+}
 
+
+//--------------------------------------------------------------------
 // here i will add the handleResponseEvent
 func SendEventResponseMessage(msg SocketMessage, w http.ResponseWriter) {
     fmt.Println("sendEventResponseMessage is functioning")
@@ -314,6 +368,27 @@ func SendEventResponseMessage(msg SocketMessage, w http.ResponseWriter) {
 }
 
 //end of handle response event
+
+// here i will add the function to send event notification
+func SendPendingRequests(ws *websocket.Conn, userID string) {
+	pendingRequests, err := queries.GetPendingRequests(userID)
+	if err != nil {
+		log.Printf("Error fetching pending requests for user %s: %v", userID, err)
+		return
+	}
+	for _, request := range pendingRequests {
+		requestMsg := SocketMessage{
+			Type:    "request",
+			Content: fmt.Sprintf("Someone requested to join the group %d", request.GroupID),
+			Request: request,
+		}
+		err := ws.WriteJSON(requestMsg)
+		if err != nil {
+			log.Printf("Error sending stored request to user %s: %v", userID, err)
+		}
+	}
+}
+// end of event notification
 // test real time typing
 func SendTypingMessage(msg SocketMessage, w http.ResponseWriter) {
 	fmt.Println("sendTyping is functioning")
@@ -420,28 +495,7 @@ func SendPendingInvitations(ws *websocket.Conn, userID string) {
 	}
 }
 //------------------------------------------------------------------------
-// here i will add the code responsible for sending the pending requests
-func SendPendingRequests(ws *websocket.Conn, userID string) {
-	pendingRequests, err := queries.GetPendingRequests(userID)
-	if err != nil {
-		log.Printf("Error fetching pending requests for user %s: %v", userID, err)
-		return
-	}
-	for _, request := range pendingRequests {
-		requestMsg := SocketMessage{
-			Type:    "request",
-			Content: fmt.Sprintf("Someone requested to join the group %d", request.GroupID),
-			Request: request,
-		}
-		err := ws.WriteJSON(requestMsg)
-		if err != nil {
-			log.Printf("Error sending stored request to user %s: %v", userID, err)
-		}
-	}
-}
 
-
-//--------------------------------------------------------------------
 // this function to send the list of my groups
 
 func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
