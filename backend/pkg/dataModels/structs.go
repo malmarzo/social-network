@@ -7,6 +7,7 @@ type Response struct {
 	ErrorMsg string `json:"error_msg"`
 	Group 	 Group	`json:"group"`
 	Users	 []User `json:"users"`
+	Data     interface{} `json:"data,omitempty"`
 }
 
 //User struct to store user data
@@ -115,3 +116,43 @@ type EventNotification struct {
 }
 
 
+type GroupPost struct {
+	GroupID       int `json:"group_id"`
+	PostID        string  `json:"post_id"`
+	UserID        string `json:"user_id"`
+	UserNickname  string `json:"user_nickname"`
+	PostTitle     string `json:"post_title"`
+	Content       string `json:"content"`
+	PostImage     string `json:"post_image"` // Will contain base64 string after conversion
+	NumOfLikes    int    `json:"num_of_likes"`
+	NumOfDislikes int    `json:"num_of_dislikes"`
+	NumOfComments int    `json:"num_of_comments"`
+	CreatedAt     string `json:"created_at"`
+	ImageMimeType string `json:"image_mime_type"` // For content-type header
+	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
+}
+
+type GroupPostInteractions struct {
+	Likes    int `json:"likes"`
+	Dislikes int `json:"dislikes"`
+	Comments int `json:"comments"`
+}
+
+// Comment struct
+type GroupComment struct {
+	CommentID     string `json:"comment_id"`
+	PostID        string `json:"post_id"`
+	UserID        string `json:"user_id"`
+	UserNickname  string `json:"user_nickname"`
+	CommentText   string `json:"comment_text"`
+	CreatedAt     string `json:"created_at"`
+	CommentImage  string `json:"comment_image"`   // Will contain base64 string after conversion
+	ImageMimeType string `json:"image_mime_type"` // For content-type header
+	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
+}
+
+
+type NewGroupComment struct {
+	Comment GroupComment          `json:"comment"`
+	Stats   GroupPostInteractions `json:"stats"`
+}
