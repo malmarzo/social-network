@@ -428,7 +428,7 @@ const ProfilePage = () => {
                   </button>
                   {(followedByMe || followsMe) && (
                     <button
-                      onClick={() => router.push(`/messages/${profileID}`)}
+                      onClick={() => router.push(`/chat?userId=${profileID}`)}
                       className={`${styles.actionButton} ${styles.messageButton}`}
                     >
                       Message

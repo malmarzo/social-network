@@ -78,6 +78,28 @@ func GetChatHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	// Log the parameters for debugging
 	log.Printf("GetChatHistoryHandler: userID=%s, otherUserID=%s, limit=%v, offset=%v", userID, otherUserID, limit, offset)
 
+	// Check if users can chat with each other based on follow relationship
+	canChat, err := queries.CanUsersChat(userID, otherUserID)
+	if err != nil {
+		log.Printf("GetChatHistoryHandler: Error checking if users can chat: %v", err)
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusInternalServerError,
+			Status:   "Failed",
+			ErrorMsg: "Error checking follow relationship",
+		})
+		return
+	}
+
+	// If users cannot chat with each other, return an error
+	if !canChat {
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusForbidden,
+			Status:   "Failed",
+			ErrorMsg: "You can only view chat history with users who follow you or whom you follow",
+		})
+		return
+	}
+
 	// Get chat history
 	messages, err := queries.GetChatHistory(userID, otherUserID, limit, offset)
 	if err != nil {
@@ -150,6 +172,56 @@ func GetUserChatsHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetEligibleChatUsersHandler handles requests to get a list of users the current user can chat with
+func GetEligibleChatUsersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusMethodNotAllowed,
+			Status:   "Failed",
+			ErrorMsg: "Method not allowed",
+		})
+		return
+	}
+
+	// Get current user ID from the request header (set by AuthMiddleware)
+	userID := r.Header.Get("User-ID")
+	if userID == "" {
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusUnauthorized,
+			Status:   "Failed",
+			ErrorMsg: "Unauthorized",
+		})
+		return
+	}
+
+	// Log the user ID for debugging
+	log.Printf("GetEligibleChatUsersHandler: userID=%v", userID)
+
+	// Get eligible chat users (those who follow the user or whom the user follows)
+	users, err := queries.GetEligibleChatUsers(userID)
+	if err != nil {
+		log.Printf("Error in GetEligibleChatUsersHandler: %v", err)
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusInternalServerError,
+			Status:   "Failed",
+			ErrorMsg: "Failed to get eligible chat users",
+		})
+		return
+	}
+
+	// Make sure we're not returning nil
+	if users == nil {
+		users = []datamodels.User{}
+	}
+
+	// Send response
+	utils.SendResponse(w, datamodels.Response{
+		Code:   http.StatusOK,
+		Status: "Success",
+		Data:   users,
+	})
+}
+
 // GetOnlineUsersHandler handles requests to get a list of online users
 func GetOnlineUsersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -196,6 +268,72 @@ func GetOnlineUsersHandler(w http.ResponseWriter, r *http.Request) {
 		Code:   http.StatusOK,
 		Status: "Success",
 		Data:   onlineUserIDs,
+	})
+}
+
+// UserStatus represents a user's online status and last seen time
+type UserStatus struct {
+	UserID   string `json:"user_id"`
+	IsOnline bool   `json:"is_online"`
+	LastSeen int64  `json:"last_seen"`
+}
+
+// GetAllUserStatusHandler handles requests to get status with last seen timestamps for all users
+func GetAllUserStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusMethodNotAllowed,
+			Status:   "Failed",
+			ErrorMsg: "Method not allowed",
+		})
+		return
+	}
+
+	// Get current user ID from the request header (set by AuthMiddleware)
+	requesterID := r.Header.Get("User-ID")
+	if requesterID == "" {
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusUnauthorized,
+			Status:   "Failed",
+			ErrorMsg: "Unauthorized",
+		})
+		return
+	}
+
+	// Get all users
+	users, err := queries.GetAllUsers()
+	if err != nil {
+		utils.SendResponse(w, datamodels.Response{
+			Code:     http.StatusInternalServerError,
+			Status:   "Failed",
+			ErrorMsg: "Failed to get users",
+		})
+		return
+	}
+
+	// Create status list for all users
+	userStatuses := make([]UserStatus, 0, len(users))
+	for _, user := range users {
+		// Skip the requester
+		if user.UserID == requesterID {
+			continue
+		}
+
+		// Get user's online status and last seen timestamp
+		isOnline, lastSeen := websocket.GetUserStatus(user.UserID)
+
+		userStatuses = append(userStatuses, UserStatus{
+			UserID:   user.UserID,
+			IsOnline: isOnline,
+			LastSeen: lastSeen,
+		})
+	}
+
+	// Send response
+	utils.SendResponse(w, datamodels.Response{
+		Code:   http.StatusOK,
+		Status: "Success",
+		Data:   userStatuses,
 	})
 }
 

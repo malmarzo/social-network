@@ -28,9 +28,11 @@ func main() {
 	// Chat API endpoints
 	http.HandleFunc("/chat/history", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetChatHistoryHandler)))
 	http.HandleFunc("/chat/users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUserChatsHandler)))
+	http.HandleFunc("/chat/eligible-users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetEligibleChatUsersHandler)))
 	http.HandleFunc("/chat/online", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetOnlineUsersHandler)))
 	http.HandleFunc("/chat/status", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUserStatusHandler)))
 	http.HandleFunc("/chat/all-users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetAllUsersHandler)))
+	http.HandleFunc("/chat/all-status", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetAllUserStatusHandler)))
 	http.HandleFunc("/chat/group/history", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetGroupChatHistoryHandler)))
 
 	//Handles validating user session

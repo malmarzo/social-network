@@ -283,3 +283,94 @@ func RejectFollowRequest(requestID string) error {
 
 	return nil
 }
+
+// CanUsersChat checks if two users can chat with each other based on follow relationship
+// Users can chat if either one follows the other
+func CanUsersChat(userID1 string, userID2 string) (bool, error) {
+	// If it's the same user, return false (can't chat with yourself)
+	if userID1 == userID2 {
+		return false, nil
+	}
+
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return false, err
+	}
+
+	defer db.Close()
+
+	// Check if userID1 follows userID2
+	var user1FollowsUser2 bool
+	err = db.QueryRow("SELECT COUNT(*) > 0 FROM followers WHERE follower_id = ? AND following_id = ? AND status = 'accepted'", userID1, userID2).Scan(&user1FollowsUser2)
+	if err != nil {
+		return false, err
+	}
+
+	// If userID1 follows userID2, they can chat
+	if user1FollowsUser2 {
+		return true, nil
+	}
+
+	// Check if userID2 follows userID1
+	var user2FollowsUser1 bool
+	err = db.QueryRow("SELECT COUNT(*) > 0 FROM followers WHERE follower_id = ? AND following_id = ? AND status = 'accepted'", userID2, userID1).Scan(&user2FollowsUser1)
+	if err != nil {
+		return false, err
+	}
+
+	// Return true if either follows the other
+	return user2FollowsUser1, nil
+}
+
+// GetEligibleChatUsers returns a list of users who are eligible to chat with the current user
+// Users are eligible if they follow the current user or if the current user follows them
+func GetEligibleChatUsers(userID string) ([]datamodels.User, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	// Get users who either follow the current user or are followed by the current user
+	query := `
+	SELECT DISTINCT u.id, u.nickname, u.avatar 
+	FROM users u
+	WHERE u.id IN (
+		-- Users who follow the current user
+		SELECT follower_id FROM followers 
+		WHERE following_id = ? AND status = 'accepted'
+		UNION
+		-- Users who are followed by the current user
+		SELECT following_id FROM followers 
+		WHERE follower_id = ? AND status = 'accepted'
+	)
+	AND u.id != ?  -- Exclude the current user
+	ORDER BY u.nickname`
+
+	rows, err := db.Query(query, userID, userID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []datamodels.User
+	for rows.Next() {
+		var user datamodels.User
+		var avatar sql.NullString
+		err = rows.Scan(&user.ID, &user.Nickname, &avatar)
+		if err != nil {
+			return nil, err
+		}
+		
+		if avatar.Valid {
+			user.Avatar = avatar.String
+		}
+		
+		users = append(users, user)
+	}
+
+	return users, nil
+}

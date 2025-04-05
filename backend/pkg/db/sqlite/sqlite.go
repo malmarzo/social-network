@@ -11,16 +11,23 @@ import (
 )
 
 func ConnectDB() *sql.DB {
-    db, err := sql.Open("sqlite3", "backend/pkg/db/sqlite/social_network.db")
+    // Use absolute path to the database file
+    dbPath := "/Users/mac/Desktop/social-network/backend/pkg/db/sqlite/social_network.db"
+    log.Println("Connecting to database at:", dbPath)
+    
+    db, err := sql.Open("sqlite3", dbPath)
     if err != nil {
-        log.Fatal(err)
+        log.Fatal("Database connection error:", err)
     }
 
     // Run Migrations
-    m, err := migrate.New(
-        "file://../backend/pkg/db/migrations/sqlite",       // Path to the migrations directory
-        "sqlite3://../backend/pkg/db/sqlite/social_network.db", // Path to the database
-    )
+    migrationsPath := "file:///Users/mac/Desktop/social-network/backend/pkg/db/migrations/sqlite"
+    dbURL := "sqlite3://" + dbPath
+    
+    log.Println("Running migrations from:", migrationsPath)
+    log.Println("Database URL:", dbURL)
+    
+    m, err := migrate.New(migrationsPath, dbURL)
     if err != nil {
         log.Println("Migration error:", err)
     } else {
@@ -34,48 +41,3 @@ func ConnectDB() *sql.DB {
     return db
 }
 
-
-// package sqlite
-
-// import (
-//     "database/sql"
-//     "log"
-
-//     "github.com/golang-migrate/migrate/v4"
-//     _ "github.com/golang-migrate/migrate/v4/database/sqlite3"
-//     _ "github.com/golang-migrate/migrate/v4/source/file"
-//     _ "github.com/mattn/go-sqlite3"
-// )
-
-// func ConnectDB() *sql.DB {
-//     db, err := sql.Open("sqlite3", "backend/pkg/db/sqlite/social_network.db")
-//     if err != nil {
-//         log.Fatal(err)
-//     }
-
-//     // Run Migrations
-//     m, err := migrate.New(
-//         "file://../backend/pkg/db/migrations/sqlite",       // Path to the migrations directory
-//         "sqlite3://../backend/pkg/db/sqlite/social_network.db", // Path to the database
-//     )
-//     if err != nil {
-//         log.Println("Migration error:", err)
-//         return db
-//     }
-
-//     // Force the database version to 14
-//     if err := m.Force(14); err != nil {
-//         log.Println("Failed to force version:", err)
-//     } else {
-//         log.Println("Database forced to version 14")
-//     }
-
-//     // Apply Migrations
-//     if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-//         log.Fatal("Migration failed:", err)
-//     } else {
-//         log.Println("Migrations applied successfully")
-//     }
-
-//     return db
-// }

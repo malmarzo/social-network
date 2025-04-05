@@ -221,6 +221,32 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 
+				// Check if users can chat with each other (based on follow relationship)
+				canChat, err := queries.CanUsersChat(senderID, receiverID)
+				if err != nil {
+					log.Printf("Error checking if users can chat: %v", err)
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Error checking follow relationship",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
+				}
+
+				// If users cannot chat with each other, send an error message
+				if !canChat {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "You can only chat with users who follow you or whom you follow",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
+				}
+
 				// Save message to database
 				messageID, err := queries.SaveChatMessage(senderID, receiverID, msg.Content)
 				if err != nil {
@@ -332,15 +358,9 @@ func HandleMessages() {
 				}
 			}
 		} else if newMsg.Type == "chat" {
-			// Save message to database
-			msgID, err := queries.SaveChatMessage(newMsg.UserDetails.ID, newMsg.ReceiverID, newMsg.Content)
-			if err != nil {
-				log.Printf("Error saving chat message to database: %v", err)
-			} else {
-				log.Printf("Chat message saved to database with ID: %d", msgID)
-				// Update the message ID in the original message
-				newMsg.MessageID = fmt.Sprintf("%d", msgID)
-			}
+			// Message is already saved to database in HandleConnections
+			// Just log that we're processing it
+			log.Printf("Processing chat message: %s -> %s", newMsg.UserDetails.ID, newMsg.ReceiverID)
 
 			// Send to the specific recipient
 			if recipient, ok := clients[newMsg.ReceiverID]; ok {
@@ -367,15 +387,9 @@ func HandleMessages() {
 				}
 			}
 		} else if newMsg.Type == "groupChat" {
-			// Save group message to database
-			msgID, err := queries.SaveGroupChatMessage(newMsg.GroupID, newMsg.UserDetails.ID, newMsg.Content)
-			if err != nil {
-				log.Printf("Error saving group chat message to database: %v", err)
-			} else {
-				log.Printf("Group chat message saved to database with ID: %d", msgID)
-				// Update the message ID in the original message
-				newMsg.MessageID = fmt.Sprintf("%d", msgID)
-			}
+			// Message is already saved to database in HandleConnections
+			// Just log that we're processing it
+			log.Printf("Processing group chat message: %s in group %s", newMsg.UserDetails.ID, newMsg.GroupID)
 
 			// For group chat, we need to send to all members of the group
 			// This is simplified - in a real app, you'd query group members from DB
@@ -475,7 +489,6 @@ func GetConnectedUsers() []string {
 
 	return userIDs
 }
-
 
 // Check if a user is online
 func IsUserOnline(userID string) bool {

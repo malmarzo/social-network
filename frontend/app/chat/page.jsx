@@ -76,7 +76,7 @@ export default function ChatPage() {
 
 
   return (
-    <ChatProvider initialUrlUserId={searchParams.get('user')}>
+    <ChatProvider initialUrlUserId={searchParams.get('userId')}>
       <div className="relative flex h-screen overflow-hidden bg-gray-100">
         {/* Back button */}
         <div className="fixed top-3 left-3 z-50">

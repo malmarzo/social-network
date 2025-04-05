@@ -220,8 +220,8 @@ const PostActionButtons = ({ postID, isGroup }) => {
         }`}
       >
         <div className={styles.commentsList}>
-          {commentsList?.map((comment, index) => (
-            <div key={index} className="p-2 border-b border-gray-500">
+          {commentsList?.map((comment) => (
+            <div key={comment.comment_id} className="p-2 border-b border-gray-500">
               <div className={styles.commentHeader}>
                 <div className={styles.commentUser}>
                   <Link href={`/profile/${comment.user_id}`}>
