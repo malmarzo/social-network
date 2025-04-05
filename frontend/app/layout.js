@@ -9,6 +9,11 @@ import { ChatPageProvider } from "@/context/ChatPageContext";
 import UserNotifier from "./components/Alerts/UserNotifier";
 import ChatNotifier from "./components/chat/ChatNotifier";
 import { usePathname } from 'next/navigation';
+import {
+  AlertProvider,
+  ConfirmAction,
+  Notification,
+} from "./components/Alerts/PopUp";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,15 +38,19 @@ export default function RootLayout({ children }) {
         <div className="main-container">
           <AuthProvider>
             <WebsocketProvider>
-              <NotificationProvider>
-                <ChatPageProvider>
-                  {/* Only render the header if we're not on the chat page */}
-                  {!isChatPage && <Header />}
-                  <UserNotifier />
-                  <ChatNotifier />
-                  {children}
-                </ChatPageProvider>
-              </NotificationProvider>
+              <AlertProvider>
+                <NotificationProvider>
+                  <ChatPageProvider>
+                    {/* Only render the header if we're not on the chat page */}
+                    {!isChatPage && <Header />}
+                    <UserNotifier />
+                    <ChatNotifier />
+                    <ConfirmAction />
+                    <Notification />
+                    {children}
+                  </ChatPageProvider>
+                </NotificationProvider>
+              </AlertProvider>
             </WebsocketProvider>
           </AuthProvider>
         </div>

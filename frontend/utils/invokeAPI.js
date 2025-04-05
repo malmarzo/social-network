@@ -19,6 +19,7 @@ const API_BASE_URL = "http://localhost:8080/";
  * @param {boolean} options.useCache - Whether to use cache for GET requests
  * @param {boolean} options.forceRefresh - Force refresh cache
  * @param {number} options.retryCount - Number of retries on failure
+ * @param {object} options.queryParams - Query parameters to append to URL
  */
 export async function invokeAPI(route, body, method = 'GET', contentType, options = {}) {
   // Default options
@@ -27,7 +28,8 @@ export async function invokeAPI(route, body, method = 'GET', contentType, option
     forceRefresh = false,
     retryCount = 0,
     timeout = 10000, // 10 second timeout by default
-    headers = {}
+    headers = {},
+    queryParams = {}
   } = options;
   
   // Basic validation
@@ -37,7 +39,7 @@ export async function invokeAPI(route, body, method = 'GET', contentType, option
   }
 
   // Check cache for GET requests if caching is enabled
-  const cacheKey = `${method}:${route}:${JSON.stringify(body || {})}`;
+  const cacheKey = `${method}:${route}:${JSON.stringify(body || {})}:${JSON.stringify(queryParams)}`;
   if (method === 'GET' && useCache && !forceRefresh) {
     const cachedResponse = apiCache.get(cacheKey);
     if (cachedResponse && Date.now() < cachedResponse.expiry) {
@@ -65,6 +67,21 @@ export async function invokeAPI(route, body, method = 'GET', contentType, option
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   requestOptions.signal = controller.signal;
 
+  // Handle query parameters
+  let url = new URL(API_BASE_URL + route);
+  if (queryParams && Object.keys(queryParams).length > 0) {
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        url.searchParams.append(key, value);
+      }
+    });
+  }
+  
+  // Add timestamp to prevent browser caching for GET requests
+  if (method === 'GET') {
+    url.searchParams.append('_t', Date.now());
+  }
+
   // Handle body and content type
   if (body instanceof FormData) {
     // Content type for form data will be set by browser
@@ -75,16 +92,10 @@ export async function invokeAPI(route, body, method = 'GET', contentType, option
       requestOptions.body = JSON.stringify(body);
     }
   }
-  
+
   try {
     const startTime = performance.now();
     console.log(`Invoking API: ${route}`);
-    
-    // Add a timestamp to prevent caching by the browser
-    const url = new URL(API_BASE_URL + route);
-    if (method === 'GET') {
-      url.searchParams.append('_t', Date.now());
-    }
     
     const response = await fetch(url.toString(), requestOptions);
     clearTimeout(timeoutId); // Clear the timeout

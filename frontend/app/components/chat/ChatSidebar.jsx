@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 import { useChat } from '@/context/ChatContext';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { formatDistanceToNow } from 'date-fns';
 import { useWebSocket } from '@/context/Websocket';
 import { useNotification } from '@/context/NotificationContext';
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +29,7 @@ export default function ChatSidebar() {
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
 
-  // Get all users with their unread status and ensure last_message_time is properly set
+  // Get eligible chat users with their unread status and ensure last_message_time is properly set
   const usersWithUnreadStatus = allUsers
     .map(user => ({
       ...user,
@@ -47,6 +49,11 @@ export default function ChatSidebar() {
       if (a.unreadCount !== b.unreadCount) {
         return b.unreadCount - a.unreadCount; // Users with unread messages first
       }
+      
+      // Then sort by most recent message
+      const aTime = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
+      const bTime = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+      return bTime - aTime; // Most recent conversations first
       
       // Check if users have message history
       const aHasMessage = Boolean(a.last_message);
@@ -183,7 +190,9 @@ export default function ChatSidebar() {
                   <div className="relative flex-shrink-0">
                     {user.avatar ? (
                       <Image
-                        src={user.avatar.startsWith('/uploads/') ? user.avatar : user.avatar.startsWith('uploads/') ? `/${user.avatar}` : `/uploads/${user.avatar}`}
+                        src={user.avatar_mime_type ? 
+                          `data:${user.avatar_mime_type};base64,${user.avatar}` : 
+                          "/imgs/defaultAvatar.jpg"}
                         alt={user.nickname}
                         width={48}
                         height={48}
@@ -194,10 +203,11 @@ export default function ChatSidebar() {
                         {user.nickname.charAt(0).toUpperCase()}
                       </div>
                     )}
+                    
                     {/* Online status indicator */}
                     <div 
-                      className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${onlineUsers.includes(String(user.user_id)) ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                      title={onlineUsers.includes(String(user.user_id)) ? 'Online' : 'Offline'}
+                      className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${user.isOnline || onlineUsers.includes(String(user.user_id)) ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
+                      title={user.isOnline || onlineUsers.includes(String(user.user_id)) ? 'Online' : user.lastSeen ? `Last seen ${formatTimestamp(new Date(user.lastSeen * 1000).toISOString())}` : 'Offline'}
                     ></div>
                     
                     {/* Unread message badge */}

@@ -7,17 +7,39 @@ import (
 
 func InsertSession(sessionID string, userID string, expiration string) error {
 	dbPath := getDBPath()
-	db, err1 := sql.Open("sqlite3", dbPath)
-	if err1 != nil {
-		log.Println(err1)
-		return err1
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 	defer db.Close()
-	_, err2 := db.Exec("INSERT INTO sessions (session_token, user_id, expiration) VALUES (?, ?, ?)", sessionID, userID, expiration)
-	if err2 != nil {
-		return err2
+
+	// Start transaction
+	tx, err := db.Begin()
+	if err != nil {
+		log.Println(err)
+		return err
 	}
-	return nil
+	defer tx.Rollback()
+
+	// Delete any existing sessions for this user
+	_, err = tx.Exec("DELETE FROM sessions WHERE user_id = ?", userID)
+	if err != nil {
+		log.Printf("Failed to delete existing sessions: %v", err)
+		return err
+	}
+
+	// Insert new session
+	_, err = tx.Exec(
+		"INSERT INTO sessions (session_token, user_id, expiration) VALUES (?, ?, ?)",
+		sessionID, userID, expiration,
+	)
+	if err != nil {
+		log.Printf("Failed to insert new session: %v", err)
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func ValidateSession(cookieValue string) (string, error) {

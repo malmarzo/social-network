@@ -62,3 +62,80 @@ type Post struct {
 	ImageMimeType string `json:"image_mime_type"` // For content-type header
 	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
 }
+
+// Post interactions stats
+type PostInteractions struct {
+	Likes    int `json:"likes"`
+	Dislikes int `json:"dislikes"`
+	Comments int `json:"comments"`
+}
+
+type NewComment struct {
+	Comment Comment          `json:"comment"`
+	Stats   PostInteractions `json:"stats"`
+}
+
+// Comment struct
+type Comment struct {
+	CommentID     string `json:"comment_id"`
+	PostID        string `json:"post_id"`
+	UserID        string `json:"user_id"`
+	UserNickname  string `json:"user_nickname"`
+	CommentText   string `json:"comment_text"`
+	CreatedAt     string `json:"created_at"`
+	CommentImage  string `json:"comment_image"`   // Will contain base64 string after conversion
+	ImageMimeType string `json:"image_mime_type"` // For content-type header
+	ImageDataURL  []byte `json:"-"`               // Temporary storage, won't be sent in JSON
+}
+
+type Group struct {
+	GroupID   string `json:"group_id"`
+	GroupName string `json:"group_name"`
+}
+
+type ExploreLists struct {
+	UsersList  []User  `json:"users_list"`
+	GroupsList []Group `json:"groups_list"`
+}
+
+type Profile struct {
+	UserID             string `json:"id"`
+	UserEmail          string `json:"email"`
+	UserNickname       string `json:"nickname"`
+	UserFirstName      string `json:"first_name"`
+	UserLastName       string `json:"last_name"`
+	UserDOB            string `json:"dob"`
+	UserAvatar         string `json:"avatar"`
+	UserAvatarMimeType string `json:"avatar_mime_type"`
+	UserAbout          string `json:"about"`
+	IsPrivate          bool   `json:"is_private"`
+	UserCreatedAt      string `json:"created_at"`
+	IsMyProfile        bool   `json:"is_my_profile"`
+	IsFollowingMe      bool   `json:"is_following_me"`
+	IsFollowingHim     bool   `json:"is_following_him"`
+	IsRequestSent      bool   `json:"is_request_sent"`
+	UserAvatarURL      string `json:"avatar_url"`
+	NumOfFollowers     int    `json:"num_of_followers"`
+	NumOfFollowing     int    `json:"num_of_following"`
+	NumOfPosts         int    `json:"num_of_posts"`
+}
+
+type PrivacyUpdateRequest struct {
+	IsPrivate bool `json:"is_private"`
+}
+
+
+type FollowRequest struct {
+	RequestID string `json:"request_id"`
+	UserID    string `json:"user_id"`
+	UserNickname string `json:"nickname"`
+}
+
+type FollowersFollowingRequests struct {
+	FollowersList []User `json:"followers_list"`
+	FollowingList []User `json:"following_list"`
+	RequestsList  []FollowRequest `json:"requests_list"`
+}
+
+
+

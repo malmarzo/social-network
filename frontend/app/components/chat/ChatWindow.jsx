@@ -7,6 +7,7 @@ import { useWebSocket } from '@/context/Websocket';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
+import EmojiPicker from 'emoji-picker-react';
 
 export default function ChatWindow({ toggleSidebar, isMobile }) {
   const [message, setMessage] = useState('');
@@ -55,12 +56,12 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
           (new Date() - new Date(lastMessage.created_at)) < 2000) {
         
         // Play notification sound if available
-        try {
-          const audio = new Audio('/notification.mp3');
-          audio.play().catch(e => console.log('Audio play failed:', e));
-        } catch (e) {
-          console.log('Audio not supported:', e);
-        }
+        // try {
+        //   const audio = new Audio('/notification.mp3');
+        //   audio.play().catch(e => console.log('Audio play failed:', e));
+        // } catch (e) {
+        //   console.log('Audio not supported:', e);
+        // }
         
         // Try to show browser notification if permission is granted
         if ("Notification" in window) {
@@ -119,6 +120,15 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
   // Handle message input change
   const handleMessageChange = (e) => {
     setMessage(e.target.value);
+  };
+
+  // Handle emoji selection
+  const handleEmojiClick = (emojiData) => {
+    setMessage(prev => prev + emojiData.emoji);
+    // Focus back on the input after selecting an emoji
+    if (messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
   };
 
   // Send a message
@@ -218,7 +228,9 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
             <div className="relative">
               {selectedUser.avatar ? (
                 <Image
-                  src={selectedUser.avatar.startsWith('/uploads/') ? selectedUser.avatar : selectedUser.avatar.startsWith('uploads/') ? `/${selectedUser.avatar}` : `/uploads/${selectedUser.avatar}`}
+                  src={selectedUser.avatar_mime_type ? 
+                    `data:${selectedUser.avatar_mime_type};base64,${selectedUser.avatar}` : 
+                    "/imgs/defaultAvatar.jpg"}
                   alt={selectedUser.nickname}
                   width={44}
                   height={44}
@@ -247,19 +259,8 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <button className="text-gray-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors duration-200" title="Voice call">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-              </svg>
-            </button>
-            <button className="text-gray-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors duration-200" title="More options">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-              </svg>
-            </button>
+          {/* Chat header actions removed as they were not being used */}
           </div>
-        </div>
       )}
 
       {/* Chat messages */}
@@ -330,7 +331,9 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
                         <div className="flex-shrink-0 mr-2 self-end mb-1">
                           {selectedUser.avatar ? (
                             <Image
-                              src={selectedUser.avatar.startsWith('/uploads/') ? selectedUser.avatar : selectedUser.avatar.startsWith('uploads/') ? `/${selectedUser.avatar}` : `/uploads/${selectedUser.avatar}`}
+                              src={selectedUser.avatar_mime_type ? 
+                                `data:${selectedUser.avatar_mime_type};base64,${selectedUser.avatar}` : 
+                                "/imgs/defaultAvatar.jpg"}
                               alt={selectedUser.nickname}
                               width={28}
                               height={28}
@@ -388,15 +391,7 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </button>
-            <button
-              type="button"
-              className="text-gray-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors duration-200 mr-1"
-              title="Attach file"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-              </svg>
-            </button>
+            {/* File attachment button removed as it's not being used */}
             <div className="relative flex-1">
               <input
                 ref={messageInputRef}
@@ -436,14 +431,25 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
             </div>
           )}
           {showEmojiPicker && (
-            <div className="absolute bottom-20 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-20">
-              {/* Emoji picker will be implemented here */}
-              <div className="p-4 text-center text-gray-600">
-                <svg className="h-8 w-8 mx-auto mb-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <p className="font-medium">Emoji picker coming soon!</p>
-                <p className="text-xs mt-1 text-gray-500">This feature is under development</p>
+            <div className="absolute bottom-20 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+              <div className="relative">
+                <button 
+                  onClick={() => setShowEmojiPicker(false)}
+                  className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 z-10 bg-white rounded-full p-1"
+                  title="Close emoji picker"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+                <EmojiPicker 
+                  onEmojiClick={handleEmojiClick} 
+                  searchDisabled={false}
+                  width={300}
+                  height={400}
+                  previewConfig={{ showPreview: false }}
+                  skinTonesDisabled
+                />
               </div>
             </div>
           )}

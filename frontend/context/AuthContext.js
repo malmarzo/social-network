@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
 
   const updateAuthState = async (newState, userData = null) => {
     setIsLoggedIn(newState);
-    if (userData) {
+    if (userData && newState === true) {
       setUserID(userData.user_id);
       setUserNickname(userData.user_nickname);
     } else {

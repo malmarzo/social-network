@@ -4,6 +4,7 @@
   padding: 1rem;
   height: calc(90vh - 4rem);
   overflow-y: auto;
+  scrollbar-width: thin
 }
 
 .title {
@@ -23,6 +24,7 @@
     hover:bg-indigo-700 transition-colors duration-200
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
     shadow-sm text-sm;
+    margin-left: auto;
 }
 
 .activeToggle {
@@ -70,11 +72,59 @@
 }
 
 .commentsList {
-  @apply p-4 space-y-4 max-h-80 overflow-y-auto;
+  @apply p-4 space-y-4 max-h-60 overflow-y-auto;
+  border: 1px solid black;
 }
 
 .commentInput {
-  @apply w-full p-4 border-t border-gray-100;
+  @apply w-full p-2 rounded-lg focus:outline-none;
+  background-color: white;
+  color: black;
+  display: flex;
+}
+
+.commentHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.commentUser {
+  @apply font-medium text-indigo-600;
+}
+
+.commentDate {
+  @apply text-sm text-gray-500;
+}
+
+.fileInputLabel {
+  @apply cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors duration-200;
+}
+
+.fileInput {
+  @apply hidden;
+}
+
+.sendButton {
+  @apply cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-colors duration-200;
+}
+
+.commentInputContainer {
+  @apply flex flex-col gap-2 border-t border-gray-100;
+}
+
+.imagePreviewContainer {
+  @apply relative mx-4 mt-2;
+}
+
+.imagePreview {
+  @apply w-32 h-32 object-cover rounded-lg border border-gray-200;
+}
+
+.removeImageButton {
+  @apply absolute -top-2 -right-2 bg-gray-800 text-white rounded-full w-6 h-6 
+    flex items-center justify-center text-sm font-bold
+    hover:bg-gray-900 transition-colors duration-200;
 }
 
 .loading {
@@ -99,4 +149,20 @@
 
 .postAuthor {
   @apply text-base font-medium text-indigo-600 hover:text-indigo-700 mb-1;
+}
+
+.errorText {
+  @apply text-red-500 text-xs mt-1;
+}
+
+.commentText {
+  @apply text-gray-700 mb-2;
+}
+
+.commentImageContainer {
+  @apply mt-2;
+}
+
+.commentImage {
+  @apply max-w-[100px] rounded-lg shadow-sm;
 }

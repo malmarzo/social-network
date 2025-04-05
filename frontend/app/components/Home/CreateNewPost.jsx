@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import styles from "@/styles/CreateNewPost.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 import FailAlert from "../Alerts/FailAlert";
+import { useWebSocket } from "@/context/Websocket";
+import { useAuth } from "@/context/AuthContext";
 
-const CreateNewPost = ({ onClose, onPostCreated }) => {
+const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
   // Add onPostCreated prop
   const [postTitle, setPostTitle] = useState("");
   const [postContent, setPostContent] = useState("");
@@ -15,7 +17,13 @@ const CreateNewPost = ({ onClose, onPostCreated }) => {
   const [followersList, setFollowersList] = useState([]);
   const [fetchError, setFetchError] = useState("");
 
+  const { sendMessage } = useWebSocket();
+  const { userID } = useAuth();
+
   useEffect(() => {
+    if (isGroup) {
+      return;
+    }
     async function getFollowers() {
       setFetchError("");
       try {
@@ -63,7 +71,13 @@ const CreateNewPost = ({ onClose, onPostCreated }) => {
     }
 
     try {
-      const response = await invokeAPI("createPost", formData, "POST");
+      let response;
+      if (isGroup) {
+        formData.append("groupID", groupID);
+        response = await invokeAPI("createGroupPost", formData, "POST");
+      } else {
+        response = await invokeAPI("createPost", formData, "POST");
+      }
       console.log(response);
       if (response.code === 200) {
         // Clear form
@@ -78,6 +92,15 @@ const CreateNewPost = ({ onClose, onPostCreated }) => {
           onPostCreated();
         }
         onClose();
+
+        if (!isGroup) {
+          sendMessage({
+            type: "new_post",
+            userDetails: {
+              id: userID,
+            }
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to create post", error);
@@ -182,46 +205,48 @@ const CreateNewPost = ({ onClose, onPostCreated }) => {
             )}
           </div>
 
-          <div className={styles.input}>
-            <label className={styles.inputLabel}>Post Privacy</label>
-            <div className={styles.radioGroup}>
-              <label>
-                <input
-                  type="radio"
-                  value="public"
-                  checked={postPrivacy === "public"}
-                  onChange={(e) => setPostPrivacy(e.target.value)}
-                  name="privacy"
-                />
-                Public
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  value="almost_private"
-                  checked={postPrivacy === "almost_private"}
-                  onChange={(e) => setPostPrivacy(e.target.value)}
-                  name="privacy"
-                />
-                Almost-private (Only followers)
-              </label>
-
-              {followersList && followersList.length !== 0 && (
+          {!isGroup && (
+            <div className={styles.input}>
+              <label className={styles.inputLabel}>Post Privacy</label>
+              <div className={styles.radioGroup}>
                 <label>
                   <input
                     type="radio"
-                    value="private"
-                    checked={postPrivacy === "private"}
+                    value="public"
+                    checked={postPrivacy === "public"}
                     onChange={(e) => setPostPrivacy(e.target.value)}
                     name="privacy"
                   />
-                  Private (Selected followers)
+                  Public
                 </label>
-              )}
-            </div>
-          </div>
+                <label>
+                  <input
+                    type="radio"
+                    value="almost_private"
+                    checked={postPrivacy === "almost_private"}
+                    onChange={(e) => setPostPrivacy(e.target.value)}
+                    name="privacy"
+                  />
+                  Almost-private (Only followers)
+                </label>
 
-          {postPrivacy === "private" && (
+                {followersList && followersList.length !== 0 && (
+                  <label>
+                    <input
+                      type="radio"
+                      value="private"
+                      checked={postPrivacy === "private"}
+                      onChange={(e) => setPostPrivacy(e.target.value)}
+                      name="privacy"
+                    />
+                    Private (Selected followers)
+                  </label>
+                )}
+              </div>
+            </div>
+          )}
+
+          {postPrivacy === "private" && !isGroup && (
             <div className={styles.followerSection}>
               <label className={styles.inputLabel}>Select Followers</label>
               <div className={styles.followerList}>

@@ -3,6 +3,7 @@ import style from "@/styles/ProfileCard.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { useWebSocket } from "@/context/Websocket";
 
 const Card = () => {
   //Data for the profile card
@@ -16,39 +17,46 @@ const Card = () => {
 
   const { userID } = useAuth();
 
-  useEffect(() => {
-    //Fetches the user's data for the card
-    async function fetchData() {
-      try {
-        const response = await invokeAPI("profileCard", null, "GET");
+  const { addMessageHandler } = useWebSocket();
 
-        if (!response || response.code !== 200) {
-          setError(true);
-          return;
-        }
+  //Fetches the user's data for the card
+  async function fetchData() {
+    try {
+      const response = await invokeAPI("profileCard", null, "GET");
 
-        console.log(response);
-
-        const profileData = response.data;
-        console.log("Profile data:", profileData);
-
-        if (profileData.avatar) {
-          const imageDataUrl = `data:${profileData.avatar_mime_type};base64,${profileData.avatar}`;
-          setImageSrc(imageDataUrl);
-        }
-
-        setUsername(profileData.nickname || "");
-        setPosts(profileData.num_of_posts || 0);
-        setFollowers(profileData.num_of_followers || 0);
-        setFollowing(profileData.num_of_following || 0);
-      } catch (error) {
-        console.error("Failed to fetch profile data:", error);
+      if (!response || response.code !== 200) {
         setError(true);
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    }
 
+      console.log(response);
+
+      const profileData = response.data;
+      console.log("Profile data:", profileData);
+
+      if (profileData.avatar) {
+        const imageDataUrl = `data:${profileData.avatar_mime_type};base64,${profileData.avatar}`;
+        setImageSrc(imageDataUrl);
+      }
+
+      setUsername(profileData.nickname || "");
+      setPosts(profileData.num_of_posts || 0);
+      setFollowers(profileData.num_of_followers || 0);
+      setFollowing(profileData.num_of_following || 0);
+    } catch (error) {
+      console.error("Failed to fetch profile data:", error);
+      setError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  addMessageHandler("new_post", async () => {
+    // alert("New post!");
+    await fetchData();
+  });
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -81,9 +89,9 @@ const Card = () => {
             <p className={style.statLabel}>Following</p>
           </span>
         </div>
-        <button className={style.viewProfileButton}>
-          <Link href={`/profile/${userID}`}>View Profile</Link>
-        </button>
+        <Link href={`/profile/${userID}`} className={style.viewProfileButton}>
+          View Profile
+        </Link>
       </div>
     </div>
   );

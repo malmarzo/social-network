@@ -18,15 +18,22 @@ type UserDetails struct {
 }
 
 type SocketMessage struct {
-	Type        string      `json:"type"`
-	UserDetails UserDetails `json:"userDetails"`
-	Content     string      `json:"content"`
-	ReceiverID  string      `json:"receiverId,omitempty"`
-	GroupID     string      `json:"groupId,omitempty"`
-	MessageID   string      `json:"messageId,omitempty"`
-	Timestamp   string      `json:"timestamp,omitempty"`
-	Status      string      `json:"status,omitempty"`      // For delivery status: sent, delivered, read
-	ClientMsgID string      `json:"clientMsgId,omitempty"` // For client-side message tracking
+	Type          string        `json:"type"`
+	UserDetails   UserDetails   `json:"userDetails"`
+	Content       string        `json:"content"`
+	ReceiverID    string        `json:"receiverId,omitempty"`
+	GroupID       string        `json:"groupId,omitempty"`
+	MessageID     string        `json:"messageId,omitempty"`
+	Timestamp     string        `json:"timestamp,omitempty"`
+	Status        string        `json:"status,omitempty"`      // For delivery status: sent, delivered, read
+	ClientMsgID   string        `json:"clientMsgId,omitempty"` // For client-side message tracking
+	FollowRequest FollowRequest `json:"followRequest"`
+}
+
+type FollowRequest struct {
+	From           string `json:"from"`
+	To             string `json:"to"`
+	SenderNickname string `json:"senderNickname"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -165,135 +172,100 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Unlock()
 
+		// Set timestamp for all messages if not already set
+		if msg.Timestamp == "" {
+			msg.Timestamp = time.Now().Format(time.RFC3339)
+		}
+
 		// Process message based on type
-		if msg.Type == "chat" && msg.ReceiverID != "" {
-			// Handle direct chat message
-			senderID := userID // Use the string user ID directly
-			receiverID := msg.ReceiverID // Use the string receiver ID directly
+		switch msg.Type {
+		case "chat":
+			if msg.ReceiverID != "" {
+				// Handle direct chat message
+				senderID := userID
+				receiverID := msg.ReceiverID
 
-			// Validate sender ID
-			if senderID == "" {
-				log.Printf("Empty sender ID")
-				errorMsg := SocketMessage{
-					Type:      "error",
-					Content:   "Invalid sender ID",
-					Timestamp: time.Now().Format(time.RFC3339),
+				// Validate sender and receiver IDs
+				if senderID == "" || receiverID == "" {
+					errorMsg := SocketMessage{
+						Type:      "error",
+						Content:   "Invalid sender or receiver ID",
+						Timestamp: msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
 				}
-				ws.WriteJSON(errorMsg)
-				continue
-			}
 
-			// Validate receiver ID
-			if receiverID == "" {
-				log.Printf("Empty receiver ID")
-				errorMsg := SocketMessage{
-					Type:      "error",
-					Content:   "Invalid receiver ID",
-					Timestamp: time.Now().Format(time.RFC3339),
+				// Set client message ID if not provided
+				if msg.ClientMsgID == "" {
+					msg.ClientMsgID = fmt.Sprintf("msg_%d_%s", time.Now().UnixNano(), userID)
 				}
-				ws.WriteJSON(errorMsg)
-				continue
-			}
 
-			// Set client message ID if not provided
-			if msg.ClientMsgID == "" {
-				msg.ClientMsgID = fmt.Sprintf("msg_%d_%s", time.Now().UnixNano(), userID)
-			}
-
-			log.Printf("Processing chat message: senderID=%s, receiverID=%s, content=%s, clientMsgID=%s", 
-				senderID, receiverID, msg.Content, msg.ClientMsgID)
-
-			// Prevent sending message to self (which would cause duplication)
-			if senderID == receiverID {
-				log.Printf("Prevented sending message to self (would cause duplication)")
-				errorMsg := SocketMessage{
-					Type:        "error",
-					Content:     "Cannot send message to yourself",
-					ClientMsgID: msg.ClientMsgID,
-					Timestamp:   time.Now().Format(time.RFC3339),
+				// Set user details if not provided
+				if msg.UserDetails.ID == "" {
+					msg.UserDetails = UserDetails{
+						ID:       userID,
+						Nickname: nickname,
+					}
 				}
-				ws.WriteJSON(errorMsg)
-				continue
-			}
 
-			// Validate message content
-			if msg.Content == "" {
-				log.Printf("Empty message content")
-				errorMsg := SocketMessage{
-					Type:        "error",
-					Content:     "Message content cannot be empty",
-					ClientMsgID: msg.ClientMsgID,
-					Timestamp:   time.Now().Format(time.RFC3339),
+				// Prevent sending message to self
+				if senderID == receiverID {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Cannot send message to yourself",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
 				}
-				ws.WriteJSON(errorMsg)
-				continue
-			}
 
-			// Save message to database
-			messageID, err := queries.SaveChatMessage(senderID, receiverID, msg.Content)
-			if err != nil {
-				log.Printf("Error saving chat message: %v", err)
-
-				// Send error response back to sender
-				errorMsg := SocketMessage{
-					Type:        "error",
-					Content:     "Failed to save message: " + err.Error(),
-					ClientMsgID: msg.ClientMsgID,
-					Timestamp:   time.Now().Format(time.RFC3339),
+				// Save message to database
+				messageID, err := queries.SaveChatMessage(senderID, receiverID, msg.Content)
+				if err != nil {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Failed to save message: " + err.Error(),
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+				} else {
+					msg.MessageID = fmt.Sprintf("%d", messageID)
+					msg.Status = "sent"
+					socketMessages <- msg
 				}
-				ws.WriteJSON(errorMsg)
-			} else {
-				// Set message ID and timestamp
-				msg.MessageID = fmt.Sprintf("%d", messageID)
-				msg.Timestamp = time.Now().Format(time.RFC3339)
-				msg.Status = "sent"
-				log.Printf("Successfully saved message with ID: %d", messageID)
+			}
 
-				// Send confirmation to sender
-				confirmMsg := SocketMessage{
-					Type:        "chatConfirmation",
-					Content:     "Message sent and saved",
-					ClientMsgID: msg.ClientMsgID,
-					MessageID:   msg.MessageID,
-					Timestamp:   msg.Timestamp,
+		case "groupChat":
+			if msg.GroupID != "" {
+				senderID := userID
+				groupID := msg.GroupID
+
+				// Set client message ID if not provided
+				if msg.ClientMsgID == "" {
+					msg.ClientMsgID = fmt.Sprintf("grp_%d_%s", time.Now().UnixNano(), userID)
 				}
-				ws.WriteJSON(confirmMsg)
 
-				// Forward message to receiver
-				socketMessages <- msg
-			}
-		} else if msg.Type == "groupChat" && msg.GroupID != "" {
-			// Handle group chat message
-			// Use string IDs directly
-			senderID := userID
-			groupID := msg.GroupID
-
-			// Set client message ID if not provided
-			if msg.ClientMsgID == "" {
-				msg.ClientMsgID = fmt.Sprintf("grp_%d_%s", time.Now().UnixNano(), userID)
-			}
-
-			// Save message to database
-			messageID, err := queries.SaveGroupChatMessage(groupID, senderID, msg.Content)
-			if err != nil {
-				log.Printf("Error saving group chat message: %v", err)
-
-				// Send error response back to sender
-				errorMsg := SocketMessage{
-					Type:        "error",
-					Content:     "Failed to save group message",
-					ClientMsgID: msg.ClientMsgID,
-					Timestamp:   time.Now().Format(time.RFC3339),
+				// Save message to database
+				messageID, err := queries.SaveGroupChatMessage(groupID, senderID, msg.Content)
+				if err != nil {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Failed to save group message",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+				} else {
+					msg.MessageID = fmt.Sprintf("%d", messageID)
+					msg.Status = "sent"
+					socketMessages <- msg
 				}
-				ws.WriteJSON(errorMsg)
-			} else {
-				// Set message ID and timestamp
-				msg.MessageID = fmt.Sprintf("%d", messageID)
-				msg.Timestamp = time.Now().Format(time.RFC3339)
-				msg.Status = "sent"
-				socketMessages <- msg
 			}
-		} else if msg.Type == "typing" {
+
+		case "typing":
 			// Handle typing indicator
 			mu.Lock()
 			if client, ok := clients[userID]; ok {
@@ -301,8 +273,6 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 			}
 			mu.Unlock()
 
-			// Forward typing indicator
-			msg.Timestamp = time.Now().Format(time.RFC3339)
 			socketMessages <- msg
 
 			// Reset typing status after a delay
@@ -314,57 +284,33 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				}
 				mu.Unlock()
 			}()
-		} else if msg.Type == "read" {
+
+		case "read":
 			// Handle read receipts
-			msg.Timestamp = time.Now().Format(time.RFC3339)
 			socketMessages <- msg
-		} else {
+
+		case "new_follow_request":
+			// Handle follow requests
+			msg.FollowRequest.SenderNickname, err = queries.GetNickname(msg.FollowRequest.From)
+			if err != nil {
+				log.Println("Error getting nickname:", err)
+				continue
+			}
+
+			validUser, err := queries.DoesUserExists(msg.FollowRequest.To)
+			if err != nil {
+				log.Println("Error validating user:", err)
+				continue
+			}
+			if validUser {
+				socketMessages <- msg
+			}
+
+		default:
 			// Handle other message types
-			msg.Timestamp = time.Now().Format(time.RFC3339)
 			socketMessages <- msg
 		}
 	}
-
-	// for {
-	//This is where the message is read from the WebSocket
-	//Msgs could be of type private msg,notification, typing, requests, etc...
-
-	// var msg DB.PrivateMessage //TODO: Change to new privateMsg struct
-	// // Read the message from WebSocket
-	// err := ws.ReadJSON(&msg)
-	// if err != nil {
-	// 	log.Printf("error: %v", err)
-	// 	break
-	// }
-	// newMsg := SocketMessage{}
-	// newMsg.NewUser = false
-	// newMsg.RemoveUser = false
-
-	// senderUsername, err := DB.GetUsername(msg.SenderID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// recUsername, err := DB.GetUsername(msg.RecID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// date := time.Now()
-	// formattedDate := date.Format("01-02-2006 15:04:05")
-	// msg.Date = formattedDate
-	// msg.RecUsername = recUsername
-	// msg.SenderUsername = senderUsername
-	// if !msg.Typing {
-	// 	err = DB.AddMsg(msg)
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }
-	// msg.Date = formattedDate[:len(formattedDate)-3]
-	// newMsg.Message = msg
-	// Send the message to the channel
-	// socketMessages <- newMsg
-	// }
 }
 
 // Sends msgs
@@ -386,6 +332,16 @@ func HandleMessages() {
 				}
 			}
 		} else if newMsg.Type == "chat" {
+			// Save message to database
+			msgID, err := queries.SaveChatMessage(newMsg.UserDetails.ID, newMsg.ReceiverID, newMsg.Content)
+			if err != nil {
+				log.Printf("Error saving chat message to database: %v", err)
+			} else {
+				log.Printf("Chat message saved to database with ID: %d", msgID)
+				// Update the message ID in the original message
+				newMsg.MessageID = fmt.Sprintf("%d", msgID)
+			}
+
 			// Send to the specific recipient
 			if recipient, ok := clients[newMsg.ReceiverID]; ok {
 				// Update message status to delivered
@@ -411,6 +367,16 @@ func HandleMessages() {
 				}
 			}
 		} else if newMsg.Type == "groupChat" {
+			// Save group message to database
+			msgID, err := queries.SaveGroupChatMessage(newMsg.GroupID, newMsg.UserDetails.ID, newMsg.Content)
+			if err != nil {
+				log.Printf("Error saving group chat message to database: %v", err)
+			} else {
+				log.Printf("Group chat message saved to database with ID: %d", msgID)
+				// Update the message ID in the original message
+				newMsg.MessageID = fmt.Sprintf("%d", msgID)
+			}
+
 			// For group chat, we need to send to all members of the group
 			// This is simplified - in a real app, you'd query group members from DB
 			for id, client := range clients {
@@ -453,6 +419,32 @@ func HandleMessages() {
 					log.Printf("Error sending read receipt to user %s: %v", newMsg.ReceiverID, err)
 				}
 			}
+		} else if newMsg.Type == "new_post" || newMsg.Type == "update_profile_stats" || newMsg.Type == "update_follower_list" {
+			if client, ok := clients[newMsg.UserDetails.ID]; ok {
+				err := client.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.UserDetails.ID, err)
+					client.Conn.Close()
+					delete(clients, newMsg.UserDetails.ID)
+				}
+			}
+		} else if newMsg.Type == "new_follow_request" || newMsg.Type == "cancel_follow_request" {
+			if client, ok := clients[newMsg.FollowRequest.To]; ok {
+				err := client.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.FollowRequest.To, err)
+					client.Conn.Close()
+					delete(clients, newMsg.FollowRequest.To)
+				}
+
+				newMsg.Type = "update_requests_list"
+				err = client.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.FollowRequest.To, err)
+					client.Conn.Close()
+					delete(clients, newMsg.FollowRequest.To)
+				}
+			}
 		} else {
 			// Default behavior for other message types
 			for id, client := range clients {
@@ -483,6 +475,7 @@ func GetConnectedUsers() []string {
 
 	return userIDs
 }
+
 
 // Check if a user is online
 func IsUserOnline(userID string) bool {

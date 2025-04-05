@@ -10,7 +10,9 @@ const Header = () => {
   return (
     <header className={style.header}>
       <div className={style.logoCont}>
-        <div className={style.logo}></div>
+        <Link href={"/"}>
+          <div className={style.logo}></div>
+        </Link>
       </div>
       <div className={style.nav}>
         {isLoggedIn && !loading && (

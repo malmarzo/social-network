@@ -4,6 +4,7 @@ import { React } from "react";
 import style from "../styles/HomePage.module.css";
 import ProfileWindow from "./components/Home/ProfileWindow";
 import PostsFeed from "./components/Home/PostsFeed";
+import Explore from "./components/Home/Explore";
 
 export default function Home() {
   return (
@@ -12,9 +13,11 @@ export default function Home() {
         <ProfileWindow />
       </div>
       <div className={style.postsDiv}>
-        <PostsFeed />
+        <PostsFeed isGroup={false} />
       </div>
-      <div className={style.searchDiv}>Search</div>
+      <div className={style.searchDiv}>
+        <Explore />
+      </div>
     </div>
   );
 }

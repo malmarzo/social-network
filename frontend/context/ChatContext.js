@@ -105,30 +105,37 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
     }
   }, [isLoggedIn]);
 
-  // Fetch all users
-  const fetchAllUsers = useCallback(async () => {
+  // Fetch eligible chat users (users who follow you or whom you follow)
+  const fetchEligibleChatUsers = useCallback(async () => {
     if (!isLoggedIn) return;
     
     try {
       setIsLoading(true);
-      const response = await invokeAPI('chat/all-users', null, 'GET');
+      const response = await invokeAPI('chat/eligible-users', null, 'GET');
       
       if (response && response.status === 'Success') {
         const users = Array.isArray(response.data) ? response.data : [];
         // Filter out the logged-in user
-        const filteredUsers = users.filter(user => String(user.user_id) !== String(userID));
-        setAllUsers(filteredUsers);
+        const filteredUsers = users.filter(user => String(user.id) !== String(userID));
+        // Format users to match the expected structure
+        const formattedUsers = filteredUsers.map(user => ({
+          user_id: user.id,
+          nickname: user.nickname,
+          avatar: user.avatar || null,
+          hasHistory: false
+        }));
+        setAllUsers(formattedUsers);
       } else {
-        console.error('Failed to fetch all users:', response?.error_msg || 'Unknown error');
+        console.error('Failed to fetch eligible chat users:', response?.error_msg || 'Unknown error');
         setAllUsers([]);
       }
     } catch (error) {
-      console.error('Error fetching all users:', error);
+      console.error('Error fetching eligible chat users:', error);
       setAllUsers([]);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, userID]);
 
   // Fetch online users
   const fetchOnlineUsers = useCallback(async () => {
@@ -146,6 +153,50 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
     } catch (error) {
       console.error('Error fetching online users:', error);
       setOnlineUsers([]);
+    }
+  }, [isLoggedIn]);
+  
+  // Fetch all user statuses with last seen timestamps
+  const fetchAllUserStatus = useCallback(async () => {
+    if (!isLoggedIn) return;
+    
+    try {
+      const response = await invokeAPI('chat/all-status', null, 'GET');
+      
+      if (response && response.status === 'Success') {
+        // Create a map of user IDs to their status information
+        const userStatusMap = {};
+        if (Array.isArray(response.data)) {
+          response.data.forEach(status => {
+            userStatusMap[status.user_id] = {
+              isOnline: status.is_online,
+              lastSeen: status.last_seen
+            };
+          });
+        }
+        
+        // Update the user list with status information
+        setAllUsers(prevUsers => {
+          return prevUsers.map(user => ({
+            ...user,
+            isOnline: userStatusMap[user.user_id]?.isOnline || false,
+            lastSeen: userStatusMap[user.user_id]?.lastSeen || 0
+          }));
+        });
+        
+        // Also update chat users with the same information
+        setChatUsers(prevUsers => {
+          return prevUsers.map(user => ({
+            ...user,
+            isOnline: userStatusMap[user.user_id]?.isOnline || false,
+            lastSeen: userStatusMap[user.user_id]?.lastSeen || 0
+          }));
+        });
+      } else {
+        console.error('Failed to fetch user statuses:', response?.error_msg || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Error fetching user statuses:', error);
     }
   }, [isLoggedIn]);
 
@@ -330,24 +381,34 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
       ...user,
       // Don't update the timestamp when selecting a user to maintain proper order
       hasHistory: true, // Mark as having history
-      unread: isOnChatPage ? 0 : (unreadMessages[user.user_id] || 0) // Keep unread count if not on chat page
+      unread: 0 // Always reset unread count when selecting a user
     };
     
     // Always update the selected user to trigger a refresh
     setSelectedUser(updatedUser);
     
-    // Only clear unread messages if we're actually on the chat page
-    if (isOnChatPage) {
+    // Clear unread messages for this user
+    if (unreadMessages[user.user_id] && unreadMessages[user.user_id] > 0) {
+      console.log(`Clearing unread messages for ${user.nickname} (${user.user_id})`);
+      
       setUnreadMessages(prev => {
-        const updated = {
-          ...prev,
-          [user.user_id]: 0
-        };
+        const updated = { ...prev };
+        delete updated[user.user_id]; // Remove this user's unread count completely
         
         // Save to localStorage using our helper function
         saveUnreadMessages(updated);
         
         return updated;
+      });
+      
+      // Update chat users list to reflect the change in unread count
+      setChatUsers(prevUsers => {
+        return prevUsers.map(u => {
+          if (u.user_id === user.user_id) {
+            return { ...u, unread: 0 };
+          }
+          return u;
+        });
       });
     }
     
@@ -427,8 +488,9 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
       // Fetch data in sequence to ensure we have the most up-to-date information
       const initializeData = async () => {
         await fetchChatUsers();
-        await fetchAllUsers();
+        await fetchEligibleChatUsers();
         await fetchOnlineUsers();
+        await fetchAllUserStatus();
         
         // After fetching data, ensure users with unread messages are sorted to the top
         // and add unread count to each user object for easier sorting
@@ -442,22 +504,26 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
               return b.unread - a.unread; // Users with unread messages first
             }
             
-            // Then by recency
-            const aTime = a.last_message_time ? new Date(a.last_message_time) : new Date(0);
-            const bTime = b.last_message_time ? new Date(b.last_message_time) : new Date(0);
-            return bTime - aTime;
+            // Then by recency of last message
+            const aTime = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
+            const bTime = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+            return bTime - aTime; // Most recent first
           });
         });
       };
       
       initializeData();
 
-      // Set up interval to refresh online users every 10 seconds
+      // Set up intervals to refresh online users and user statuses
       const onlineUsersInterval = setInterval(fetchOnlineUsers, 10000);
+      const userStatusInterval = setInterval(fetchAllUserStatus, 15000);
       
-      return () => clearInterval(onlineUsersInterval);
+      return () => {
+        clearInterval(onlineUsersInterval);
+        clearInterval(userStatusInterval);
+      };
     }
-  }, [isLoggedIn, loading, fetchChatUsers, fetchAllUsers, fetchOnlineUsers, unreadMessages]);
+  }, [isLoggedIn, loading, fetchChatUsers, fetchEligibleChatUsers, fetchOnlineUsers, fetchAllUserStatus, unreadMessages]);
 
   // Handle URL parameters for direct navigation to a chat
   useEffect(() => {
@@ -468,7 +534,7 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
     if (userFromURL && (!selectedUser || selectedUser.user_id !== userFromURL.user_id)) {
       setSelectedUser(userFromURL);
     }
-  }, [initialUrlUserId, chatUsers, isLoggedIn, selectedUser]);
+  }, [initialUrlUserId, chatUsers, isLoggedIn, selectedUser, setChatUsers]);
 
   // Helper function to truncate message for preview (moved to top level)
 
@@ -476,33 +542,65 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
   useEffect(() => {
     const handleChatMessage = (msg) => {
       // Only process chat messages from other users
-      if (msg.type === 'chat' && msg.userDetails.id !== String(userID)) {
+      if (msg.type === 'chat' && msg.userDetails && msg.userDetails.id !== String(userID)) {
         const senderName = msg.userDetails.nickname;
         const senderId = msg.userDetails.id;
         
-        // Always increment unread count if not viewing that user's messages
-        if (!selectedUser || senderId !== String(selectedUser.user_id) || !isOnChatPage) {
-          // Store the unread message count in localStorage to persist across page refreshes
-          const newUnreadCount = (unreadMessages[senderId] || 0) + 1;
+        // Always increment unread count if not viewing that user's messages or not on chat page
+        // This ensures notifications work even when the user is not on the chat page
+        const shouldIncrementUnread = !isOnChatPage || !selectedUser || senderId !== String(selectedUser.user_id);
+        
+        // Store the unread message count in localStorage to persist across page refreshes
+        const currentCount = unreadMessages[senderId] || 0;
+        const newUnreadCount = shouldIncrementUnread ? currentCount + 1 : currentCount;
+        
+        // Always update the user in the chat list, even if we're not incrementing unread count
+        // This ensures the user list is always up to date with the latest messages
+        
+        // Update state for unread messages
+        setUnreadMessages(prev => {
+          const updated = {
+            ...prev,
+            [senderId]: newUnreadCount
+          };
           
-          // Update state
-          setUnreadMessages(prev => {
-            const updated = {
-              ...prev,
-              [senderId]: newUnreadCount
-            };
-            
-            // Save to localStorage using our helper function
-            saveUnreadMessages(updated);
-            
-            return updated;
-          });
+          // Save to localStorage using our helper function
+          saveUnreadMessages(updated);
           
+          // Log for debugging
+          console.log(`Unread messages for ${senderName} (${senderId}): ${newUnreadCount}`);
+          
+          return updated;
+        });
+        
+        // Check if this user is already in our chat users list
+        const userExists = chatUsers.some(u => String(u.user_id) === senderId);
+        
+        // If the user doesn't exist in our chat list, we need to add them
+        // This ensures users who haven't chatted before still show up with unread messages
+        if (!userExists) {
+          // Try to find the user in allUsers list
+          const userFromAllUsers = allUsers.find(u => String(u.user_id) === senderId);
+          
+          if (userFromAllUsers) {
+            // Add this user to chatUsers with the new message
+            setChatUsers(prevUsers => [
+              {
+                ...userFromAllUsers,
+                last_message_time: new Date().toISOString(),
+                hasHistory: true,
+                last_message: msg.content,
+                unread: newUnreadCount
+              },
+              ...prevUsers
+            ]);
+          }
+        } else {
           // Move this user to the top of the chat list and update all users with their unread counts
           setChatUsers(prevUsers => {
             // Find the user
             const userIndex = prevUsers.findIndex(u => String(u.user_id) === senderId);
-            if (userIndex === -1) return prevUsers; // User not found
+            if (userIndex === -1) return prevUsers; // User not found (shouldn't happen at this point)
             
             // Create a new array with the user moved to the top
             const newUsers = [...prevUsers];
@@ -523,74 +621,83 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
               unread: unreadMessages[u.user_id] || 0
             }));
             
-            // Sort users by unread count first, then by recency
+            // Put the user with the new message at the top, then sort the rest by unread count and recency
             return [updatedUser, ...updatedUsers].sort((a, b) => {
-              // First sort by unread messages
+              // Skip the first user (the one with the new message)
+              if (a.user_id === updatedUser.user_id) return -1;
+              if (b.user_id === updatedUser.user_id) return 1;
+              
+              // Sort by unread count first
               if (a.unread !== b.unread) {
-                return b.unread - a.unread; // Users with unread messages first
-              }
-              
-              // Check if users have message history
-              const aHasMessage = Boolean(a.last_message);
-              const bHasMessage = Boolean(b.last_message);
-              
-              // If one has a message and the other doesn't, prioritize the one with a message
-              if (aHasMessage !== bHasMessage) {
-                return aHasMessage ? -1 : 1; // User with message comes first
+                return b.unread - a.unread;
               }
               
               // Then by recency
               const aTime = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
               const bTime = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
-              return bTime - aTime; // Most recent first
+              return bTime - aTime;
             });
-          });
-          
-          // Show notification for new message from non-selected user
-          showInfo(`${senderName} sent you a message`, {
-            duration: 2000,
-            position: 'top-right'
-          });
-          
-          // Play notification sound regardless of page
-          try {
-            const audio = new Audio('/notification.mp3');
-            audio.play().catch(e => console.log('Audio play failed:', e));
-          } catch (e) {
-            console.log('Audio not supported:', e);
-          }
-          
-          // Show browser notification if not on chat page
-          if (!isOnChatPage && "Notification" in window && Notification.permission === "granted") {
-            new Notification(`${senderName} sent you a message`, {
-              body: msg.content,
-              icon: '/favicon.ico',
-              tag: 'chat-message',
-              renotify: true
-            });
-          }
-        } else {
-          // It's from the currently selected user, still show a notification
-          showInfo(`${senderName} sent you: ${truncateMessage(msg.content, 30)}`, {
-            duration: 2000,
-            position: 'top-right'
           });
         }
+        
+        // Always show notification for new messages, regardless of page
+        showInfo(`${senderName} sent you a message`, {
+          duration: 3000,
+          position: 'top-right'
+        });
+        
+        // Always play notification sound
+        try {
+          const audio = new Audio('/notification.mp3');
+          audio.play().catch(e => console.log('Audio play failed:', e));
+        } catch (e) {
+          console.log('Audio not supported:', e);
+        }
+        
+        // Always show browser notification, not just when not on chat page
+        // This ensures notifications work even when the browser is minimized
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(`${senderName} sent you a message`, {
+            body: msg.content,
+            icon: '/favicon.ico',
+            tag: 'chat-message',
+            renotify: true
+          });
+        } else if ("Notification" in window && Notification.permission !== "denied") {
+          // Request permission if not already granted or denied
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              new Notification(`${senderName} sent you a message`, {
+                body: msg.content,
+                icon: '/favicon.ico',
+                tag: 'chat-message',
+                renotify: true
+              });
+            }
+          });
+        }
+      } else if (msg.type === 'chat' && msg.userDetails && msg.userDetails.id !== String(userID)) {
+        // It's from another user but not the one we're currently viewing, show a notification
+        const senderName = msg.userDetails.nickname;
+        showInfo(`${senderName} sent you: ${truncateMessage(msg.content, 30)}`, {
+          duration: 2000,
+          position: 'top-right'
+        });
       }
 
       // Update chat history if message is from/to the selected user
       if (selectedUser && 
           msg.type === 'chat' && 
-          (msg.userDetails.id === String(selectedUser.user_id) || 
-           msg.receiverId === String(selectedUser.user_id))) {
+          ((msg.userDetails && msg.userDetails.id === String(selectedUser.user_id)) || 
+           (msg.receiverId === String(selectedUser.user_id)))) {
         
         const newMessage = {
           id: msg.messageId || `msg_${Date.now()}`,
-          sender_id: msg.userDetails.id,
+          sender_id: msg.userDetails ? msg.userDetails.id : userID,
           receiver_id: msg.receiverId,
           message: msg.content,
           created_at: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
-          sender_name: msg.userDetails.nickname
+          sender_name: msg.userDetails ? msg.userDetails.nickname : userNickname
         };
         
         setChatHistory(prev => {
@@ -631,7 +738,7 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
 
       // Refresh chat users list to update last message info
       fetchChatUsers();
-    };
+    }
 
     // Add message handler for chat messages
     addMessageHandler('chat', handleChatMessage);
@@ -711,8 +818,9 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
     
     // Actions
     fetchChatUsers,
-    fetchAllUsers,
+    fetchEligibleChatUsers,
     fetchOnlineUsers,
+    fetchAllUserStatus,
     fetchChatHistory,
     sendChatMessage,
     toggleUserView,
