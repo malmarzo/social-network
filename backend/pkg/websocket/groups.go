@@ -531,32 +531,69 @@ func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
 //--------------------------------------------------------------------------
 // this function to send the groups to request
 
-func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string){
-	fmt.Println("function to provide the groups to request")
-			mu.Lock()
-			recipientConn, exists := clients[userID]
-			if exists {
+// func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string){
+// 	fmt.Println("function to provide the groups to request")
+// 			mu.Lock()
+// 			recipientConn, exists := clients[userID]
+// 			if exists {
 			
-					myGroups, err := queries.GroupsToRequest(userID)
-					if err != nil {
-						log.Printf("Error fetching pending requests for user %s: %v", userID, err)
-						return
-					}
-						groupsToRequestMsg := SocketMessage{
-							Type:    "groupsToRequest",
-							MyGroups: myGroups,
-							UserDetails: UserDetails{
-								ID: userID,
-							},
-						}
-						err = recipientConn.WriteJSON(groupsToRequestMsg)
-						if err != nil {
-							log.Printf("Error sending myGroups to user %s: %v", userID, err)
-						}
+// 					myGroups, err := queries.GroupsToRequest(userID)
+// 					if err != nil {
+// 						log.Printf("Error fetching pending requests for user %s: %v", userID, err)
+// 						return
+// 					}
+// 						groupsToRequestMsg := SocketMessage{
+// 							Type:    "groupsToRequest",
+// 							MyGroups: myGroups,
+// 							UserDetails: UserDetails{
+// 								ID: userID,
+// 							},
+// 						}
+// 						err = recipientConn.WriteJSON(groupsToRequestMsg)
+// 						if err != nil {
+// 							log.Printf("Error sending myGroups to user %s: %v", userID, err)
+// 						}
 				
-			} else {
-				log.Printf("User %s is not online", userID)
+// 			} else {
+// 				log.Printf("User %s is not online", userID)
 				
+// 			}
+// 			mu.Unlock()
+// }
+
+func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string) {
+	fmt.Println("function to provide the groups to request")
+	
+	// Lock to avoid concurrent writes to clients map
+	mu.Lock()
+
+	// Fetch the list of users to send the message to (in this case, all users in the group)
+	for clientUserID, recipientConn := range clients {
+		// If the user is online and it's not the user who created the group, send the message
+		//if clientUserID != userID {
+			myGroups, err := queries.GroupsToRequest(clientUserID)
+			if err != nil {
+				log.Printf("Error fetching pending requests for user %s: %v", clientUserID, err)
+				continue
 			}
-			mu.Unlock()
+
+			// Construct the message to send to the user
+			groupsToRequestMsg := SocketMessage{
+				Type:    "groupsToRequest",
+				MyGroups: myGroups,
+				UserDetails: UserDetails{
+					ID: clientUserID,
+				},
+			}
+
+			// Send the message to the user
+			err = recipientConn.WriteJSON(groupsToRequestMsg)
+			if err != nil {
+				log.Printf("Error sending myGroups to user %s: %v", clientUserID, err)
+			}
+		//}
+	}
+
+	// Unlock after operation is complete
+	mu.Unlock()
 }

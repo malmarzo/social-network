@@ -47,6 +47,11 @@ export default function CreateGroup() {
             setGroupID(response.group.id);
             setGroupCreatorID(response.group.creator_id);
             console.log(groupCreatorID);
+            const getGroupsToRequest = () => {
+                const GroupsToRequestMsg = { type: "groupsToRequest" };
+                sendMessage(GroupsToRequestMsg);
+            };
+            getGroupsToRequest();
            
 
            
