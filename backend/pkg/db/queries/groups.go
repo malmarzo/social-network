@@ -1281,3 +1281,52 @@ func GetPendingEventNotifications(userID string) ([]datamodels.EventNotification
 
 	return eventNotifications, nil
 }
+
+
+func GetUserInvitationList(userID string, groupID int) ([]datamodels.User, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("DB connection error:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	query := `
+	SELECT id, nickname
+	FROM users
+	WHERE id != ?
+	  AND id NOT IN (
+		SELECT user_id FROM group_members
+		WHERE group_id = ? AND status IN ('pending', 'accepted')
+	  )
+	  AND id != (
+		SELECT creator_id FROM groups WHERE id = ?
+	  );
+	`
+
+	rows, err := db.Query(query, userID, groupID, groupID)
+	if err != nil {
+		log.Println("Query error:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []datamodels.User
+
+	for rows.Next() {
+		var user datamodels.User
+		if err := rows.Scan(&user.ID, &user.Nickname); err != nil {
+			log.Println("Row scan error:", err)
+			continue
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Println("Rows error:", err)
+		return nil, err
+	}
+
+	return users, nil
+}

@@ -27,6 +27,7 @@ type SocketMessage struct {
 	TypingMessage datamodels.TypingMessage `json:"typing_message"`
 	EventMessage datamodels.EventMessage `json:"event_message"`
 	EventResponseMessage datamodels.EventResponseMessage `json:"event_response_message"`
+	UsersInviationListMessage   datamodels.UsersInvitationListMessage  `json:"users_invitation_list_message"`             
 	//EventNotification    datamodels.EventNotification    `json:"event_notification"`
 }
 
@@ -136,6 +137,8 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 
 		}else if msg.Type == "eventResponseMessage" {
 			SendEventResponseMessage(msg,w)
+		}else if msg.Type == "usersInvitationListMessage" {
+			SendUsersInvitationList(msg,w,userID)
 		}else{
 			socketMessages <- msg
 		}

@@ -116,6 +116,11 @@ type EventNotification struct {
 	FirstName	 string   `json:"first_name"`
 }
 
+type UsersInvitationListMessage struct {
+	GroupID		int `json:"group_id"`
+	Users   []User  `json:"users"`             
+}
+
 
 type GroupPost struct {
 	GroupID       int `json:"group_id"`

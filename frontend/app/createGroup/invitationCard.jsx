@@ -42,6 +42,13 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
             //     sendMessage({ type: "myGroups" });
             // }
             // Hide the card after responding
+            const getMyGroups = () => {
+                const myGroupsMsg = { type: "myGroups" };
+                sendMessage(myGroupsMsg);
+            };
+    
+            getMyGroups(); 
+    
             setShowCard(false);
         } catch (error) {
             console.error("Failed to update invitation response:", error);

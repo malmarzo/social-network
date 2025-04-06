@@ -48,37 +48,37 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         return
 	}
 // get the full user list
-	users, err:= queries.GetUsersList()
-	if err != nil {
-		log.Println(err)
-			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error22"})
-			return
-	}
+	// users, err:= queries.GetUsersList()
+	// if err != nil {
+	// 	log.Println(err)
+	// 		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error22"})
+	// 		return
+	// }
 //  members of a specific group and have a status of either 'pending' or 'accepted'.
-	users2, err4:= queries.GetAvailableUsersList(groupIDInt)
-	if err4 != nil {
-		fmt.Println("Error retriving the available userlist", err4)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
-        return
-	}
+	// users2, err4:= queries.GetAvailableUsersList(groupIDInt)
+	// if err4 != nil {
+	// 	fmt.Println("Error retriving the available userlist", err4)
+    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+    //     return
+	// }
 	
 	
 	// remove the users that already invited or accepted the invitation
-	var users4 []datamodels.User
-	for _, user1 := range users {
-        found := false
+	// var users4 []datamodels.User
+	// for _, user1 := range users {
+    //     found := false
         
-        for _, user2 := range users2 {
-            if user1.Nickname == user2.Nickname {
-                found = true
-                break
-            }
-        }
+    //     for _, user2 := range users2 {
+    //         if user1.Nickname == user2.Nickname {
+    //             found = true
+    //             break
+    //         }
+    //     }
         
-        if !found {
-            users4 = append(users4, user1)
-        }
-    }
+    //     if !found {
+    //         users4 = append(users4, user1)
+    //     }
+    // }
 	
 
 	// test 
@@ -117,22 +117,22 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 	//end
 
 	//remove the creator from the invitation list
-	var users3 []datamodels.User
-	for i:= 0; i <len(users4); i++ {
-		if users4[i].ID != CreatorID{
-			users3 = append(users3,users4[i])
-		}
-	}
+	// var users3 []datamodels.User
+	// for i:= 0; i <len(users4); i++ {
+	// 	if users4[i].ID != CreatorID{
+	// 		users3 = append(users3,users4[i])
+	// 	}
+	// }
 
 	
 	//test
 	// remove the current user
-	var users5 []datamodels.User
-	for i:= 0; i<len(users3);i++ {
-		if users[i].ID != currentUser {
-			users5= append(users5,users3[i])
-		}
-	}
+	// var users5 []datamodels.User
+	// for i:= 0; i<len(users3);i++ {
+	// 	if users[i].ID != currentUser {
+	// 		users5= append(users5,users3[i])
+	// 	}
+	// }
 
 	getChatHistory, err8:= queries.OldGroupChats(Id)
 	if err8!= nil {
@@ -196,7 +196,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			EventResponsesHistory:eventResponsesFinal,
 			Members:groupMembers,
         },
-		Users: users5,
+		//Users: users5,
     }
 	utils.SendResponse(w, response) //send the response
 }

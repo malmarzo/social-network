@@ -597,3 +597,67 @@ func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string
 	// Unlock after operation is complete
 	mu.Unlock()
 }
+
+
+// end------------------------------------------
+
+// here i will do the the invitation user list inside the chat 
+
+func SendUsersInvitationList(msg SocketMessage, w http.ResponseWriter, userID string) {
+	fmt.Println("SendUsersInvitationList is functioning")
+	mu.Lock()
+	defer mu.Unlock()
+
+	groupID := msg.UsersInviationListMessage.GroupID
+
+	// Get group members
+	groupMembers, err := queries.GetGroupMembers(groupID)
+	if err != nil {
+		log.Printf("Error getting group members")
+		return
+	}
+
+	// Get group creator
+	creatorID, err := queries.GetCreatorIDByGroupID(groupID)
+	if err != nil {
+		log.Printf("Error getting group creator")
+		return
+	}
+
+	// Build final list of unique user IDs (members + creator)
+	var finalList []string
+	for _, member := range groupMembers {
+		finalList = append(finalList, member.ID)
+	}
+	finalList = append(finalList, creatorID)
+
+	// Fetch the invitation list (once)
+	usersInvitationList, err := queries.GetUserInvitationList(userID, groupID)
+	if err != nil {
+		log.Printf("Error fetching pending requests for user %s: %v", userID, err)
+		return
+	}
+
+	// Build the message
+	usersInvitationListMsg := SocketMessage{
+		Type: "usersInvitationList",
+		UsersInviationListMessage: datamodels.UsersInvitationListMessage{
+			Users: usersInvitationList,
+		},
+	}
+
+	// Send to each online user
+	for _, uid := range finalList {
+		if conn, ok := clients[uid]; ok {
+			err := conn.WriteJSON(usersInvitationListMsg)
+			if err != nil {
+				log.Printf("Error sending usersInvitationList to user %s: %v", uid, err)
+			}
+		} else {
+			log.Printf("User %s is not online", uid)
+		}
+	}
+}
+
+
+// end of invitation userlist

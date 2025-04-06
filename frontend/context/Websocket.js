@@ -112,6 +112,8 @@ const WebSocketProvider = ({ children }) => {
 
   return (
     <WebSocketContext.Provider value={{ addMessageHandler, sendMessage }}>
+  
+
       {children}
     </WebSocketContext.Provider>
   );

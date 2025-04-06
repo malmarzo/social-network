@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useWebSocket } from "@/context/Websocket";
+import { sendUsersInvitationListMessage } from "../groupChat/groupMessage";
 
 export default function MyGroups() {
     console.log("Rendering MyGroups component...");
@@ -47,7 +48,11 @@ export default function MyGroups() {
             <ul>
                 {myGroups.my_groups.map((group) => (
                     <li key={group.id} style={{ marginBottom: "10px" }}>
-                         <Link href={`/groupChat/${group.id}`} style={{ color: "#1e90ff", textDecoration: "underline", cursor: "pointer" }}>
+                         <Link href={`/groupChat/${group.id}`} style={{ color: "#1e90ff", textDecoration: "underline", cursor: "pointer" }}
+                          onClick={() => {
+                           // sendUsersInvitationListMessage(group.id, sendMessage);
+                        }}
+                         >
                             <strong>{group.title}</strong>
                         </Link> 
                       

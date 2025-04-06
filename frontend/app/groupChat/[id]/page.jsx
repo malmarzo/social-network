@@ -13,6 +13,8 @@ import { sendEventMessage } from "./eventMessage";
 import { withOptions } from "tailwindcss/plugin";
 import { sendEventResponseMessage } from "./eventResponseMessage";
 import  PostsFeed  from "./postFeed"
+import { sendUsersInvitationListMessage } from "../groupMessage";
+
 export default function GroupChat() {
     const router = useRouter();
     const { id } = useParams();
@@ -32,7 +34,9 @@ export default function GroupChat() {
      const [dateTime, setDateTime] = useState("");
      const [options, setOptions] = useState([""]);
      const [day, setDay] = useState("");
-     const [selectedOption, setSelectedOption] = useState({}); 
+     const [selectedOption, setSelectedOption] = useState({});
+     const [isUsersListVisible, setIsUsersListVisible] = useState(false); 
+     
     
 
      const scrollToBottom = () => {
@@ -44,7 +48,11 @@ export default function GroupChat() {
       
     }, [messages]);
 
+  
+      
     useEffect(() => {
+
+     
         const fetchGroup = async () => {
             if (!id) {
                 console.error("Group ID is undefined.");
@@ -57,7 +65,8 @@ export default function GroupChat() {
             if (response.code === 200) {
                 
                 setGroup(response);
-                setUsers(response);
+                //setUsers(response);
+                //sendUsersInvitationListMessage(id, sendMessage);
                 
                 if (response.group && response.group.chat_history) {
                     setMessages(response.group.chat_history.map((msg) => ({ group_message: msg })));
@@ -140,15 +149,49 @@ export default function GroupChat() {
         });
 
        
+         //sendUsersInvitationListMessage(id, sendMessage);
+        // addMessageHandler("usersInvitationList", (msg) => {
+        //     setUsers(msg.users_invitation_list_message); 
+        // });
+     
+        addMessageHandler("usersInvitationList", (msg) => {
+            setUsers(msg.users_invitation_list_message); // Assuming this is the structure of the response
+          });
+      
+
+       
 
         if (id) fetchGroup();
-    }, [id, router,addMessageHandler]);
+    }, [id,router,sendMessage,addMessageHandler]);
 
- 
+
+
+   console.log("yasseer",users);
+
     const handleEmojiClick = (emojiObject) => {
         setMessage((prevMessage) => prevMessage + emojiObject.emoji); // Add emoji to message
     };
-  
+
+
+    const handleButtonClick = async () => {
+        // Toggle visibility of the users list
+         setIsUsersListVisible((prevState) => !prevState);
+    
+        // Only send the message if it's the first time showing the list
+        if (!isUsersListVisible) {
+           try {
+            await  sendUsersInvitationListMessage(id, sendMessage);
+           
+        } catch (error) {
+            console.error("Error sending usersinvitationlist:", error);
+        } 
+        }
+      };
+
+
+      
+
+    //console.log(users);
     // Function to handle sending invitations
     const handleInviteUsers = async () => {
         if (!group || !group.group || !group.group.creator_id) {
@@ -158,6 +201,7 @@ export default function GroupChat() {
 
         try {
             await sendInvitations(selectedUsers,sendMessage,group.group.id, group.group.creator_id);
+            await  sendUsersInvitationListMessage(id, sendMessage);
             alert("Invitations sent successfully!");
             setSelectedUsers([]); // Reset selection after sending
         } catch (error) {
@@ -460,7 +504,8 @@ export default function GroupChat() {
 
                        
             {/* Users List for Invitations */}
-            <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
+{/*           
+             <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
                 <UsersList users={users.users} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
                 <button
                     onClick={handleInviteUsers}
@@ -469,7 +514,31 @@ export default function GroupChat() {
                 >
                     Invite Selected Users
                 </button>
-            </div>
+            </div>   */}
+
+            <div>
+                {/* Button to toggle the visibility of the users list */}
+                <button
+                    onClick={handleButtonClick}
+                    className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                    {isUsersListVisible ? "Hide Users List" : "Show Users List"}
+                </button>
+
+                {/* Conditionally render the users list div */}
+                 {isUsersListVisible && users && users.users && (
+                    <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
+                    <UsersList users={users.users} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
+                    <button
+                        onClick={handleInviteUsers}
+                        className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        disabled={selectedUsers.length === 0}
+                    >
+                        Invite Selected Users
+                    </button>
+                    </div>
+                )} 
+                </div>
             {/* end of users invitation list */}
         </div>
     );
