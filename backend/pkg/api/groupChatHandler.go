@@ -174,7 +174,12 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		eventResponsesFinal = append(eventResponsesFinal, eventResponses...)
 	}
-
+	groupMembers, err10:= queries.GetGroupMembers(groupIDInt)
+	if err10 != nil {
+		fmt.Println("Error retriving group memebers")
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+        return
+	}
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",
@@ -189,6 +194,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			ChatHistory:getChatHistory,
 			EventHistory:getEventHistory,
 			EventResponsesHistory:eventResponsesFinal,
+			Members:groupMembers,
         },
 		Users: users5,
     }

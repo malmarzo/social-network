@@ -255,6 +255,23 @@ export default function GroupChat() {
                 </p>
             </div>
 
+
+            {/* displaying group memebers */}
+            <div>
+            {group.group.members && group.group.members.length > 0 ? (
+                group.group.members.map((member, index) => (
+                <div key={index} className="member">
+                    <p>{member.nickname}</p>
+                </div>
+                ))
+            ) : (
+                <p>No members found</p>
+            )}
+            </div>
+            {/* end of displaying group members */}
+
+
+
             {/* displaying Chat messages section */}
             <div className="mt-6 bg-gray-700 p-4 rounded-lg border border-gray-600">
                 <h3 className="text-xl font-bold text-white">💬 Chat messages</h3>

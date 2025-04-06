@@ -302,6 +302,39 @@ func GetAvailableUsersList(groupID int) ([]datamodels.User, error) {
 }
 
 
+func GetGroupMembers(groupID int) ([]datamodels.User, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer db.Close()
+
+	var users []datamodels.User
+	rows, err := db.Query(`
+		SELECT u.nickname , u.id
+		FROM users u
+		INNER JOIN group_members gm ON u.id = gm.user_id
+		WHERE gm.group_id = ? AND gm.status IN ('accepted')
+	`, groupID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user datamodels.User
+		if err := rows.Scan(&user.Nickname, &user.ID); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 
 func IsUserInGroup(userID string, groupID int) (bool, error) {
 	dbPath := getDBPath()
