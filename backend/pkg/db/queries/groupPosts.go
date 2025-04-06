@@ -69,12 +69,12 @@ func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.Group
 	switch tab {
 	case "trending":
 		rows, errFetch = db.Query(baseQuery+` 
-            ORDER BY (p.num_likes + p.num_dislikes + p.num_comments) DESC`,
+            ORDER BY (gp.num_likes + gp.num_dislikes + gp.num_comments) DESC`,
 			groupID,)
 	case "my-posts":
 		rows, errFetch = db.Query("SELECT * FROM group_posts WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC", userID, groupID)
 	default: // "latest" or empty
-		rows, errFetch = db.Query(baseQuery+`ORDER BY p.created_at DESC`,
+		rows, errFetch = db.Query(baseQuery+`ORDER BY gp.created_at DESC`,
 			groupID,)
 	}
 
@@ -90,6 +90,7 @@ func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.Group
 			&post.PostID,
 			&post.GroupID,
 			&post.UserID,
+			&post.UserNickname, 
 			&post.PostTitle,
 			&post.Content,
 			&post.PostImage,

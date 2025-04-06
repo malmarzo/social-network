@@ -15,6 +15,7 @@ import(
 
 
 func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("HIT:", r.URL.Path) // Add this line here
 	log.Println("calling CreateGroupChatHandler ")
     //var g datamodels.Group
 	var response datamodels.Response

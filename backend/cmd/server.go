@@ -22,12 +22,22 @@ func main() {
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
 	http.HandleFunc("/groups", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupHandler)))
    // http.HandleFunc("/groups/invite", middleware.CorsMiddleware(middleware.AuthMiddleware(api.InviteUserHandler)))
+   
 	http.HandleFunc("/groups/users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUsersHandler)))
-	http.HandleFunc("/groups/chat/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupChatHandler)))
+	http.HandleFunc("/groups/chat/{id}/groupComments/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetGroupPostComments)))
+	http.HandleFunc("/groups/chat/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GroupPostInteractionsHandler)))
+	http.HandleFunc("/groups/chat/{id}/createGroupPost", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateNewGroupPostHandler)))
+	http.HandleFunc("/groups/chat/{id}/groupPosts", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetGroupPostsHandler)))
+
+	http.HandleFunc("/groups/chat/{id}/likeGroupPost/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.LikeGroupPostHandler)))
+	http.HandleFunc("/groups/chat/{id}/dislikeGroupPost/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.DislikeGroupPostHandler)))
+	http.HandleFunc("/groups/chat/{id}/groupComment", middleware.CorsMiddleware(middleware.AuthMiddleware(api.NewGroupComment)))
+	
+	http.HandleFunc("/groups/chat/{id}", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupChatHandler)))
 	http.HandleFunc("/groups/invitation", middleware.CorsMiddleware(middleware.AuthMiddleware(api.InvitationResponseHandler)))
 	http.HandleFunc("/groups/list", middleware.CorsMiddleware(middleware.AuthMiddleware(api.RequestGroupListHandler)))
-
 	http.HandleFunc("/groups/request", middleware.CorsMiddleware(middleware.AuthMiddleware(api.RequestResponseHandler)))
+	
 	//http.HandleFunc("/groups/mygroups", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ListMyGroupsHandler)))
 	//Handle establishing websocket connection
 	http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))

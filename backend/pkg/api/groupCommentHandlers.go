@@ -12,6 +12,7 @@ import (
 	"social-network/pkg/db/queries"
 	"social-network/pkg/utils"
 	"time"
+	"strings"
 )
 
 func NewGroupComment(w http.ResponseWriter, r *http.Request) {
@@ -169,14 +170,19 @@ func NewGroupComment(w http.ResponseWriter, r *http.Request) {
 
 // second function
 
-func GetPostComments(w http.ResponseWriter, r *http.Request) {
+func GetGroupPostComments(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("this function is functioning")
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	//Getting the post id from the path parameter
-	postID := r.URL.Path[len("/comments/"):]
+	// postID := r.URL.Path[len("/comments/"):]
+	// fmt.Println(postID)
+	pathParts := strings.Split(r.URL.Path, "/")
+	postID := pathParts[len(pathParts)-1] // Get postID from /like/{postID}
+
 	if postID == "" {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Missing required fields"})
 		return
@@ -204,7 +210,7 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 			comments[i].ImageDataURL = nil
 		}
 	}
-
+fmt.Println(comments)
 	utils.SendResponse(w, datamodels.Response{
 		Code:   http.StatusOK,
 		Status: "Success",

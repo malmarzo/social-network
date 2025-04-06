@@ -1,0 +1,312 @@
+.container {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+  }
+  
+  .modal {
+    width: 100%;
+    max-width: 500px;
+    max-height: 600px;
+    background: var(--background);
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .modalTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--foreground);
+    font-family: var(--font-geist-sans);
+  }
+  
+  .closeButton {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #64748b;
+  }
+  
+  .closeButton:hover {
+    background-color: #f1f5f9;
+    color: #475569;
+  }
+  
+  .modalBody {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .input {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .inputLabel {
+    font-size: 0.75rem;
+    color: #ecdfdf;
+    font-family: var(--font-geist-sans);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .inputField {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    font-family: var(--font-geist-sans);
+    background: rgb(176, 179, 174);
+  }
+  
+  .inputField:focus {
+    outline: none;
+    border-color: #3949ab;
+    box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.1);
+  }
+  
+  .errorInput {
+    border-color: #ef4444;
+  }
+  
+  .textarea {
+    height: 80px;
+    resize: none;
+    min-height: 80px;
+    max-height: 80px;
+  }
+  
+  .fileInput {
+    border: none;
+    padding: 0;
+    border-radius: 0.75rem;
+    /* color: white;
+    background-color: #000000; */
+  }
+  
+  .radioGroup {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+  }
+  
+  .radioLabel {
+    position: relative;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  
+  .radioLabel input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  .radioLabel span {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-family: var(--font-geist-sans);
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .radioLabel:hover {
+    background: #f1f5f9;
+    border-color: #3949ab;
+  }
+  
+  .radioLabel input:checked {
+    background: #3949ab;
+  }
+  
+  .radioLabel input:checked + span {
+    color: #ffffff;
+  }
+  
+  .radioLabel input:checked ~ .radioLabel {
+    background: #3949ab;
+    border-color: #3949ab;
+  }
+  
+  /* Add these new styles for radio button states */
+  .radioLabel input:checked + span {
+    color: white;
+  }
+  
+  .radioLabel input:checked {
+    background: #3949ab;
+  }
+  
+  .radioLabel input:checked ~ .radioLabel {
+    background: #3949ab;
+    border-color: #3949ab;
+  }
+  
+  .radioLabel[aria-checked="true"] {
+    background: #3949ab;
+    border-color: #3949ab;
+  }
+  
+  .radioLabel[aria-checked="true"] span {
+    color: white;
+  }
+  
+  .followerSection {
+    margin-top: 0.5rem;
+  }
+  
+  .followerList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+  }
+  
+  .followerItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+  }
+  
+  .followerItem:hover {
+    border-color: #3949ab;
+    background: rgba(57, 73, 171, 0.05);
+  }
+  
+  .followerItem input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #3949ab;
+  }
+  
+  .followerName {
+    font-size: 0.875rem;
+    color: var(--foreground);
+    font-family: var(--font-geist-sans);
+  }
+  
+  .modalFooter {
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .buttonPrimary {
+    padding: 0.75rem 1.5rem;
+    background: #3949ab;
+    color: white;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-geist-sans);
+  }
+  
+  .buttonPrimary:hover {
+    background: #283593;
+    transform: translateY(-1px);
+  }
+  
+  .buttonPrimary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .buttonSecondary {
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: var(--foreground);
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-geist-sans);
+  }
+  
+  .buttonSecondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  
+  .errorText {
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    font-family: var(--font-geist-sans);
+  }
+  
+  .submitError {
+    color: #ef4444;
+    font-size: 0.875rem;
+    text-align: center;
+    margin-top: 0.75rem;
+    font-family: var(--font-geist-sans);
+  }
+  
+  @media (max-width: 640px) {
+    .modal {
+      margin: 1rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+    }
+  
+    .modalBody {
+      padding: 1rem;
+      gap: 1rem;
+    }
+  
+    .modalHeader,
+    .modalFooter {
+      padding: 1rem;
+    }
+  }
+  

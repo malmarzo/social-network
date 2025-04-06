@@ -6,9 +6,12 @@ import (
 	"social-network/pkg/db/queries"
 	"social-network/pkg/utils"
 	"strings"
+	"fmt"
+	"log"
 )
 
-func PostInteractionsHandler(w http.ResponseWriter, r *http.Request) {
+func GroupPostInteractionsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("HIT:", r.URL.Path) // Add this line here
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -47,7 +50,7 @@ func PostInteractionsHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
+	fmt.Println(stats)
 	utils.SendResponse(w, datamodels.Response{
 		Code:   http.StatusOK,
 		Status: "Success",
@@ -55,7 +58,7 @@ func PostInteractionsHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func LikePostHandler(w http.ResponseWriter, r *http.Request) {
+func LikeGroupPostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -115,7 +118,7 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func DislikePostHandler(w http.ResponseWriter, r *http.Request) {
+func DislikeGroupPostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return

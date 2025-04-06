@@ -12,6 +12,7 @@ import { sendTypingMessage } from "./typingMessage"
 import { sendEventMessage } from "./eventMessage";
 import { withOptions } from "tailwindcss/plugin";
 import { sendEventResponseMessage } from "./eventResponseMessage";
+import  PostsFeed  from "./postFeed"
 export default function GroupChat() {
     const router = useRouter();
     const { id } = useParams();
@@ -435,6 +436,10 @@ export default function GroupChat() {
             </div>
         </div>
                 {/* end of displaying the event */}
+
+                <div>
+        <PostsFeed isGroup={true} groupID={id}/>
+      </div>
 
                        
             {/* Users List for Invitations */}
