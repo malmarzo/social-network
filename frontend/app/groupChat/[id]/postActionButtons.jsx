@@ -8,7 +8,7 @@ import {
   PaperAirplaneIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
-import styles from "@/styles/PostsFeed.module.css";
+import styles from "@/styles/PostsFeedGroup.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 import Link from "next/link";
 import { comment } from "postcss";

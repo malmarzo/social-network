@@ -37,7 +37,11 @@ export default function GroupChat() {
      const [day, setDay] = useState("");
      const [selectedOption, setSelectedOption] = useState({});
      const [isUsersListVisible, setIsUsersListVisible] = useState(false); 
-     const [isMembersListVisible, setIsMembersListVisible] = useState(false); 
+     const [isMembersListVisible, setIsMembersListVisible] = useState(false);
+     const [activeSection, setActiveSection] = useState("events");
+     const [showEventForm, setShowEventForm] = useState(false);
+
+
     
 
      const scrollToBottom = () => {
@@ -304,11 +308,11 @@ export default function GroupChat() {
     return (
         <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-lg text-white border border-gray-700 backdrop-blur-lg">
             <h2 className="text-3xl font-extrabold mb-3 text-blue-400">{group.group.title}</h2>
-            <p className="text-lg text-gray-300 italic">{group.group.description}</p>
+            <p className="text-lg text-gray-300 italic">Description: {group.group.description}</p>
 
             <div className="mt-5 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
                 <p className="text-lg font-semibold text-gray-200">
-                    👤 {group.group.firstname} {group.group.lastname}
+                    👤 {group.group.firstname} {group.group.lastname} (Admin)
                 </p>
             </div>
 
@@ -340,8 +344,7 @@ export default function GroupChat() {
             </div>
             {/* end of displaying group members */}
 
-
-
+          
             {/* displaying Chat messages section */}
             <div className="mt-6 bg-gray-700 p-4 rounded-lg border border-gray-600">
                 <h3 className="text-xl font-bold text-white">💬 Chat messages</h3>
@@ -408,74 +411,133 @@ export default function GroupChat() {
             </div>
             {/* end for input for typing messages */}
 
+           
+
 
             {/* the section for the event creation  */}
             {/* Event Creation Section */}
-            <div className="mt-6 bg-gray-700 p-4 rounded-lg border border-gray-600">
-                <h3 className="text-xl font-bold text-white">🎉 Create Event</h3>
+           
+                {showEventForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
+                    <div className="bg-gray-800 p-6 rounded-lg w-full max-w-xl mx-auto">
+                    <h3 className="text-xl font-bold text-white mb-4">🎉 Create Event</h3>
 
-                <div className="mt-4 space-y-3">
-                    <input
+                    <div className="space-y-3">
+                        <input
                         type="text"
                         placeholder="Event Title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full p-2 rounded-lg bg-gray-800 text-white border border-gray-700"
-                    />
-                    <textarea
+                        className="w-full p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
+                        />
+                        <textarea
                         placeholder="Event Description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        className="w-full p-2 rounded-lg bg-gray-800 text-white border border-gray-700"
-                    />
-                    <input
-                        id="dateTimeInput"
+                        className="w-full p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
+                        />
+                        <input
                         type="datetime-local"
                         value={dateTime}
                         min={formattedDateTime}
                         onChange={handleDateChange}
-                        className="w-full p-2 rounded-lg bg-gray-800 text-white border border-gray-700"
-                    />
+                        className="w-full p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
+                        />
 
-                    <div>
+                        <div>
                         <h4 className="text-white font-semibold">Options</h4>
                         {options.map((option, index) => (
                             <div key={index} className="flex items-center space-x-2 mt-2">
-                                <input
-                                    type="text"
-                                    placeholder={`Option ${index + 1}`}
-                                    value={option}
-                                    onChange={(e) => handleOptionChange(index, e.target.value)}
-                                    className="flex-1 p-2 rounded-lg bg-gray-800 text-white border border-gray-700"
-                                />
-                                {index === options.length - 1 && (
-                                    <button
-                                        onClick={handleAddOption}
-                                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                                    >
-                                        Add Option
-                                    </button>
-                                )}
+                            <input
+                                type="text"
+                                placeholder={`Option ${index + 1}`}
+                                value={option}
+                                onChange={(e) => handleOptionChange(index, e.target.value)}
+                                className="flex-1 p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
+                            />
+                            {index === options.length - 1 && (
+                                <button
+                                onClick={handleAddOption}
+                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                >
+                                Add
+                                </button>
+                            )}
                             </div>
                         ))}
-                    </div>
+                        </div>
 
-                    <button
-                        onClick={handleSendEvent}
-                        className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Create Event
-                    </button>
+                        <div className="flex justify-between mt-4">
+                        <button
+                            // onClick={handleSendEvent}
+                            onClick={() => {
+                                handleSendEvent();
+                                setShowEventForm(false);
+                              }}
+                            
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Create Event
+                        </button>
+                        <button
+                            onClick={() => setShowEventForm(false)}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Cancel
+                        </button>
+                        </div>
+                    </div>
+                    </div>
                 </div>
-            </div>
+                )}
+
+
                 {/* end of event creation */}
+
+                        <br></br>
+            {/* here i will put buttons to show sections either events or posts */}
+            <div className="flex justify-center space-x-4 mb-6">
+                <button
+                    onClick={() => setActiveSection("events")}
+                    className={`px-4 py-2 rounded-lg font-bold transition ${
+                        activeSection === "events"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    }`}
+                >
+                    Events
+                </button>
+                <button
+                    onClick={() => setActiveSection("posts")}
+                    className={`px-4 py-2 rounded-lg font-bold transition ${
+                        activeSection === "posts"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    }`}
+                >
+                    Posts
+                </button>
+            </div>
+            {/* end of buttons to show sections */}
 
 
                 {/* here i will display the event  */}
+                {activeSection === "events" && (
                 <div className="event-container p-4">
-            <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
+                     <h2 className="text-2xl font-bold mb-4  text-center">Events</h2>
+            {/* toggele button to show event creation form  */}
+            <button
+            onClick={() => setShowEventForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+            >
+                Create New Event
+            </button>
+            {/* end of toggele button for event creation */}
 
-            <div className="event-list space-y-3 h-64 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 shadow-sm p-3">
+           <br></br>
+           <br></br>
+
+            <div className="event-list space-y-3 h-[600px] overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 shadow-sm p-3">
                 {events.length > 0 ? (
                     events.map((event) => (
                         <div key={event.event_message.event_id} className="event-card p-3 border border-gray-300 rounded-lg shadow bg-white">
@@ -522,25 +584,19 @@ export default function GroupChat() {
                 )}
             </div>
         </div>
+        )}
                 {/* end of displaying the event */}
 
+
+                {/* here i will display the posts & comments */}
+                {activeSection === "posts" && (
                 <div>
         <PostsFeed isGroup={true} groupID={id}/>
       </div>
-
+      )}
+                {/* end of displaying posts and comments */}
                        
             {/* Users List for Invitations */}
-{/*           
-             <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
-                <UsersList users={users.users} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
-                <button
-                    onClick={handleInviteUsers}
-                    className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    disabled={selectedUsers.length === 0}
-                >
-                    Invite Selected Users
-                </button>
-            </div>   */}
 
             <div>
                 {/* Button to toggle the visibility of the users list */}

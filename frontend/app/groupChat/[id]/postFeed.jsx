@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import styles from "@/styles/PostsFeed.module.css";
+import styles from "@/styles/PostsFeedGroup.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
 import CreateNewPost from "./CreateNewPost";
 import Link from "next/link";
@@ -94,40 +94,8 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
     <div
       className={styles.container}
     >
-      <div className={styles.feedContainer}>
-        <div className={styles.headerContainer}>
-          {isProfile ? (
-            <div className={styles.profileHeader}>
-              <h1 className={styles.title}>Activity</h1>
-              {shouldShowCreatePost() && (
-                <button
-                  className={styles.createPostButton}
-                  onClick={() => setCreateNewPost(true)}
-                >
-                  Create Post
-                </button>
-              )}
-            </div>
-          ) : (
-            <>
-              <h1 className={styles.title}>{isGroup ? "Activity" : "Posts"}</h1>
-              <nav className={styles.toggleNav}>
-                {!isGroup && (
-                  <div className={styles.toggleButtons}>
-                    {toggles.map((toggle) => (
-                      <button
-                        key={toggle.id}
-                        className={`${styles.toggleButton} ${
-                          activeTab === toggle.id ? styles.activeToggle : ""
-                        }`}
-                        onClick={() => setActiveTab(toggle.id)}
-                      >
-                        {toggle.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {shouldShowCreatePost() && (
+       <h2 className="text-2xl font-bold mb-4  text-center">Posts & Comments</h2>
+       {shouldShowCreatePost() && (
                   <button
                     className={styles.createPostButton}
                     onClick={() => setCreateNewPost(true)}
@@ -135,9 +103,11 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
                     Create Post
                   </button>
                 )}
-              </nav>
-            </>
-          )}
+                <br></br>
+                <br></br>
+      <div className="posts-list space-y-3 h-[600px] overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 shadow-sm p-3">
+        <div className={styles.headerContainer}>
+        
         </div>
 
         {createNewPost && shouldShowCreatePost() && (
