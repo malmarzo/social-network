@@ -14,13 +14,14 @@ import { withOptions } from "tailwindcss/plugin";
 import { sendEventResponseMessage } from "./eventResponseMessage";
 import  PostsFeed  from "./postFeed"
 import { sendUsersInvitationListMessage } from "../groupMessage";
-
+import { sendGroupMembersMessage } from "../groupMessage";
 export default function GroupChat() {
     const router = useRouter();
     const { id } = useParams();
     const [group, setGroup] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState([]); 
     const [users, setUsers] = useState(null);
+    const [members, setMembers] = useState(null);
      const { sendMessage } = useWebSocket();
      const [message, setMessage] = useState(""); 
      const { addMessageHandler } = useWebSocket();
@@ -36,7 +37,7 @@ export default function GroupChat() {
      const [day, setDay] = useState("");
      const [selectedOption, setSelectedOption] = useState({});
      const [isUsersListVisible, setIsUsersListVisible] = useState(false); 
-     
+     const [isMembersListVisible, setIsMembersListVisible] = useState(false); 
     
 
      const scrollToBottom = () => {
@@ -65,8 +66,7 @@ export default function GroupChat() {
             if (response.code === 200) {
                 
                 setGroup(response);
-                //setUsers(response);
-                //sendUsersInvitationListMessage(id, sendMessage);
+                
                 
                 if (response.group && response.group.chat_history) {
                     setMessages(response.group.chat_history.map((msg) => ({ group_message: msg })));
@@ -109,7 +109,6 @@ export default function GroupChat() {
                 
                
             } else {
-                console.log("hellooooooo");
                 router.push("/"); // Redirect if group not found
             }
         };
@@ -148,17 +147,17 @@ export default function GroupChat() {
             });
         });
 
-       
-         //sendUsersInvitationListMessage(id, sendMessage);
-        // addMessageHandler("usersInvitationList", (msg) => {
-        //     setUsers(msg.users_invitation_list_message); 
-        // });
+      
      
         addMessageHandler("usersInvitationList", (msg) => {
             setUsers(msg.users_invitation_list_message); // Assuming this is the structure of the response
           });
       
-
+          addMessageHandler("groupMembers", (msg) => {
+            setMembers(msg.users_invitation_list_message.users); // Assuming this is the structure of the response
+          });
+      
+  
        
 
         if (id) fetchGroup();
@@ -187,6 +186,22 @@ export default function GroupChat() {
         } 
         }
       };
+
+      const handleButtonClick2 = async () => {
+        // Toggle visibility of the users list
+         setIsMembersListVisible((prevState) => !prevState);
+    
+        // Only send the message if it's the first time showing the list
+        if (!isMembersListVisible) {
+           try {
+            await  sendGroupMembersMessage(id, sendMessage);
+           
+        } catch (error) {
+            console.error("Error sending groupMemberslist:", error);
+        } 
+        }
+      };
+
 
 
       
@@ -302,14 +317,27 @@ export default function GroupChat() {
 
             {/* displaying group memebers */}
             <div>
-            {group.group.members && group.group.members.length > 0 ? (
-                group.group.members.map((member, index) => (
-                <div key={index} className="member">
-                    <p>{member.nickname}</p>
+            {/* Button to toggle visibility of members list */}
+            <button
+                onClick={handleButtonClick2}
+                className="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            >
+                {isMembersListVisible ? "Hide Members List" : "Show Members List"}
+            </button>
+
+            {/* Conditionally render the members list if visible */}
+            {isMembersListVisible && (
+                <div className="mt-4 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
+                {members && members.length > 0 ? (
+                    members.map((member, index) => (
+                    <div key={index} className="member text-white mb-2">
+                        <p>{member.nickname}</p>
+                    </div>
+                    ))
+                ) : (
+                    <p className="text-gray-400">No members found</p>
+                )}
                 </div>
-                ))
-            ) : (
-                <p>No members found</p>
             )}
             </div>
             {/* end of displaying group members */}

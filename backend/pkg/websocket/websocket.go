@@ -29,6 +29,7 @@ type SocketMessage struct {
 	EventResponseMessage datamodels.EventResponseMessage `json:"event_response_message"`
 	UsersInviationListMessage   datamodels.UsersInvitationListMessage  `json:"users_invitation_list_message"`             
 	//EventNotification    datamodels.EventNotification    `json:"event_notification"`
+	GroupMembersMessage               datamodels.GroupMembersMessage  `json:"group_members_message"` 
 }
 
 var upgrader = websocket.Upgrader{
@@ -139,6 +140,8 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 			SendEventResponseMessage(msg,w)
 		}else if msg.Type == "usersInvitationListMessage" {
 			SendUsersInvitationList(msg,w,userID)
+		}else if msg.Type == "groupMembersMessage" {
+			SendGroupMembers(msg,w)
 		}else{
 			socketMessages <- msg
 		}

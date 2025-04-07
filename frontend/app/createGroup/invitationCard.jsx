@@ -1,6 +1,7 @@
 import { invokeAPI } from "@/utils/invokeAPI";
 import { useState, useEffect } from "react";
 import { useWebSocket } from "@/context/Websocket";
+import { sendGroupMembersMessage } from "../groupChat/groupMessage";
 
 export default function DisplayInvitationCard({ invitation,onRespond }) {
     const [showCard, setShowCard] = useState(false);
@@ -47,7 +48,8 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
                 sendMessage(myGroupsMsg);
             };
     
-            getMyGroups(); 
+            getMyGroups();
+            await  sendGroupMembersMessage(invitation.invite.group_id, sendMessage); 
     
             setShowCard(false);
         } catch (error) {

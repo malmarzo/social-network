@@ -15,8 +15,6 @@ import(
 
 
 func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("HIT:", r.URL.Path) // Add this line here
-	log.Println("calling CreateGroupChatHandler ")
     //var g datamodels.Group
 	var response datamodels.Response
 	if r.Method == http.MethodGet {
@@ -47,39 +45,6 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
-// get the full user list
-	// users, err:= queries.GetUsersList()
-	// if err != nil {
-	// 	log.Println(err)
-	// 		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error22"})
-	// 		return
-	// }
-//  members of a specific group and have a status of either 'pending' or 'accepted'.
-	// users2, err4:= queries.GetAvailableUsersList(groupIDInt)
-	// if err4 != nil {
-	// 	fmt.Println("Error retriving the available userlist", err4)
-    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
-    //     return
-	// }
-	
-	
-	// remove the users that already invited or accepted the invitation
-	// var users4 []datamodels.User
-	// for _, user1 := range users {
-    //     found := false
-        
-    //     for _, user2 := range users2 {
-    //         if user1.Nickname == user2.Nickname {
-    //             found = true
-    //             break
-    //         }
-    //     }
-        
-    //     if !found {
-    //         users4 = append(users4, user1)
-    //     }
-    // }
-	
 
 	// test 
 	cookie, err := r.Cookie("session_id")
@@ -94,9 +59,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
-	fmt.Println("-------------------------------------------")
-	fmt.Println("Session Cookie:", cookie.Value)
-	fmt.Println("Current User ID:", currentUser)
+	
 
 	// end of test 
 	 
@@ -116,24 +79,6 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//end
 
-	//remove the creator from the invitation list
-	// var users3 []datamodels.User
-	// for i:= 0; i <len(users4); i++ {
-	// 	if users4[i].ID != CreatorID{
-	// 		users3 = append(users3,users4[i])
-	// 	}
-	// }
-
-	
-	//test
-	// remove the current user
-	// var users5 []datamodels.User
-	// for i:= 0; i<len(users3);i++ {
-	// 	if users[i].ID != currentUser {
-	// 		users5= append(users5,users3[i])
-	// 	}
-	// }
-
 	getChatHistory, err8:= queries.OldGroupChats(Id)
 	if err8!= nil {
 		fmt.Println("Error retreving the chat history")
@@ -141,8 +86,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
         return
 
 	}
-	fmt.Println("------------------------------")
-
+	
 	for i:= 0 ; i < len(getChatHistory); i++ {
 		firstName,err:=queries.GetFirstNameById(getChatHistory[i].SenderID)
 		if err != nil {
@@ -174,12 +118,12 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		eventResponsesFinal = append(eventResponsesFinal, eventResponses...)
 	}
-	groupMembers, err10:= queries.GetGroupMembers(groupIDInt)
-	if err10 != nil {
-		fmt.Println("Error retriving group memebers")
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
-        return
-	}
+	// groupMembers, err10:= queries.GetGroupMembers(groupIDInt)
+	// if err10 != nil {
+	// 	fmt.Println("Error retriving group memebers")
+    //     utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "internal server error"})
+    //     return
+	// }
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",
@@ -194,7 +138,7 @@ func CreateGroupChatHandler(w http.ResponseWriter, r *http.Request) {
 			ChatHistory:getChatHistory,
 			EventHistory:getEventHistory,
 			EventResponsesHistory:eventResponsesFinal,
-			Members:groupMembers,
+			//Members:groupMembers,
         },
 		//Users: users5,
     }

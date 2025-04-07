@@ -56,3 +56,21 @@ export const sendUsersInvitationListMessage = async (groupID, sendMessage) => {
     sendMessage(usersInvitationListMsg);  
 
 };
+
+
+
+export const sendGroupMembersMessage = async (groupID, sendMessage) => {
+    console.log("the function is functioning");
+    const groupMembersMsg = {
+        type: "groupMembersMessage",
+       //invited_user: user, // Ensure it's a single recipient ID
+       // content: content,
+       group_members_message: {
+            group_id: parseInt(groupID, 10),
+        }
+    };
+    //console.log(user);
+    console.log("Sending WebSocket message:",  groupMembersMsg);
+    sendMessage( groupMembersMsg);  
+
+};

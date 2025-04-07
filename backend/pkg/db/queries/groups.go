@@ -533,15 +533,15 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 		GROUP BY group_id
 	) AS last_msg ON g.id = last_msg.group_id
 	WHERE (gm.user_id = ? AND gm.status = 'accepted') 
-	      OR  g.creator_id = gm.invited_by
+	      OR  g.creator_id = ?
 	ORDER BY 
 		CASE WHEN last_msg.last_message_time IS NULL THEN 1 ELSE 0 END,  -- Groups with messages come first
 		last_msg.last_message_time DESC,  -- Order by last message time if it exists
 		g.title ASC  -- Otherwise, order alphabetically
 `
 
-	
-	rows, err := db.Query(query, userID)  // Pass userID twice for both conditions
+//OR  g.creator_id = gm.invited_by
+	rows, err := db.Query(query, userID, userID)  // Pass userID twice for both conditions
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, err

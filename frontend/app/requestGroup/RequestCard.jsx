@@ -36,6 +36,8 @@ export default function DisplayRequestCard({ request,onRespond }) {
 
             // Call parent function to remove the invitation from the list
             onRespond(response.user_id, accepted);
+            // not tested 
+             await  sendGroupMembersMessage(request.request.group_id, sendMessage); 
             // if (!accepted) {
             //     // Request updated group list
             //     const getGroupsToRequest = () => {

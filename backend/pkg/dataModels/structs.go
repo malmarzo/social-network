@@ -122,6 +122,12 @@ type UsersInvitationListMessage struct {
 }
 
 
+type GroupMembersMessage struct {
+	GroupID		int `json:"group_id"`
+	Users   []User  `json:"users"`             
+}
+
+
 type GroupPost struct {
 	GroupID       int `json:"group_id"`
 	PostID        string  `json:"post_id"`
