@@ -27,6 +27,22 @@ func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
 		mu.Unlock()
 		return
 	}
+	getFirstName, err2:= queries.GetFirstNameById(msg.Invite.InvitedBy)
+	if err2 != nil {
+		fmt.Println("Error retreving the invited by name", err2)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+
+	}
+	getGroupName, err3:= queries.GetGroupName(msg.Invite.GroupID)
+	if err3 != nil {
+		fmt.Println("Error retreving the group name", err3)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+
+	}
+
+	msg.Content = "you are invited by " + getFirstName + " to join the a group called " + getGroupName
 	// Now, check if the user is online and send the invite if they are
 	if exists {
 		err := recipientConn.WriteJSON(msg)
@@ -462,6 +478,22 @@ func RequestToJoinGroup(msg SocketMessage, w http.ResponseWriter){
 				utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
 					return
 					}
+	getFirstName, err2:= queries.GetFirstNameById(msg.Request.UserID)
+	if err2 != nil {
+		fmt.Println("Error retreving the requester name", err2)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+
+	}
+	getGroupName, err3:= queries.GetGroupName(msg.Request.GroupID)
+	if err3 != nil {
+		fmt.Println("Error retreving the group name", err3)
+        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+        return
+
+	}
+
+	msg.Content =  getFirstName + " has requested to join the group called " + getGroupName
 			if exists {
 				err := recipientConn.WriteJSON(msg)
 				if err != nil {
@@ -691,13 +723,6 @@ func SendGroupMembers(msg SocketMessage, w http.ResponseWriter) {
 		finalList = append(finalList, member.ID)
 	}
 	finalList = append(finalList, creatorID)
-
-	// Fetch the invitation list (once)
-	// groupMembers, err := queries.GetGroupMembers(groupID)
-	// if err != nil {
-	// 	log.Printf("Error fetching pending requests for user %s: %v", userID, err)
-	// 	return
-	// }
 
 	// Build the message
 	groupMembersMsg := SocketMessage{

@@ -54,6 +54,7 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
             setShowCard(false);
         } catch (error) {
             console.error("Failed to update invitation response:", error);
+            
         }
     };
     

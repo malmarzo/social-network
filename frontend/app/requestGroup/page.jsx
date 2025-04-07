@@ -45,7 +45,7 @@ export default function GroupsToJoin() {
             const requestMsg = {
                 type: "request",
                //invited_user: user, // Ensure it's a single recipient ID
-                content: "a user request to join a group",
+                content: "",
                 request: {
                     group_id: groupID,
                     group_creator: groupCreator,  // The user who is sending the invite

@@ -1330,3 +1330,25 @@ func GetUserInvitationList(userID string, groupID int) ([]datamodels.User, error
 
 	return users, nil
 }
+
+
+func GetGroupName(groupID int) (string, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println(err)
+		return  "", err
+	}
+	defer db.Close()
+	var  title string
+
+	// Fetch the group by its ID
+	err = db.QueryRow("SELECT title FROM groups WHERE id = ?", groupID).
+		Scan(&title)
+	if err != nil {
+		log.Println(err)
+		return  "", err
+	}
+
+	return title, nil
+}

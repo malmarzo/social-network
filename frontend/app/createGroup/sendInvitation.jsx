@@ -11,7 +11,7 @@ export const sendInvitations = async (users, sendMessage, groupID,invitedBy) => 
         const inviteMsg = {
             type: "invite",
            //invited_user: user, // Ensure it's a single recipient ID
-            content: "You are invited to join a group",
+            content: "",
             invite: {
                 group_id: groupID,
                 user_id: user,  // The user being invited

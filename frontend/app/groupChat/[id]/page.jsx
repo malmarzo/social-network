@@ -156,9 +156,7 @@ export default function GroupChat() {
           addMessageHandler("groupMembers", (msg) => {
             setMembers(msg.users_invitation_list_message.users); // Assuming this is the structure of the response
           });
-      
-  
-       
+
 
         if (id) fetchGroup();
     }, [id,router,sendMessage,addMessageHandler]);
