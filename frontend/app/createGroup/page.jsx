@@ -18,6 +18,7 @@ export default function CreateGroup() {
     const router = useRouter();
     const [users, setUsers] = useState([]);
     const { sendMessage } = useWebSocket();
+    const [errors, setErrors] = useState({});
     useEffect(() => {
       const fetchUsers = async () => {
           const data = await fetchUsersData();  // Fetch users data
@@ -28,21 +29,34 @@ export default function CreateGroup() {
   }, []);  // This will run only once when the component mounts
    
     const createGroup = async () => {
-        if (!title.trim() || !description.trim()) {
-            alert("Title and Description are required.");
-            return;
-        }
-        if (selectedUsers.length == 0){
-          alert("you need at least to invite one person");
+        // if (!title.trim() || !description.trim()) {
+        //     alert("Title and Description are required.");
+        //     return;
+        // }
+        const errors = {
+            title: title.trim() ? "" : "Title is required",
+            description: description.trim() ? "" : "Description is required",
+          };
+
+       
+       
+        const hasErrors = Object.values(errors).some((msg) => msg !== "");
+          
+        if (hasErrors) {
+          setErrors(errors);
           return;
         }
-       
         const body = { title, description };
+        if (selectedUsers.length == 0){
+            alert("you need at least to invite one person");
+            return;
+          }
         const response = await invokeAPI("groups", body, "POST");
 
       
         
         if (response.code === 200) {
+            //setErrors({});
             console.log("Group created successfully:", response.group);
             setGroupID(response.group.id);
             setGroupCreatorID(response.group.creator_id);
@@ -85,23 +99,31 @@ export default function CreateGroup() {
                 placeholder="Title" 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-3 mb-3 text-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-4 mb-4 text-white bg-gray-800 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
             />
+             {errors.title && (
+                <p className="text-lg font-bold text-red-600 mt-2">{errors.title}</p>
+                )}
+                <br></br>
 
             <input 
                 type="text" 
                 placeholder="Description" 
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 mb-3 text-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-4 mb-4 text-white bg-gray-800 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
             />
-
+            {errors.description && (
+                 <p className="text-lg font-bold text-red-600 mt-2">{errors.description}</p>
+                    )}
+                    <br></br>
             {/* Pass selectedUsers state and setter to UsersList */}
             <UsersList 
                 users = {users}
                 selectedUsers={selectedUsers} 
                 setSelectedUsers={setSelectedUsers} 
             />
+            <br></br>
 
             <button 
                 // onClick={createGroup}
@@ -110,7 +132,7 @@ export default function CreateGroup() {
                     createGroup();
                     // getGroupsToRequest();
                 }}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200"
+                className="w-full bg-blue-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200"
             >
                 Create Group
             </button>

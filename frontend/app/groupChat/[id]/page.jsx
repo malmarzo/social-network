@@ -402,7 +402,7 @@ export default function GroupChat() {
                 <h3 className="text-xl font-bold text-white">💬 Chat messages</h3>
 
                 {/* Messages display */}
-                     <div className="h-40 overflow-y-auto bg-gray-800 p-3 rounded-lg border border-gray-700 mt-2">
+                     <div className="h-60 overflow-y-auto bg-gray-800 p-3 rounded-lg border border-gray-700 mt-2">
                     
                     {messages.length > 0 ? (
                     messages.map((msg) => (
