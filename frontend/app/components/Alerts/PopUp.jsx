@@ -64,21 +64,17 @@ export const ConfirmAction = () => {
   );
 };
 
-// Notification.js
-export const Notification = () => {
+export const PopUp = () => {
   const { alertConfig, closeAlert } = useAlert();
   if (!alertConfig.isOpen || alertConfig.type === "confirm") return null;
 
-  const notificationClass =
+  const popUpClass =
     alertConfig.type === "success" ? styles.success : styles.failure;
-  const icon = alertConfig.type === "success" ? "✅" : "❌";
 
   return (
     <div className={styles.overlay}>
-      <div className={`${styles.popup} ${notificationClass}`}>
-        <p>
-          {icon} {alertConfig.message}
-        </p>
+      <div className={`${styles.popup} ${popUpClass}`}>
+        <p>{alertConfig.message}</p>
         <button className={styles.close} onClick={closeAlert}>
           Close
         </button>

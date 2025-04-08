@@ -4,34 +4,27 @@ import AuthButton from "../Buttons/AuthButtons";
 import LogoutButton from "@/app/logout/page";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { HomeIcon } from "@heroicons/react/24/outline";
 
 const Header = () => {
   const { isLoggedIn, loading } = useAuth();
   return (
     <header className={style.header}>
       <div className={style.logoCont}>
-        <Link href={"/"}>
-          <div className={style.logo}></div>
+        <Link href="/" className={style.homeLink}>
+          <HomeIcon className={style.homeIcon} />
+          <span className={style.homeText}>Home</span>
         </Link>
       </div>
-      <div className={style.nav}>
-        {isLoggedIn && !loading && (
-          <nav className={style.navLinks}>
-            <Link href="/" className={style.navLink}>Home</Link>
-            <Link href="/chat" className={style.navLink}>Chat</Link>
-          </nav>
-        )}
-      </div>
-      <div className={style.buttons}>
+      <nav className={style.buttons}>
         {!isLoggedIn && !loading && (
           <>
             <AuthButton text="Login" href="/login" />
-            <AuthButton text="Signup" href="/signup" />
+            <AuthButton text="Sign Up" href="/signup" />
           </>
         )}
-
         {isLoggedIn && !loading && <LogoutButton />}
-      </div>
+      </nav>
     </header>
   );
 };

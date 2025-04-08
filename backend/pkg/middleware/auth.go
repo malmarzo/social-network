@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"social-network/pkg/db/queries"
 )
@@ -9,8 +8,8 @@ import (
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Log the request path for debugging
-		log.Printf("AuthMiddleware: Processing request for path: %s", r.URL.Path)
-		
+		// log.Printf("AuthMiddleware: Processing request for path: %s", r.URL.Path)
+
 		// Get the session cookie
 		cookie, err1 := r.Cookie("session_id")
 		if err1 != nil {
@@ -27,7 +26,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		// Set the User-ID header for downstream handlers
 		r.Header.Set("User-ID", userID)
-		
+
 		// Log successful authentication
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",

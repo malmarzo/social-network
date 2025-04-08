@@ -139,7 +139,6 @@ const ProfilePage = () => {
     });
   };
 
-
   //Handles the follow/unfollow request
   const handleFollow = async () => {
     if (isRequestSent) {
@@ -173,7 +172,6 @@ const ProfilePage = () => {
                   senderNickname: "", // This will be set in the backend
                 },
               });
-              
             } else {
               showAlert({
                 type: "error",
@@ -327,49 +325,52 @@ const ProfilePage = () => {
     >
       <div className={styles.profileDetails}>
         <div className={styles.profileCard}>
-          <div className={styles.profileImage}>
-            <img
-              src={
-                user.avatar_url
-                  ? `data:${user.avatar_mime_type};base64,${user.avatar_url}`
-                  : "/imgs/defaultAvatar.jpg"
-              }
-              alt="Profile"
-            />
-          </div>
+          <div className={styles.imageWithDetails}>
+            <div className={styles.profileImage}>
+              <img
+                src={
+                  user.avatar_url
+                    ? `data:${user.avatar_mime_type};base64,${user.avatar_url}`
+                    : "/imgs/defaultAvatar.jpg"
+                }
+                alt="Profile"
+              />
+            </div>
 
-          <div className={styles.info}>
             <div className={styles.header}>
               <div className={styles.nameSection}>
                 <div className={styles.nicknameRow}>
                   <h1 className={styles.nickname}>@{user.nickname}</h1>
-                  {user.is_private ? (
-                    <LockClosedIcon
-                      className={`${styles.lockIcon} ${styles.private}`}
-                    />
-                  ) : (
-                    <LockOpenIcon className={styles.lockIcon} />
-                  )}
                 </div>
                 {(!user.is_private || followedByMe || isMyProfile) && (
                   <h2 className={styles.name}>
                     {user.first_name} {user.last_name}
                   </h2>
                 )}
+
+                {user.is_private ? (
+                  <LockClosedIcon
+                    className={`${styles.lockIcon} ${styles.private}`}
+                  />
+                ) : (
+                  <LockOpenIcon className={styles.lockIcon} />
+                )}
               </div>
             </div>
+          </div>
 
+          <div className={styles.info}>
             {(!user.is_private || followedByMe || isMyProfile) && (
               <>
                 <div className={styles.details}>
-                  <p className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Email:</span>{" "}
-                    {user.email}
-                  </p>
-                  <p className={styles.detailItem}>
-                    <span className={styles.detailLabel}>Date of Birth:</span>{" "}
-                    {user.dob}
-                  </p>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Email</span>
+                    <span className={styles.detailValue}>{user.email}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Date of Birth</span>
+                    <span className={styles.detailValue}>{user.dob}</span>
+                  </div>
                 </div>
 
                 {user.about && (

@@ -1,13 +1,12 @@
 import React from "react";
 import ProfileCard from "./ProfileCard";
+import styles from "@/styles/ProfileWindow.module.css";
 
 const ProfileWindow = () => {
   return (
-    <div>
-          <h1
-          style={{fontSize:"1.8rem", fontWeight:"bold"}}
-          >Profile</h1>
-      <ProfileCard imageSrc="https://www.w3schools.com/howto/img_avatar.png" />
+    <div className={styles.container}>
+      <h1 className={styles.title}>Profile</h1>
+      <ProfileCard />
     </div>
   );
 };

@@ -25,8 +25,8 @@ type SocketMessage struct {
 	GroupID       string        `json:"groupId,omitempty"`
 	MessageID     string        `json:"messageId,omitempty"`
 	Timestamp     string        `json:"timestamp,omitempty"`
-	Status        string        `json:"status,omitempty"`      // For delivery status: sent, delivered, read
-	ClientMsgID   string        `json:"clientMsgId,omitempty"` // For client-side message tracking
+	Status        string        `json:"status,omitempty"`
+	ClientMsgID   string        `json:"clientMsgId,omitempty"`
 	FollowRequest FollowRequest `json:"followRequest"`
 }
 
@@ -37,9 +37,7 @@ type FollowRequest struct {
 }
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
 // Client represents a connected websocket client
@@ -52,7 +50,7 @@ type Client struct {
 }
 
 var clients = make(map[string]*Client)
-var socketMessages = make(chan SocketMessage, 100) // Buffered channel to prevent blocking
+var socketMessages = make(chan SocketMessage)
 var mu sync.Mutex
 
 // Handles new connections
@@ -136,26 +134,26 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		socketMessages <- msg
 	}()
 	// Set read deadline
-	ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+	// ws.SetReadDeadline(time.Now().Add(60 * time.Second))
 
 	// Set pong handler to reset read deadline
-	ws.SetPongHandler(func(string) error {
-		ws.SetReadDeadline(time.Now().Add(60 * time.Second))
-		return nil
-	})
+	// ws.SetPongHandler(func(string) error {
+	// 	ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+	// 	return nil
+	// })
 
 	// Start a goroutine for ping-pong to keep connection alive
-	go func() {
-		ticker := time.NewTicker(30 * time.Second)
-		defer ticker.Stop()
+	// go func() {
+	// 	ticker := time.NewTicker(30 * time.Second)
+	// 	defer ticker.Stop()
 
-		for {
-			<-ticker.C
-			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		}
-	}()
+	// 	for {
+	// 		<-ticker.C
+	// 		if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
+	// 			return
+	// 		}
+	// 	}
+	// }()
 
 	for {
 		msg := SocketMessage{}

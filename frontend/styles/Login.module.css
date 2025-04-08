@@ -82,11 +82,24 @@
   font-family: var(--font-geist-sans);
 }
 
-.button:hover {
+.button:disabled {
+  background: #9fa8da;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button:hover:not(:disabled) {
   background: #283593;
   transform: translateY(-1px);
 }
 
-.button:active {
+.button:active:not(:disabled) {
   transform: translateY(0);
 }

@@ -223,13 +223,6 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if activeTab != "trending" {
-		//reverse the posts array
-		for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
-			posts[i], posts[j] = posts[j], posts[i]
-		}
-	}
-
 	utils.SendResponse(w, datamodels.Response{
 		Code:   http.StatusOK,
 		Status: "Success",
@@ -291,10 +284,7 @@ func ProfilePostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//reverse the posts array
-	for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
-		posts[i], posts[j] = posts[j], posts[i]
-	}
+	
 
 	// Convert images to base64 for each post
 	for i := range posts {

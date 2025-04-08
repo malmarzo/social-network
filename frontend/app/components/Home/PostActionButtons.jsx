@@ -220,15 +220,15 @@ const PostActionButtons = ({ postID, isGroup }) => {
         }`}
       >
         <div className={styles.commentsList}>
-          {commentsList?.map((comment) => (
-            <div key={comment.comment_id} className="p-2 border-b border-gray-500">
+          {commentsList?.map((comment, index) => (
+            <div key={index} className={styles.commentItem}>
               <div className={styles.commentHeader}>
-                <div className={styles.commentUser}>
-                  <Link href={`/profile/${comment.user_id}`}>
+                <Link href={`/profile/${comment.user_id}`}>
+                  <span className={styles.commentUser}>
                     @{comment.user_nickname}
-                  </Link>
-                </div>
-                <div className={styles.commentDate}>{comment.created_at}</div>
+                  </span>
+                </Link>
+                <span className={styles.commentDate}>{comment.created_at}</span>
               </div>
               <p className={styles.commentText}>{comment.comment_text}</p>
               {comment.comment_image && (
@@ -243,6 +243,7 @@ const PostActionButtons = ({ postID, isGroup }) => {
             </div>
           ))}
         </div>
+
         <div className={styles.commentInputContainer}>
           {imagePreviewUrl && (
             <div className={styles.imagePreviewContainer}>
@@ -266,7 +267,6 @@ const PostActionButtons = ({ postID, isGroup }) => {
             <input
               type="text"
               placeholder="Add a comment..."
-              className={styles.commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
               value={commentInput}
             />

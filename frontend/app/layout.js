@@ -12,7 +12,7 @@ import { usePathname } from 'next/navigation';
 import {
   AlertProvider,
   ConfirmAction,
-  Notification,
+  PopUp,
 } from "./components/Alerts/PopUp";
 
 const geistSans = Geist({
@@ -41,12 +41,11 @@ export default function RootLayout({ children }) {
               <AlertProvider>
                 <NotificationProvider>
                   <ChatPageProvider>
-                    {/* Only render the header if we're not on the chat page */}
-                    {!isChatPage && <Header />}
+                    <Header />
                     <UserNotifier />
                     <ChatNotifier />
                     <ConfirmAction />
-                    <Notification />
+                    <PopUp />
                     {children}
                   </ChatPageProvider>
                 </NotificationProvider>

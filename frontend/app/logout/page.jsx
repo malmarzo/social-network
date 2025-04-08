@@ -5,6 +5,7 @@ import FailAlert from "../components/Alerts/FailAlert";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "../components/Alerts/PopUp";
+import styles from "@/styles/AuthButtons.module.css"; // Import the styles
 
 const LogoutButton = () => {
   const [errorMsg, setErrorMsg] = useState("");
@@ -38,14 +39,12 @@ const LogoutButton = () => {
   return (
     <>
       {errorMsg && <FailAlert msg={errorMsg} />}
-      <div>
-        <button
-          onClick={handleLogout}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-        >
-          Logout
-        </button>
-      </div>
+      <button
+        onClick={handleLogout}
+        className={styles.button} // Add this new class
+      >
+        Logout
+      </button>
     </>
   );
 };

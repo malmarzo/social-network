@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { invokeAPI } from "@/utils/invokeAPI";
 import debounce from "lodash/debounce";
-import styles from "@/styles/Explore.module.css";
+import styles from "@/styles/FollowersAndFollowingLists.module.css";
 import UserLoader from "../loaders/UserLoader";
 import { useAlert } from "@/app/components/Alerts/PopUp";
 import { useWebSocket } from "@/context/Websocket";

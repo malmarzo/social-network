@@ -78,13 +78,18 @@ func GetAllPosts(userID, tab string) ([]datamodels.Post, error) {
 	var errFetch error
 
 	baseQuery := `
-        SELECT p.* FROM posts p
-        LEFT JOIN followers f ON p.user_id = f.following_id 
-        WHERE 
-            p.user_id = ? OR
-            p.privacy = 'public' OR
-            (p.privacy = 'almost_private' AND f.follower_id = ? AND f.status = 'accepted') OR
-            (p.privacy = 'private' AND p.allowedUsers LIKE ?)`
+    SELECT p.* FROM posts p
+    LEFT JOIN (
+        SELECT DISTINCT following_id FROM followers 
+        WHERE follower_id = ? AND status = 'accepted'
+    ) f ON p.user_id = f.following_id
+    WHERE 
+        (p.user_id = ? OR
+        p.privacy = 'public' OR
+        (p.privacy = 'almost_private' AND f.following_id IS NOT NULL) OR
+        (p.privacy = 'private' AND p.allowedUsers LIKE ?))
+    GROUP BY p.id
+    `
 
 	switch tab {
 	case "trending":
@@ -92,9 +97,9 @@ func GetAllPosts(userID, tab string) ([]datamodels.Post, error) {
             ORDER BY (p.num_likes + p.num_dislikes + p.num_comments) DESC`,
 			userID, userID, "%"+userID+"%")
 	case "my-posts":
-		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ?", userID)
+		rows, errFetch = db.Query("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC", userID)
 	default: // "latest" or empty
-		rows, errFetch = db.Query(baseQuery,
+		rows, errFetch = db.Query(baseQuery+`ORDER BY p.created_at DESC`,
 			userID, userID, "%"+userID+"%")
 	}
 
@@ -297,20 +302,24 @@ func GetProfilePosts(profileID, userID string, isMyProfile bool) ([]datamodels.P
 
 	var rows *sql.Rows
 	if isMyProfile {
-		// Return all my posts
-		rows, err = db.Query(`SELECT * FROM posts WHERE user_id = ?`, profileID)
+		rows, err = db.Query(`
+            SELECT * FROM posts 
+            WHERE user_id = ? 
+            GROUP BY id 
+            ORDER BY created_at DESC`, profileID)
 	} else {
-		// For other profiles, check various conditions
 		rows, err = db.Query(`
             SELECT p.* FROM posts p
-            LEFT JOIN followers f ON p.user_id = f.following_id 
+            LEFT JOIN followers f ON p.user_id = f.following_id AND f.follower_id = ?
             WHERE p.user_id = ? 
             AND (
                 p.privacy = 'public' 
-                OR (p.privacy = 'almost_private' AND f.follower_id = ? AND f.status = 'accepted')
+                OR (p.privacy = 'almost_private' AND f.status = 'accepted')
                 OR (p.privacy = 'private' AND p.allowedUsers LIKE ?)
-            )`,
-			profileID, userID, "%"+userID+"%")
+            )
+            GROUP BY p.id
+            ORDER BY p.created_at DESC`,
+			userID, profileID, "%"+userID+"%")
 	}
 
 	if err != nil {

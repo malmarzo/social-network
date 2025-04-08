@@ -41,11 +41,11 @@ const Explore = () => {
     fetchData();
   }, []);
 
-
   // Debounced search function will run every 300ms after the user changed the input
   const debouncedSearch = useCallback(
     debounce((searchTerm) => {
-      if (searchTerm.trim() === "") { //If the inout is empty then show all the list items
+      if (searchTerm.trim() === "") {
+        //If the inout is empty then show all the list items
         setFilteredUsers(usersList);
         setFilteredGroups(groupsList);
         return;
@@ -89,9 +89,9 @@ const Explore = () => {
   }, [UsersSearch]);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.wrapper}>
       <h1 className={styles.title}>Explore</h1>
-      <div>
+      <div className={styles.container}>
         <div className={styles.toggleContainer}>
           <button
             onClick={() => setUsersSearch(true)}
@@ -122,59 +122,45 @@ const Explore = () => {
           </div>
         )}
 
-        {!loading && error && <p>{error}</p>}
+        {!loading && error && <p className={styles.noResults}>{error}</p>}
 
         {!loading && !error && (
-          <div>
-            <div className={styles.usersList}>
-              {UsersSearch &&
-                filteredUsers.length > 0 &&
-                filteredUsers.map((user) => (
-                  <Link key={user.id} href={`/profile/${user.id}`}>
-                    <div className={styles.userCard}>
-                      <div>
-                        <img
-                          src="/imgs/defaultAvatar.jpg"
-                          alt="user"
-                          className={styles.userImage}
-                        />
-                      </div>
+          <div className={styles.usersList}>
+            {UsersSearch &&
+              filteredUsers.map((user) => (
+                <Link key={user.id} href={`/profile/${user.id}`}>
+                  <div className={styles.userCard}>
+                    <img
+                      src="/imgs/defaultAvatar.jpg"
+                      alt={user.nickname}
+                      className={styles.userImage}
+                    />
+                    <span className={styles.userName}>@{user.nickname}</span>
+                  </div>
+                </Link>
+              ))}
 
-                      <div>
-                        <h3 className={styles.userName}>@{user.nickname}</h3>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+            {UsersSearch && filteredUsers.length === 0 && (
+              <p className={styles.noResults}>No users found</p>
+            )}
 
-              {UsersSearch && filteredUsers.length === 0 && (
-                <p>No users found...</p>
-              )}
+            {!UsersSearch &&
+              filteredGroups.map((group) => (
+                <Link key={group.id} href={`/group/${group.id}`}>
+                  <div className={styles.userCard}>
+                    <img
+                      src="/imgs/defaultAvatar.jpg"
+                      alt={group.name}
+                      className={styles.userImage}
+                    />
+                    <span className={styles.userName}>{group.name}</span>
+                  </div>
+                </Link>
+              ))}
 
-              {!UsersSearch &&
-                filteredGroups.length > 0 &&
-                filteredGroups.map((group) => (
-                  <Link key={group.id} href={`/group/${group.id}`}>
-                    <div className={styles.userCard}>
-                      <div>
-                        <img
-                          src="/imgs/defaultAvatar.jpg"
-                          alt="user"
-                          className={styles.userImage}
-                        />
-                      </div>
-
-                      <div>
-                        <h3 className={styles.userName}>{group.name}</h3>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-
-              {!UsersSearch && filteredGroups.length === 0 && (
-                <p>No groups found...</p>
-              )}
-            </div>
+            {!UsersSearch && filteredGroups.length === 0 && (
+              <p className={styles.noResults}>No groups found</p>
+            )}
           </div>
         )}
       </div>

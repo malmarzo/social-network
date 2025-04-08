@@ -81,9 +81,7 @@
 
 .fileInput {
   border: none;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  background: #f9fafb;
+  padding: 0;
 }
 
 .fileInputGroup {
@@ -121,6 +119,29 @@
 }
 
 .button:active {
+  transform: translateY(0);
+}
+
+.button:disabled {
+  background: #9fa8da;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.button:hover:not(:disabled) {
+  background: #283593;
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled) {
   transform: translateY(0);
 }
 
