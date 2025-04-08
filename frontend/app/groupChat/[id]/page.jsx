@@ -40,6 +40,7 @@ export default function GroupChat() {
      const [isMembersListVisible, setIsMembersListVisible] = useState(false);
      const [activeSection, setActiveSection] = useState("events");
      const [showEventForm, setShowEventForm] = useState(false);
+      const [errors, setErrors] = useState({});
 
 
     
@@ -269,29 +270,39 @@ export default function GroupChat() {
             .filter(option => option.trim() !== '')  // Remove empty strings
             .map((option, index) => ({ id: index + 1, text: option }));  // Create Option objects
     
-        if (!title.trim() || !description.trim() || !dateTime.trim() || formattedOptions.length === 0 ) return;
-        if (formattedOptions.length >= 2) {
-            // Proceed with rendering or processing options
-        } else {
-            console.log("You need to provide at least two options.");
-            return;
-        }
         const selectedDateTime = new Date(dateTime);
         const now = new Date();
-    
-        if (selectedDateTime < now) {
-            console.log("You cannot select a past  time.");
+        const errors = {
+            title: title.trim() ? "" : "Title is required",
+            description: description.trim() ? "" : "Description is required",
+            dateTime: dateTime.trim() ? "" : "Date & Time are required",
+            option: formattedOptions.length >= 2 ? "" : "At least two valid options are required",
+          };
+
+          if (selectedDateTime < now) {
+            setErrors((prev) => ({
+              ...prev,
+              dateTime: "You cannot select a past time",
+            }));
             return;
-        }
-        console.log("Formatted Options:", formattedOptions);
+          }
+          const hasErrors = Object.values(errors).some((msg) => msg !== "");
+          
+          if (hasErrors) {
+            setErrors(errors);
+            return;
+          }
         sendEventMessage(group.group.id, group.group.current_user, title, description, dateTime, formattedOptions, sendMessage);
         console.log("Event is sent");
         
         // Reset form fields after sending the event
+        setErrors({});
         setTitle('');
         setDescription('');
         setDateTime('');
         setOptions(['']);
+        setShowEventForm(false); 
+
     }
 
     const handleResponseEvent = (eventId, optionId, sendMessage) => {
@@ -353,20 +364,20 @@ export default function GroupChat() {
                      <div className="h-40 overflow-y-auto bg-gray-800 p-3 rounded-lg border border-gray-700 mt-2">
                     
                     {messages.length > 0 ? (
-    messages.map((msg) => (
-        msg.group_message ? (  // Add this check
-            <div key={msg.group_message.id} className={`mb-3 ${msg.group_message.sender_id === group.group.current_user ? "text-right" : ""}`}>
-                <p className={`text-sm font-semibold ${msg.group_message.sender_id === group.group.current_user ? "text-green-400" : "text-blue-400"}`}>
-                    {msg.group_message.sender_id === group.group.current_user ? "You" : msg.group_message.first_name}
-                </p>
-                <p className="text-sm text-white-300">{msg.group_message.message}</p>
-                <p className="text-xs text-white-500">{msg.group_message.date_time}</p>
-            </div>
-        ) : null  
-    ))
-) : (
-    <p className="text-gray-400 italic">No messages yet...</p>
-)}
+                    messages.map((msg) => (
+                        msg.group_message ? (  // Add this check
+                            <div key={msg.group_message.id} className={`mb-3 ${msg.group_message.sender_id === group.group.current_user ? "text-right" : ""}`}>
+                                <p className={`text-sm font-semibold ${msg.group_message.sender_id === group.group.current_user ? "text-green-400" : "text-blue-400"}`}>
+                                    {msg.group_message.sender_id === group.group.current_user ? "You" : msg.group_message.first_name}
+                                </p>
+                                <p className="text-sm text-white-300">{msg.group_message.message}</p>
+                                <p className="text-xs text-white-500">{msg.group_message.date_time}</p>
+                            </div>
+                        ) : null  
+                    ))
+                ) : (
+                    <p className="text-gray-400 italic">No messages yet...</p>
+                )}
                     <div ref={messagesEndRef}></div>
                 </div> 
                 {/* end of message displays */}
@@ -430,12 +441,18 @@ export default function GroupChat() {
                         onChange={(e) => setTitle(e.target.value)}
                         className="w-full p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
                         />
+                         {errors.title && (
+                            <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                        )}
                         <textarea
                         placeholder="Event Description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="w-full p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
                         />
+                         {errors.description && (
+                            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                        )}
                         <input
                         type="datetime-local"
                         value={dateTime}
@@ -443,7 +460,9 @@ export default function GroupChat() {
                         onChange={handleDateChange}
                         className="w-full p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
                         />
-
+                         {errors.dateTime && (
+                            <p className="text-red-500 text-sm mt-1">{errors.dateTime}</p>
+                        )}
                         <div>
                         <h4 className="text-white font-semibold">Options</h4>
                         {options.map((option, index) => (
@@ -455,6 +474,9 @@ export default function GroupChat() {
                                 onChange={(e) => handleOptionChange(index, e.target.value)}
                                 className="flex-1 p-2 rounded-lg bg-gray-900 text-white border border-gray-700"
                             />
+                            {errors.option && (
+                                <p className="text-red-500 text-sm mt-1">{errors.option}</p>
+                            )}
                             {index === options.length - 1 && (
                                 <button
                                 onClick={handleAddOption}
@@ -472,7 +494,8 @@ export default function GroupChat() {
                             // onClick={handleSendEvent}
                             onClick={() => {
                                 handleSendEvent();
-                                setShowEventForm(false);
+                               // setShowEventForm(false);
+                               
                               }}
                             
                             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -480,7 +503,13 @@ export default function GroupChat() {
                             Create Event
                         </button>
                         <button
-                            onClick={() => setShowEventForm(false)}
+                            onClick={() => { setShowEventForm(false);
+                                setTitle('');
+                                setDescription('');
+                                setDateTime('');
+                                setOptions(['']);
+                                setErrors({});
+                            }}
                             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
                         >
                             Cancel

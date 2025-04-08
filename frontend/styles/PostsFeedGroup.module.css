@@ -296,9 +296,9 @@
 .createPostButton {
   padding: 0.625rem 1rem;
   background: #1d4ed8; /* Blue background (tailwind's blue-600) */
-  color: white;
+  color: rgb(255, 255, 255);
   border-radius: 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 500;
   border: none;
   transition: all 0.2s ease;
