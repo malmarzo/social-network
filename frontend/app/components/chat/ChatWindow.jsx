@@ -135,7 +135,12 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
   // If no user is selected, show the empty state
   if (!selectedUser) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-blue-50 to-white h-full overflow-hidden">
+      <div
+        className="flex-1 flex items-center justify-center h-full overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+        }}
+      >
         <div className="text-center p-8 max-w-md bg-white rounded-xl shadow-lg border border-gray-100">
           <div className="bg-blue-100 rounded-full p-6 inline-block mb-6 shadow-inner">
             <svg
@@ -189,7 +194,12 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
     );
   } else {
     return (
-      <div className="flex-1 flex flex-col h-[calc(100vh-64px)] bg-gradient-to-b from-gray-50 to-white">
+      <div
+        className="flex-1 flex flex-col h-[calc(100vh-64px)]"
+        style={{
+          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+        }}
+      >
         {selectedUser && (
           <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white shadow-sm">
             <div className="flex items-center">

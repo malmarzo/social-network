@@ -101,7 +101,7 @@ export default function ChatSidebar() {
       {/* Header */}
       <div className="p-4 border-b border-gray-200 sticky top-0 z-10 bg-white shadow-sm">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-bold text-blue-800 ml-20">Messages</h2>
+          <h2 className="text-xl font-bold text-blue-800 ml-2">Chats</h2>
           
             <div className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
