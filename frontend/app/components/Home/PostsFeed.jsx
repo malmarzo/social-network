@@ -8,6 +8,7 @@ import PostLoader from "../loaders/PostLoader";
 import {
   ClipboardDocumentIcon,
   ExclamationTriangleIcon,
+  PencilSquareIcon, // Add this import
 } from "@heroicons/react/24/outline";
 
 const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
@@ -91,9 +92,7 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
   }
 
   return (
-    <div
-      className={styles.container}
-    >
+    <div className={styles.container}>
       <div className={styles.feedContainer}>
         <div className={styles.headerContainer}>
           {isProfile ? (
@@ -104,6 +103,7 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
                   className={styles.createPostButton}
                   onClick={() => setCreateNewPost(true)}
                 >
+                  <PencilSquareIcon className="h-5 w-5 mr-2" /> {/* Add icon */}
                   Create Post
                 </button>
               )}
@@ -132,6 +132,8 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
                     className={styles.createPostButton}
                     onClick={() => setCreateNewPost(true)}
                   >
+                    <PencilSquareIcon className="h-5 w-5 mr-2" />{" "}
+                    {/* Add icon */}
                     Create Post
                   </button>
                 )}

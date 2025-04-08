@@ -5,7 +5,8 @@ import FailAlert from "../components/Alerts/FailAlert";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "../components/Alerts/PopUp";
-import styles from "@/styles/AuthButtons.module.css"; // Import the styles
+import styles from "@/styles/AuthButtons.module.css";
+import { PowerIcon } from "@heroicons/react/24/outline"; // Import the power icon
 
 const LogoutButton = () => {
   const [errorMsg, setErrorMsg] = useState("");
@@ -41,8 +42,9 @@ const LogoutButton = () => {
       {errorMsg && <FailAlert msg={errorMsg} />}
       <button
         onClick={handleLogout}
-        className={styles.button} // Add this new class
+        className={`${styles.button} flex items-center gap-1`}
       >
+        <PowerIcon className="h-4 w-4" />
         Logout
       </button>
     </>

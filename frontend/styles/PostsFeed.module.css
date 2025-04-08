@@ -95,6 +95,7 @@
   border: none;
   transition: all 0.2s ease;
   font-family: var(--font-geist-sans);
+  display: flex;
 }
 
 .createPostButton:hover {
@@ -232,6 +233,7 @@
   overflow-y: auto;
   max-height: 300px;
   margin-bottom: 0;
+  scrollbar-width: thin;
 }
 
 .commentsList::-webkit-scrollbar {
@@ -249,7 +251,7 @@
 }
 
 .commentItem {
-  background: var(--background);
+  background: white;
   border-radius: 0.75rem;
   padding: 1rem;
   border: 1px solid #e5e7eb;
@@ -441,6 +443,22 @@
 .retryButton:hover {
   background: #dc2626;
   transform: translateY(-1px);
+}
+
+.fileInputLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fileInput {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
 }
 
 @media (max-width: 768px) {

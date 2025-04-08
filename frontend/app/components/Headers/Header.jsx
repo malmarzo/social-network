@@ -23,7 +23,12 @@ const Header = () => {
             <AuthButton text="Sign Up" href="/signup" />
           </>
         )}
-        {isLoggedIn && !loading && <LogoutButton />}
+        {isLoggedIn && !loading && (
+          <>
+            <AuthButton text="Chat" href="/chat" />
+          <LogoutButton />
+          </>
+        )}
       </nav>
     </header>
   );
