@@ -1,5 +1,7 @@
 .container {
   width: 100%;
+   min-width: 650px;
+  margin: 0 auto; /* Center the container */
 }
 
 .feedContainer {
@@ -9,6 +11,7 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
+  min-width: 320px; /* Add minimum width */
 }
 
 /* .headerContainer{
@@ -115,6 +118,8 @@
   border: 1px solid #e5e7eb;
   overflow: hidden;
   transition: all 0.2s ease;
+  width: 100%; /* Ensure full width */
+  min-height: 200px; /* Add minimum height */
 }
 
 .postCard:hover {
@@ -366,6 +371,8 @@
   background: var(--background);
   border-radius: 1rem;
   border: 1px solid #e5e7eb;
+  width: 100%; /* Ensure full width */
+  min-height: 300px; /* Add minimum height */
 }
 
 .emptyStateIcon {
@@ -402,6 +409,8 @@
   border-radius: 1rem;
   border: 1px solid #fecaca;
   background: #fff1f2;
+  width: 100%; /* Ensure full width */
+  min-height: 300px; /* Add minimum height */
 }
 
 .errorIcon {
@@ -483,5 +492,13 @@
 
   .postImage {
     max-height: 300px;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .feedContainer {
+    padding: 0 1rem 1rem 1rem;
   }
 }
