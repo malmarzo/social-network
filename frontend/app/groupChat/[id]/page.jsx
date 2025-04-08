@@ -318,7 +318,7 @@ export default function GroupChat() {
    
     return (
         <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-lg text-white border border-gray-700 backdrop-blur-lg">
-            <h2 className="text-3xl font-extrabold mb-3 text-blue-400">{group.group.title}</h2>
+            <h2 className="text-3xl font-extrabold mb-3 text-blue-400">Title: {group.group.title}</h2>
             <p className="text-lg text-gray-300 italic">Description: {group.group.description}</p>
 
             <div className="mt-5 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
@@ -331,12 +331,22 @@ export default function GroupChat() {
             {/* displaying group memebers */}
             <div>
             {/* Button to toggle visibility of members list */}
+            <div className="flex justify-center items-center gap-4 mt-4">
             <button
                 onClick={handleButtonClick2}
                 className="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             >
-                {isMembersListVisible ? "Hide Members List" : "Show Members List"}
+                {isMembersListVisible ? "Hide Members" : "Show Members"}
             </button>
+
+             {/* Button to toggle the visibility of the users list */}
+             <button
+                    onClick={handleButtonClick}
+                    className="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                >
+                    {isUsersListVisible ? "Hide Users" : "Show People"}
+                </button>
+            </div>
 
             {/* Conditionally render the members list if visible */}
             {isMembersListVisible && (
@@ -354,6 +364,37 @@ export default function GroupChat() {
             )}
             </div>
             {/* end of displaying group members */}
+
+
+             {/* Users List for Invitations */}
+
+             <div className="mt-6">
+            {/* Conditionally render the users list div */}
+            {isUsersListVisible && users && users.users && (
+                <div className="p-6 bg-gray-800 rounded-xl shadow-xl border border-gray-700 max-w-md mx-auto">
+                <h2 className="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-2">Invite Users</h2>
+
+                <div className="space-y-3 ">
+                    <UsersList
+                    users={users.users}
+                    selectedUsers={selectedUsers}
+                    setSelectedUsers={setSelectedUsers}
+                    />
+                </div>
+
+                <button
+                    onClick={handleInviteUsers}
+                    className={`mt-6 w-full transition duration-300 ease-in-out bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm ${
+                    selectedUsers.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={selectedUsers.length === 0}
+                >
+                    Invite Selected Users
+                </button>
+                </div>
+            )}
+            </div>
+            {/* end of users invitation list */}
 
           
             {/* displaying Chat messages section */}
@@ -530,7 +571,7 @@ export default function GroupChat() {
                     onClick={() => setActiveSection("events")}
                     className={`px-4 py-2 rounded-lg font-bold transition ${
                         activeSection === "events"
-                            ? "bg-blue-600 text-white"
+                            ? "bg-green-500 hover:bg-green-700 text-white"
                             : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                     }`}
                 >
@@ -540,7 +581,7 @@ export default function GroupChat() {
                     onClick={() => setActiveSection("posts")}
                     className={`px-4 py-2 rounded-lg font-bold transition ${
                         activeSection === "posts"
-                            ? "bg-blue-600 text-white"
+                            ? "bg-green-500 hover:bg-green-700 text-white"
                             : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                     }`}
                 >
@@ -570,13 +611,19 @@ export default function GroupChat() {
                 {events.length > 0 ? (
                     events.map((event) => (
                         <div key={event.event_message.event_id} className="event-card p-3 border border-gray-300 rounded-lg shadow bg-white">
-                            <h3 className="text-lg font-bold text-blue-500 truncate">{event.event_message.title}</h3>
-                            <p className="text-sm text-gray-600 truncate">{event.event_message.description}</p>
-                            <p className="text-sm text-gray-600 truncate">{event.event_message.first_name}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                <span className="font-semibold">Date & Time:</span> {event.event_message.date_time}
+                            <h3 className="text-lg text-blue-500 truncate">
+                            <span className="font-bold">Title:</span> {event.event_message.title}
+                            </h3>
+                            <p className="text-sm text-gray-600 truncate">
+                            <span className="font-bold">Description:</span> {event.event_message.description}
+                                </p>
+                            <p className="text-sm text-gray-600 truncate">
+                            <span className="font-bold">Created By:</span> {event.event_message.first_name}
+                                </p>
+                            <p className="text-sm text-gray-600 truncate">
+                                <span className="font-bold">Date & Time:</span> {event.event_message.date_time}
                                 <br />
-                                <span className="font-semibold">Day:</span> {event.event_message.day}
+                                <span className="font-bold">Day:</span> {event.event_message.day}
                             </p>
 
 <ul className="mt-2 text-sm text-gray-700 space-y-2 bg-gray-100 p-4 rounded-lg shadow-md">
@@ -598,7 +645,7 @@ export default function GroupChat() {
                     <button
                         onClick={() => handleResponseEvent(event.event_message.event_id, option.id,sendMessage)}
                         className={`ml-4 px-3 py-1 rounded-lg text-white ${
-                            selectedOption === option.id ? "bg-blue-500" : "bg-gray-500 hover:bg-blue-400"
+                            selectedOption === option.id ? "bg-blue-500" : "bg-blue-500 hover:bg-blue-400"
                         }`}
                     >
                         {selectedOption === option.id ? "Selected" : "Choose"}
@@ -625,32 +672,7 @@ export default function GroupChat() {
       )}
                 {/* end of displaying posts and comments */}
                        
-            {/* Users List for Invitations */}
-
-            <div>
-                {/* Button to toggle the visibility of the users list */}
-                <button
-                    onClick={handleButtonClick}
-                    className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                >
-                    {isUsersListVisible ? "Hide Users List" : "Show Users List"}
-                </button>
-
-                {/* Conditionally render the users list div */}
-                 {isUsersListVisible && users && users.users && (
-                    <div className="mt-6 p-4 bg-gray-800 rounded-lg shadow-md border border-gray-700">
-                    <UsersList users={users.users} selectedUsers={selectedUsers} setSelectedUsers={setSelectedUsers} />
-                    <button
-                        onClick={handleInviteUsers}
-                        className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        disabled={selectedUsers.length === 0}
-                    >
-                        Invite Selected Users
-                    </button>
-                    </div>
-                )} 
-                </div>
-            {/* end of users invitation list */}
+           
         </div>
     );
 }

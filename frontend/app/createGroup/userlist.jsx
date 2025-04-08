@@ -10,24 +10,26 @@ export default function UsersList({ users, selectedUsers, setSelectedUsers }) {
     };
 
     return (
-        <div>
-            <h2>Select Users to Invite</h2>
-            <div style={{ maxHeight: "200px", overflowY: "scroll", border: "1px solid black", padding: "10px" }}>
-                {users.map((user) => (
-                    <div
-                        key={user.id}
-                        onClick={() => toggleUserSelection(user)}
-                        style={{
-                            padding: "5px",
-                            cursor: "pointer",
-                            backgroundColor: selectedUsers.includes(user.id) ? "#bde0fe" : "black",
-                        }}
-                    >
-                        {user.nickname}
-                    </div>
-                ))}
-            </div>
+        <div className="w-full max-w-md bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700">
+    <h2 className="text-white text-xl font-semibold mb-4">Select Users to Invite</h2>
+    
+    <div className="max-h-64 overflow-y-auto divide-y divide-gray-700 rounded-md border border-gray-700">
+        {users.map((user) => (
+        <div
+            key={user.id}
+            onClick={() => toggleUserSelection(user)}
+            className={`p-3 cursor-pointer transition duration-200 ease-in-out ${
+            selectedUsers.includes(user.id)
+                ? "bg-blue-600 text-white"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+        >
+            {user.nickname}
         </div>
+        ))}
+    </div>
+    </div>
+
     );
 };
 
