@@ -18,28 +18,17 @@ const WebSocketProvider = ({ children }) => {
   }, [isLoggedIn]); // if this value changes it will update it in the ref
 
   const connectWebSocket = () => {
-    // If there is a connection then return
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
+    //if theere is a connection then return
+    if (wsRef.current) return;
 
-    // Close any existing connection that might be in a bad state
-    if (wsRef.current) {
-      try {
-        wsRef.current.close();
-      } catch (err) {
-        console.error("Error closing existing WebSocket:", err);
-      }
-      wsRef.current = null;
-    }
-
-    // Connect to the websocket and update the ref
-    console.log("Attempting to connect to WebSocket...");
+    //connect to the websocket and update the ref
     const ws = new WebSocket("ws://localhost:8080/ws");
     wsRef.current = ws;
 
-    // When the connection opens
+    //When the connection opens
     ws.onopen = () => {
-      console.log("WebSocket connected successfully");
-      setIsConnected(true); 
+      console.log("WebSocket connected");
+      setIsConnected(true);
 
       if (reconnectRef.current) {
         clearTimeout(reconnectRef.current);
@@ -50,11 +39,11 @@ const WebSocketProvider = ({ children }) => {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        console.log("WebSocket message received:", msg);
+        // console.log("WebSocket message received:", msg);
 
-        // Handle the msg based on its type
+        //Handle the msg based on its type
         if (msg.type && handlersRef.current[msg.type]) {
-          handlersRef.current[msg.type](msg); 
+          handlersRef.current[msg.type](msg);
         } else {
           console.warn("Unhandled message type:", msg.type);
         }
@@ -66,8 +55,8 @@ const WebSocketProvider = ({ children }) => {
     ws.onclose = () => {
       console.log("WebSocket disconnected");
       wsRef.current = null;
-      setIsConnected(false); 
-      
+      setIsConnected(false);
+
       if (isLoggedInRef.current) {
         console.log("User is logged in, attempting to reconnect...");
         reconnectRef.current = setTimeout(() => {
@@ -85,15 +74,11 @@ const WebSocketProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    console.log("WebSocket Effect Triggered - isLoggedIn:", isLoggedIn, "loading:", loading, "isConnected:", isConnected);
+    console.log("WebSocket Effect Triggered - isLoggedIn:", isLoggedIn);
     if (loading) return;
 
-    if (isLoggedIn) {
-      // Check if we need to connect or reconnect
-      if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED || wsRef.current.readyState === WebSocket.CLOSING) {
-        console.log("User is logged in and WebSocket is not connected or in a bad state. Connecting...");
-        connectWebSocket();
-      }
+    if (isLoggedIn && !isConnected) {
+      connectWebSocket(); // Only connect if the user is logged in and WebSocket isn't connected
     } else if (!isLoggedIn && wsRef.current) {
       console.log("User logged out - closing WebSocket...");
       wsRef.current.close(); // Close WebSocket on logout
@@ -105,24 +90,7 @@ const WebSocketProvider = ({ children }) => {
         reconnectRef.current = null;
       }
     }
-    
-    // Set up a periodic connection check for logged-in users
-    let connectionCheckInterval;
-    if (isLoggedIn) {
-      connectionCheckInterval = setInterval(() => {
-        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-          console.log("Periodic check: WebSocket not connected. Attempting to reconnect...");
-          connectWebSocket();
-        }
-      }, 30000); // Check every 30 seconds
-    }
-    
-    return () => {
-      if (connectionCheckInterval) {
-        clearInterval(connectionCheckInterval);
-      }
-    };
-  }, [isLoggedIn, loading]);
+  }, [isLoggedIn, loading, isConnected]);
 
   // Function to allow components to register message handlers
   const addMessageHandler = (type, handler) => {
@@ -132,53 +100,17 @@ const WebSocketProvider = ({ children }) => {
     };
   };
 
-  // Function to send messages with message ID for tracking
+  // Function to send messages
   const sendMessage = (message) => {
-    // Add a unique message ID if not present
-    const messageWithId = {
-      ...message,
-      messageId: message.messageId || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    };
-    
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      try {
-        wsRef.current.send(JSON.stringify(messageWithId));
-        console.log("Message sent successfully:", messageWithId.type);
-        return true; // Return success status
-      } catch (error) {
-        console.error("Error sending WebSocket message:", error);
-        // Try to reconnect on send error
-        if (isLoggedInRef.current) {
-          console.log("Attempting to reconnect after send error...");
-          setTimeout(connectWebSocket, 1000);
-        }
-        return false;
-      }
+      wsRef.current.send(JSON.stringify(message));
     } else {
-      console.warn("WebSocket is not connected (state: " + 
-                  (wsRef.current ? wsRef.current.readyState : "null") + 
-                  "). Message not sent:", messageWithId.type);
-      
-      // Try to reconnect if we're supposed to be connected
-      if (isLoggedInRef.current && (!wsRef.current || wsRef.current.readyState !== WebSocket.CONNECTING)) {
-        console.log("Attempting to reconnect...");
-        setTimeout(connectWebSocket, 1000);
-      }
-      
-      return false;
+      console.warn("WebSocket is not connected. Message not sent:", message);
     }
-  };
-  
-  // Function to check connection status
-  const checkConnection = () => {
-    return {
-      isConnected: isConnected,
-      readyState: wsRef.current ? wsRef.current.readyState : WebSocket.CLOSED
-    };
   };
 
   return (
-    <WebSocketContext.Provider value={{ addMessageHandler, sendMessage, isConnected, checkConnection }}>
+    <WebSocketContext.Provider value={{ addMessageHandler, sendMessage }}>
       {children}
     </WebSocketContext.Provider>
   );

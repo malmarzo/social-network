@@ -10,7 +10,6 @@ import { useNotification } from '@/context/NotificationContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function ChatSidebar() {
-  const { isConnected } = useWebSocket();
   const { showInfo } = useNotification();
   const { userID } = useAuth();
   const {
@@ -103,17 +102,11 @@ export default function ChatSidebar() {
       <div className="p-4 border-b border-gray-200 sticky top-0 z-10 bg-white shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-bold text-blue-800 ml-20">Messages</h2>
-          {!isConnected ? (
-            <div className="text-xs text-red-500 flex items-center bg-red-50 px-2 py-1 rounded-full">
-              <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1 animate-pulse"></span>
-              Offline
-            </div>
-          ) : (
+          
             <div className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
               Online
             </div>
-          )}
         </div>
         
         {/* Search bar */}
@@ -243,8 +236,7 @@ export default function ChatSidebar() {
       {/* Status footer */}
       <div className="p-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-500 flex justify-between items-center">
         <div className="flex items-center">
-          <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
-          <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+          <span className={`inline-block w-2 h-2 rounded-full mr-1.5 bg-green-500'`}></span>
         </div>
         <div>
           {filteredUsers.length} {filteredUsers.length === 1 ? 'conversation' : 'conversations'}

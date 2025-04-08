@@ -3,14 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useWebSocket } from '@/context/Websocket';
 import { ChatProvider } from '@/context/ChatContext';
 import ChatSidebar from '../components/chat/ChatSidebar';
 import ChatWindow from '../components/chat/ChatWindow';
 
 export default function ChatPage() {
   const { isLoggedIn, loading } = useAuth();
-  const { isConnected } = useWebSocket();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -78,18 +76,6 @@ export default function ChatPage() {
   return (
     <ChatProvider initialUrlUserId={searchParams.get('userId')}>
       <div className="relative flex h-screen overflow-hidden bg-gray-100">
-        {/* Back button */}
-        <div className="fixed top-3 left-3 z-50">
-          <button 
-            onClick={() => router.push('/')}
-            className="bg-white hover:bg-gray-50 text-gray-600 p-2 rounded-full shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            aria-label="Back to Home"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-        </div>
         {/* Mobile menu button */}
         {isMobile && (
           <button 
