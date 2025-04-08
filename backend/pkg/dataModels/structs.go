@@ -95,7 +95,9 @@ type Group struct {
 
 type ExploreLists struct {
 	UsersList  []User  `json:"users_list"`
-	GroupsList []Group `json:"groups_list"`
+	AllGroupsList []Group `json:"all_groups_list"`
+	MyGroupsList []Group `json:"my_groups_list"`
+	NotMyGroupsList []Group `json:"not_my_groups_list"`
 }
 
 type Profile struct {
