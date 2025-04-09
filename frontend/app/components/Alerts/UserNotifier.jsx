@@ -1,17 +1,31 @@
 import { useEffect } from "react";
 import { useWebSocket } from "@/context/Websocket";
+import { useNotification } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
 
 //Used this component in the layout.js file to notify users
 const UserNotifier = () => {
   const { addMessageHandler } = useWebSocket();
+  const { showInfo } = useNotification();
+  const { userID } = useAuth();
 
   useEffect(() => {
     //Adding msg Handlers (set the msg type and the function to handle it)
 
     addMessageHandler("new_follow_request", (msg) => {
-      alert(
-        "You have a new follow request from " + msg.followRequest.senderNickname
-      );
+      showInfo("New Follow Request", {
+        duration: 3000,
+        position: "top-right",
+        link: `/profile/${userID}`,
+      });
+    });
+
+    addMessageHandler("new_chat_message", (msg) => {
+      showInfo(`${msg.userDetails.nickname} sent you a message`, {
+        duration: 3000,
+        position: "top-right",
+        link: `/chat`,
+      });
     });
   }, [addMessageHandler]);
 

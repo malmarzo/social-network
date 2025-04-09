@@ -24,7 +24,7 @@ export default function NotificationDemo() {
         showWarning(message, { duration, position });
         break;
       case 'info':
-        showInfo(message, { duration, position });
+        showInfo(message, { duration, position, link });
         break;
       default:
         break;

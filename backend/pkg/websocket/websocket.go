@@ -370,10 +370,23 @@ func HandleMessages() {
 					recipient.Conn.Close()
 					delete(clients, newMsg.ReceiverID)
 				}
+
+				newMsg.Type = "new_chat_message"
+
+				err = recipient.Conn.WriteJSON(newMsg)
+
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.ReceiverID, err)
+					recipient.Conn.Close()
+					delete(clients, newMsg.ReceiverID)
+				}
 			}
 
 			// Also send back to sender for confirmation
 			if sender, ok := clients[newMsg.UserDetails.ID]; ok {
+
+				newMsg.Type = "chat"
+
 				// For sender, keep original status
 				senderMsg := newMsg
 				if newMsg.Status == "delivered" {

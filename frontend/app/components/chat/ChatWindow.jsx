@@ -265,11 +265,7 @@ export default function ChatWindow({ toggleSidebar, isMobile }) {
                     <span className="text-green-600">Active now</span>
                   ) : (
                     <span>
-                      Last seen{" "}
-                      {formatDistanceToNow(
-                        new Date(selectedUser.last_activity || Date.now()),
-                        { addSuffix: true }
-                      )}
+                     Inactive
                     </span>
                   )}
                 </div>

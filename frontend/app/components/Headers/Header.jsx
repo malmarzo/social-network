@@ -5,6 +5,7 @@ import LogoutButton from "@/app/logout/page";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { HomeIcon } from "@heroicons/react/24/outline";
+import NotificationButton from "./NotificationButton";
 
 const Header = () => {
   const { isLoggedIn, loading } = useAuth();
@@ -25,6 +26,7 @@ const Header = () => {
         )}
         {isLoggedIn && !loading && (
           <>
+            <NotificationButton />
             <AuthButton text="Chat" href="/chat" />
           <LogoutButton />
           </>

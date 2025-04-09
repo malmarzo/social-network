@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useChat } from '@/context/ChatContext';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import { formatDistanceToNow } from 'date-fns';
-import { useWebSocket } from '@/context/Websocket';
-import { useNotification } from '@/context/NotificationContext';
-import { useAuth } from '@/context/AuthContext';
+import { useState, useEffect, useRef } from "react";
+import { useChat } from "@/context/ChatContext";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { formatDistanceToNow } from "date-fns";
+import { useWebSocket } from "@/context/Websocket";
+import { useNotification } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ChatSidebar() {
   const { showInfo } = useNotification();
@@ -23,23 +23,22 @@ export default function ChatSidebar() {
     toggleUserView,
     selectUser,
     formatTimestamp,
-    truncateMessage
+    truncateMessage,
   } = useChat();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef(null);
 
   // Get eligible chat users with their unread status and ensure last_message_time is properly set
-  const usersWithUnreadStatus = allUsers
-    .map(user => ({
-      ...user,
-      unreadCount: unreadMessages[user.user_id] || 0,
-      // Ensure last_message_time is set for sorting
-      last_message_time: user.last_message_time || user.last_activity || null
-    }));
-  
+  const usersWithUnreadStatus = allUsers.map((user) => ({
+    ...user,
+    unreadCount: unreadMessages[user.user_id] || 0,
+    // Ensure last_message_time is set for sorting
+    last_message_time: user.last_message_time || user.last_activity || null,
+  }));
+
   // Sort users by unread messages and recency
   const filteredUsers = usersWithUnreadStatus
-    .filter(user => {
+    .filter((user) => {
       if (!searchTerm) return true;
       return user.nickname.toLowerCase().includes(searchTerm.toLowerCase());
     })
@@ -48,29 +47,37 @@ export default function ChatSidebar() {
       if (a.unreadCount !== b.unreadCount) {
         return b.unreadCount - a.unreadCount; // Users with unread messages first
       }
-      
+
       // Then sort by most recent message
-      const aTime = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
-      const bTime = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+      const aTime = a.last_message_time
+        ? new Date(a.last_message_time).getTime()
+        : 0;
+      const bTime = b.last_message_time
+        ? new Date(b.last_message_time).getTime()
+        : 0;
       return bTime - aTime; // Most recent conversations first
-      
+
       // Check if users have message history
       const aHasMessage = Boolean(a.last_message);
       const bHasMessage = Boolean(b.last_message);
-      
+
       // If one has a message and the other doesn't, prioritize the one with a message
       if (aHasMessage !== bHasMessage) {
         return aHasMessage ? -1 : 1; // User with message comes first
       }
-      
+
       // If both have messages, sort by most recent message time
       if (aHasMessage && bHasMessage) {
         // Get timestamps, defaulting to 0 if not present
-        const aTime = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
-        const bTime = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+        const aTime = a.last_message_time
+          ? new Date(a.last_message_time).getTime()
+          : 0;
+        const bTime = b.last_message_time
+          ? new Date(b.last_message_time).getTime()
+          : 0;
         return bTime - aTime; // Most recent conversations first
       }
-      
+
       // If neither has messages, keep the original order
       return 0;
     });
@@ -78,20 +85,20 @@ export default function ChatSidebar() {
   // Focus search input when pressing '/' key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Clear search when Escape key is pressed
   const handleSearchKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      setSearchTerm('');
+    if (e.key === "Escape") {
+      setSearchTerm("");
       searchInputRef.current?.blur();
     }
   };
@@ -102,13 +109,13 @@ export default function ChatSidebar() {
       <div className="p-4 border-b border-gray-200 sticky top-0 z-10 bg-white shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-bold text-blue-800 ml-2">Chats</h2>
-          
-            <div className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full">
-              <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-              Online
-            </div>
+
+          <div className="text-xs text-green-600 flex items-center bg-green-50 px-2 py-1 rounded-full">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+            Online
+          </div>
         </div>
-        
+
         {/* Search bar */}
         <div className="relative ml-0">
           <input
@@ -121,17 +128,39 @@ export default function ChatSidebar() {
             className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-sm"
           />
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
             </svg>
           </div>
           {searchTerm && (
             <button
-              onClick={() => setSearchTerm('')}
+              onClick={() => setSearchTerm("")}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
               </svg>
             </button>
           )}
@@ -150,13 +179,17 @@ export default function ChatSidebar() {
               <>
                 <div className="mb-3 text-4xl">🔍</div>
                 <p className="font-medium mb-1">No matches found</p>
-                <p className="text-sm text-gray-400">Try a different search term</p>
+                <p className="text-sm text-gray-400">
+                  Try a different search term
+                </p>
               </>
             ) : (
               <>
                 <div className="mb-3 text-4xl">💬</div>
                 <p className="font-medium mb-1">No conversations yet</p>
-                <p className="text-sm text-gray-400">Start chatting with someone!</p>
+                <p className="text-sm text-gray-400">
+                  Start chatting with someone!
+                </p>
               </>
             )}
           </div>
@@ -165,17 +198,27 @@ export default function ChatSidebar() {
             {filteredUsers.map((user) => (
               <div
                 key={user.user_id}
-                className={`p-4 cursor-pointer transition-all duration-200 hover:bg-blue-50 ${selectedUser && selectedUser.user_id === user.user_id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'}`}
+                className={`p-4 cursor-pointer transition-all duration-200 hover:bg-blue-50 ${
+                  selectedUser && selectedUser.user_id === user.user_id
+                    ? "bg-blue-50 border-l-4 border-l-blue-500"
+                    : "border-l-4 border-l-transparent"
+                }`}
                 onClick={() => {
                   selectUser(user);
-                  
+
                   // Show notification when switching to a user with unread messages
                   const unreadCount = unreadMessages[user.user_id] || 0;
                   if (unreadCount > 0) {
-                    showInfo(`${unreadCount} unread message${unreadCount > 1 ? 's' : ''} from ${user.nickname}`, {
-                      duration: 3000,
-                      position: 'top-right'
-                    });
+                    showInfo(
+                      `${unreadCount} unread message${
+                        unreadCount > 1 ? "s" : ""
+                      } from ${user.nickname}`,
+                      {
+                        duration: 3000,
+                        position: "top-right",
+                        link: "/chat",
+                      }
+                    );
                   }
                 }}
               >
@@ -183,9 +226,11 @@ export default function ChatSidebar() {
                   <div className="relative flex-shrink-0">
                     {user.avatar ? (
                       <Image
-                        src={user.avatar_mime_type ? 
-                          `data:${user.avatar_mime_type};base64,${user.avatar}` : 
-                          "/imgs/defaultAvatar.jpg"}
+                        src={
+                          user.avatar_mime_type
+                            ? `data:${user.avatar_mime_type};base64,${user.avatar}`
+                            : "/imgs/defaultAvatar.jpg"
+                        }
                         alt={user.nickname}
                         width={48}
                         height={48}
@@ -196,34 +241,66 @@ export default function ChatSidebar() {
                         {user.nickname.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    
+
                     {/* Online status indicator */}
-                    <div 
-                      className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${user.isOnline || onlineUsers.includes(String(user.user_id)) ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} 
-                      title={user.isOnline || onlineUsers.includes(String(user.user_id)) ? 'Online' : user.lastSeen ? `Last seen ${formatTimestamp(new Date(user.lastSeen * 1000).toISOString())}` : 'Offline'}
+                    <div
+                      className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                        user.isOnline ||
+                        onlineUsers.includes(String(user.user_id))
+                          ? "bg-green-500 animate-pulse"
+                          : "bg-gray-400"
+                      }`}
+                      title={
+                        user.isOnline ||
+                        onlineUsers.includes(String(user.user_id))
+                          ? "Online"
+                          : "Offline"
+                      }
                     ></div>
-                    
+
                     {/* Unread message badge */}
                     {unreadMessages[user.user_id] > 0 && (
-                      <div 
+                      <div
                         className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-md border border-white"
-                        title={`${unreadMessages[user.user_id]} unread message${unreadMessages[user.user_id] > 1 ? 's' : ''}`}
+                        title={`${unreadMessages[user.user_id]} unread message${
+                          unreadMessages[user.user_id] > 1 ? "s" : ""
+                        }`}
                       >
-                        {unreadMessages[user.user_id] > 9 ? '9+' : unreadMessages[user.user_id]}
+                        {unreadMessages[user.user_id] > 9
+                          ? "9+"
+                          : unreadMessages[user.user_id]}
                       </div>
                     )}
                   </div>
-                  <div className="ml-3 flex-1 min-w-0"> {/* min-width-0 helps with text truncation */}
+                  <div className="ml-3 flex-1 min-w-0">
+                    {" "}
+                    {/* min-width-0 helps with text truncation */}
                     <div className="flex justify-between items-center">
-                      <h3 className={`font-medium truncate ${unreadMessages[user.user_id] > 0 ? 'text-black font-semibold' : 'text-gray-800'}`}>
+                      <h3
+                        className={`font-medium truncate ${
+                          unreadMessages[user.user_id] > 0
+                            ? "text-black font-semibold"
+                            : "text-gray-800"
+                        }`}
+                      >
                         {user.nickname}
                       </h3>
                       <span className="text-xs text-gray-500 whitespace-nowrap ml-2 flex-shrink-0">
                         {formatTimestamp(user.last_message_time)}
                       </span>
                     </div>
-                    <p className={`text-sm mt-1 truncate ${unreadMessages[user.user_id] > 0 ? 'text-black font-medium' : user.last_message ? 'text-gray-600' : 'text-gray-400 italic'}`}>
-                      {user.last_message ? truncateMessage(user.last_message) : 'Start a conversation...'}
+                    <p
+                      className={`text-sm mt-1 truncate ${
+                        unreadMessages[user.user_id] > 0
+                          ? "text-black font-medium"
+                          : user.last_message
+                          ? "text-gray-600"
+                          : "text-gray-400 italic"
+                      }`}
+                    >
+                      {user.last_message
+                        ? truncateMessage(user.last_message)
+                        : "Start a conversation..."}
                     </p>
                   </div>
                 </div>
@@ -236,10 +313,13 @@ export default function ChatSidebar() {
       {/* Status footer */}
       <div className="p-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-500 flex justify-between items-center">
         <div className="flex items-center">
-          <span className={`inline-block w-2 h-2 rounded-full mr-1.5 bg-green-500'`}></span>
+          <span
+            className={`inline-block w-2 h-2 rounded-full mr-1.5 bg-green-500'`}
+          ></span>
         </div>
         <div>
-          {filteredUsers.length} {filteredUsers.length === 1 ? 'conversation' : 'conversations'}
+          {filteredUsers.length}{" "}
+          {filteredUsers.length === 1 ? "conversation" : "conversations"}
         </div>
       </div>
     </div>

@@ -612,7 +612,7 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
 
   // Handle incoming chat messages
   useEffect(() => {
-    const handleChatMessage = (msg) => {
+     const handleChatMessage = (msg) => {
       // Only process chat messages from other users
       if (
         msg.type === "chat" &&
@@ -733,19 +733,20 @@ export function ChatProvider({ children, initialUrlUserId = null }) {
           });
         }
 
-        // Always show notification for new messages, regardless of page
-        showInfo(`${senderName} sent you a message`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        // // Always show notification for new messages, regardless of page
+        // showInfo(`${senderName} sent you a message`, {
+        //   duration: 3000,
+        //   position: "top-right",
+        //   link: "/chat",
+        // });
 
         // Always play notification sound
-        try {
-          const audio = new Audio("/notification.mp3");
-          audio.play().catch((e) => console.log("Audio play failed:", e));
-        } catch (e) {
-          console.log("Audio not supported:", e);
-        }
+        // try {
+        //   const audio = new Audio("/notification.mp3");
+        //   audio.play().catch((e) => console.log("Audio play failed:", e));
+        // } catch (e) {
+        //   console.log("Audio not supported:", e);
+        // }
       }
 
       // Update chat history if message is from/to the selected user
