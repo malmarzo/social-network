@@ -13,11 +13,11 @@ export default function Home() {
   
   return (
       <div className="container text-white bg-black min-h-screen flex items-center justify-center">
-        Hello world
+        {/* Hello world */}
         {/* <CreateGroup /> */}
         {/* <AuthButton text="create group" href="/createGroup" /> */}
         <AuthButton text="group page " href="/groupPage" />
-        <HelloSender />
+        {/* <HelloSender /> */}
       </div>
   );
 }

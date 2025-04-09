@@ -22,7 +22,9 @@ const Header = () => {
 
         {isLoggedIn && !loading && <LogoutButton />}
       </div>
+      
     </header>
+    
   );
 };
 
