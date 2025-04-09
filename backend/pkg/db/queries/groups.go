@@ -1051,14 +1051,14 @@ func OldGroupEvents(groupID int) ([]datamodels.EventMessage, error) {
 	defer db.Close()
 
 	query := `
-		SELECT e.id, e.group_id, e.creator_id, e.title, e.description, e.event_date, e.created_at,
+		SELECT e.id, e.group_id, e.creator_id, e.title, e.description, e.event_date, e.event_date,
 		       eo.id, eo.option_text
 		FROM events e
 		LEFT JOIN event_options eo ON e.id = eo.event_id
 		WHERE e.group_id = ?
-		ORDER BY e.event_date DESC
+		ORDER BY e.created_at DESC
 	`
-
+	
 	rows, err := db.Query(query, groupID)
 	if err != nil {
 		log.Println("Error querying old events:", err)

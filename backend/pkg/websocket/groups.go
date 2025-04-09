@@ -274,7 +274,7 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
             if err := recipientConn.WriteJSON(msg); err != nil {
                 log.Printf("Error sending message to user %s: %v", user.ID, err)	
             }
-			if !(user.ID == CreatorID ){
+			if !(user.ID == msg.EventMessage.SenderID ){
 				err = recipientConn.WriteJSON(eventNotificationMsg)
 			err = queries.UpdateEventNotificationStatus(user.ID, eventID)
 			if err != nil {
@@ -312,6 +312,7 @@ func SendPendingEventNotifications(ws *websocket.Conn, userID string) {
 			Content: fmt.Sprintf("there is new event called %s created by %s", event.Title,senderName),
 			//EventNotification: event,
 		}
+		if !(userID == event.SenderID ){
 		err = ws.WriteJSON(eventNotificationMsg)
 		if err != nil {
 			log.Printf("Error sending stored eventNotification to user %s: %v", userID, err)
@@ -321,6 +322,7 @@ func SendPendingEventNotifications(ws *websocket.Conn, userID string) {
 			if err != nil {
 				log.Printf("Error updating event notification status for user %s: %v", userID, err)
 			}
+		}
 	}
 }
 
