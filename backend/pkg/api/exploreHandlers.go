@@ -31,7 +31,9 @@ func ExploreHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	groupsList := []datamodels.Group{}
-	utils.SendResponse(w, datamodels.Response{Code: http.StatusOK, Status: "Success", Data: datamodels.ExploreLists{UsersList: usersList, GroupsList: groupsList}})
+	allGroupsList := []datamodels.Group{}
+	myGroupsList := []datamodels.Group{}
+	notMyGroupsList := []datamodels.Group{}
+	utils.SendResponse(w, datamodels.Response{Code: http.StatusOK, Status: "Success", Data: datamodels.ExploreLists{UsersList: usersList, AllGroupsList: allGroupsList, MyGroupsList: myGroupsList, NotMyGroupsList: notMyGroupsList}})
 
 }
