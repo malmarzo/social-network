@@ -50,14 +50,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 				utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Failed to insert the session token to the database"})
 				return
 			}
-			// Set HTTP-Only Cookie 
+			// Set HTTP-Only Cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:     "session_id",
 				Value:    sessionID,
 				Path:     "/",
+				Domain:   "", // Allow subdomains to access the cookie
 				HttpOnly: true,
-				Secure:   false, 
-				SameSite: http.SameSiteLaxMode,
+				Secure:   false,
+				SameSite: http.SameSiteLaxMode, // For cross-origin cookies
 			})
 			response.Code = 200
 			response.Status = "OK"

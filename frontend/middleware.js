@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 export async function middleware(request) {
   const sessionCookie = request.cookies.get("session_id");
+  console.log("Session Cookie:", sessionCookie);
+  console.log("Request URL:", request.url);
+  console.log("Request Headers:", request.headers);
   const url = new URL(request.url);
   const path = url.pathname;
 
@@ -15,13 +18,14 @@ export async function middleware(request) {
 
   // For protected routes without session, redirect to login
   if (!isPublicRoute && !sessionCookie) {
+    console.log("No session cookie, redirecting to login");
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // If we have a session, verify it
   if (sessionCookie) {
     try {
-      const response = await fetch("http://localhost:8080/session", {
+      const response = await fetch("http://backend:8080/session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

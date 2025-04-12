@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy the frontend folder contents
+COPY frontend/ .
+
+# Install dependencies
+RUN npm install
+
+# Set environment to development
+ENV NODE_ENV=development
+
+# Expose the port Next.js runs on
+EXPOSE 3000
+
+# Start the app in development mode
+CMD ["npm", "run", "dev"]
