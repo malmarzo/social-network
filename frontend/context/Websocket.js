@@ -28,7 +28,7 @@ const WebSocketProvider = ({ children }) => {
     //When the connection opens
     ws.onopen = () => {
       console.log("WebSocket connected");
-      setIsConnected(true); 
+      setIsConnected(true);
 
       if (reconnectRef.current) {
         clearTimeout(reconnectRef.current);
@@ -39,11 +39,11 @@ const WebSocketProvider = ({ children }) => {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        console.log("WebSocket message received:", msg);
+        // console.log("WebSocket message received:", msg);
 
         //Handle the msg based on its type
         if (msg.type && handlersRef.current[msg.type]) {
-          handlersRef.current[msg.type](msg); 
+          handlersRef.current[msg.type](msg);
         } else {
           console.warn("Unhandled message type:", msg.type);
         }
@@ -55,9 +55,8 @@ const WebSocketProvider = ({ children }) => {
     ws.onclose = () => {
       console.log("WebSocket disconnected");
       wsRef.current = null;
-      setIsConnected(false); 
+      setIsConnected(false);
 
-      
       if (isLoggedInRef.current) {
         console.log("User is logged in, attempting to reconnect...");
         reconnectRef.current = setTimeout(() => {
@@ -112,8 +111,6 @@ const WebSocketProvider = ({ children }) => {
 
   return (
     <WebSocketContext.Provider value={{ addMessageHandler, sendMessage }}>
-  
-
       {children}
     </WebSocketContext.Provider>
   );

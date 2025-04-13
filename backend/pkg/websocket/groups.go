@@ -45,7 +45,7 @@ func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
 	msg.Content = "you are invited by " + getFirstName + " to join the a group called " + getGroupName
 	// Now, check if the user is online and send the invite if they are
 	if exists {
-		err := recipientConn.WriteJSON(msg)
+		err := recipientConn.Conn.WriteJSON(msg)
 		if err != nil {
 			log.Printf("Error sending invitation to user %s: %v", recipientID, err)
 		}
@@ -140,7 +140,7 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	if exists {
 		
 		msg.GroupMessage.Count = counter
-		err := recipientConn.WriteJSON(msg)
+		err := recipientConn.Conn.WriteJSON(msg)
 		if err != nil {
 			log.Printf("Error sending invitation to user %s: %v", user.ID, err)
 		}
@@ -316,11 +316,11 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
         recipientConn, exists := clients[user.ID]
         if exists {
             // User is online; send the message via WebSocket
-            if err := recipientConn.WriteJSON(msg); err != nil {
+            if err := recipientConn.Conn.WriteJSON(msg); err != nil {
                 log.Printf("Error sending message to user %s: %v", user.ID, err)	
             }
 			if !(user.ID == msg.EventMessage.SenderID ){
-				err = recipientConn.WriteJSON(eventNotificationMsg)
+				err = recipientConn.Conn.WriteJSON(eventNotificationMsg)
 			err = queries.UpdateEventNotificationStatus(user.ID, eventID)
 			if err != nil {
 				log.Printf("Error sending stored eventNotification to user %s: %v", user.ID, err)
@@ -421,7 +421,7 @@ func SendEventResponseMessage(msg SocketMessage, w http.ResponseWriter) {
         recipientConn, exists := clients[user.ID]
         if exists {
             // User is online; send the message via WebSocket
-            if err := recipientConn.WriteJSON(msg); err != nil {
+            if err := recipientConn.Conn.WriteJSON(msg); err != nil {
                 log.Printf("Error sending message to user %s: %v", user.ID, err)
             }
         } else {
@@ -498,7 +498,7 @@ func SendTypingMessage(msg SocketMessage, w http.ResponseWriter) {
 	msg.TypingMessage.Content = senderName + " is typing..."
 	// Now, check if the user is online and send the invite if they are
 	if exists {
-		err := recipientConn.WriteJSON(msg)
+		err := recipientConn.Conn.WriteJSON(msg)
 		if err != nil {
 			log.Printf("Error sending invitation to user %s: %v", user.ID, err)
 		}
@@ -542,7 +542,7 @@ func RequestToJoinGroup(msg SocketMessage, w http.ResponseWriter){
 
 	msg.Content =  getFirstName + " has requested to join the group called " + getGroupName
 			if exists {
-				err := recipientConn.WriteJSON(msg)
+				err := recipientConn.Conn.WriteJSON(msg)
 				if err != nil {
 					log.Printf("Error sending request to user %s: %v", recipientID, err)
 				}
@@ -580,11 +580,11 @@ func SendPendingInvitations(ws *websocket.Conn, userID string) {
 func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
 	fmt.Println("Request to join group function triggered")
 			mu.Lock()
-			
 			recipientConn, exists := clients[userID]
 			if exists {
 			
 					myGroups, err := queries.ListMyGroups(userID)
+				
 					if err != nil {
 						log.Printf("Error fetching pending requests for user %s: %v", userID, err)
 						return
@@ -594,7 +594,8 @@ func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
 							MyGroups: myGroups,
 							
 						}
-						err = recipientConn.WriteJSON(myGroupsMsg)
+						//fmt.Println("startssssss",myGroupsMsg)
+						err = recipientConn.Conn.WriteJSON(myGroupsMsg)
 						if err != nil {
 							log.Printf("Error sending myGroups to user %s: %v", userID, err)
 						}
@@ -666,7 +667,7 @@ func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string
 			}
 
 			// Send the message to the user
-			err = recipientConn.WriteJSON(groupsToRequestMsg)
+			err = recipientConn.Conn.WriteJSON(groupsToRequestMsg)
 			if err != nil {
 				log.Printf("Error sending myGroups to user %s: %v", clientUserID, err)
 			}
@@ -728,7 +729,7 @@ func SendUsersInvitationList(msg SocketMessage, w http.ResponseWriter, userID st
 	// Send to each online user
 	for _, uid := range finalList {
 		if conn, ok := clients[uid]; ok {
-			err := conn.WriteJSON(usersInvitationListMsg)
+			err := conn.Conn.WriteJSON(usersInvitationListMsg)
 			if err != nil {
 				log.Printf("Error sending usersInvitationList to user %s: %v", uid, err)
 			}
@@ -782,7 +783,7 @@ func SendGroupMembers(msg SocketMessage, w http.ResponseWriter) {
 	// Send to each online user
 	for _, uid := range finalList {
 		if conn, ok := clients[uid]; ok {
-			err := conn.WriteJSON(groupMembersMsg)
+			err := conn.Conn.WriteJSON(groupMembersMsg)
 			if err != nil {
 				log.Printf("Error sending usersInvitationList to user %s: %v", uid, err)
 			}

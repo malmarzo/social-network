@@ -3,16 +3,19 @@ import  DisplayInvitationCard from "../../createGroup/invitationCard"
 import { useState, useEffect } from "react";
 import  DisplayRequestCard from "../../requestGroup/RequestCard"
 import EventNotificationCard from "@/app/groupChat/[id]/eventNotificationCard";
+import { useNotification } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
+
 
 //Used this component in the layout.js file to notify users
 const UserNotifier = () => {
   const { addMessageHandler } = useWebSocket();
+
   const [invitations, setInvitations] = useState(""); // Array to hold invitations
   const [requests, setRequests] = useState(""); // Array to hold requests
   const [eventNotifications, setEventNotifications] = useState([]);
- 
-
-  
+  const { showInfo } = useNotification();
+  const { userID } = useAuth();
 
   useEffect(() => {
     //Adding msg Handlers (set the msg type and the function to handle it)
@@ -49,6 +52,24 @@ const UserNotifier = () => {
     addMessageHandler("hello", (msg) => {
       alert(msg.content);
     });
+
+
+    addMessageHandler("new_follow_request", (msg) => {
+      showInfo("New Follow Request", {
+        duration: 3000,
+        position: "top-right",
+        link: `/profile/${userID}`,
+      });
+    });
+
+    addMessageHandler("new_chat_message", (msg) => {
+      showInfo(`${msg.userDetails.nickname} sent you a message`, {
+        duration: 3000,
+        position: "top-right",
+        link: `/chat`,
+      });
+    });
+
   }, [addMessageHandler]);
 
   const handleDismissNotification = (index) => {

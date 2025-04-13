@@ -1,9 +1,8 @@
 "use client";
 import Link from "next/link";
 import { React, useEffect, useState } from "react";
-import styles from "./SignUpForm.module.css";
+import styles from "@/styles/SignUpForm.module.css";
 import { invokeAPI } from "@/utils/invokeAPI";
-import SuccessAlert from "../components/Alerts/SuccessAlert";
 import FailAlert from "../components/Alerts/FailAlert";
 import {
   validateDOB,
@@ -12,7 +11,7 @@ import {
   validateTextOnly,
 } from "@/utils/formValidators";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "../components/loaders/LoadingSpinner";
 
 const SignUpForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -33,6 +32,9 @@ const SignUpForm = () => {
   const [avatarErr, setAvatarErr] = useState("");
   const [aboutErr, setAboutErr] = useState("");
   const [passErr, setPassErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
 
   //Validates the first name on every change
   const handleFirstNameChange = (e) => {
@@ -112,6 +114,8 @@ const SignUpForm = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
+    setLoading(true);
+
     const formData = new FormData();
     formData.append("first_name", firstName);
     formData.append("last_name", lastName);
@@ -139,152 +143,163 @@ const SignUpForm = () => {
       formData.append("avatar", avatar);
     }
 
-    const response = await invokeAPI("signup", formData, "POST");
-    if (response.code === 200) {
-      setSuccess(true);
+    try {
+      setTimeout(() => {});
+      const response = await invokeAPI("signup", formData, "POST");
+      if (response.code === 200) {
+        setSuccess(true);
 
-      // Clear the form
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
-      setDob("");
-      setNickname("");
-      setAvatar("");
-      setAboutMe("");
-    } else {
+        // Clear the form
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPassword("");
+        setDob("");
+        setNickname("");
+        setAvatar("");
+        setAboutMe("");
+        router.push("/login");
+      } else {
+        setSuccess(false);
+        // Display the error message
+        setErrorMsg(response.error_msg);
+      }
+    } catch (error) {
+      setErrorMsg("Something went wrong. Please try again later.");
       setSuccess(false);
-      // Display the error message
-      setErrorMsg(response.error_msg);
+      setLoading(false);
+      return;
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      {success && (
-        <SuccessAlert
-          msg="Signup successful! Please signin."
-          link={"/"}
-          linkText={"Login"}
-        />
-      )}
-      {!success && errorMsg && <FailAlert msg={errorMsg} />}
+    <main className={styles.main}>
+      <div className={styles.formCard}>
+        <h1 className={styles.title}>Create Account</h1>
+        {!success && errorMsg && <FailAlert msg={errorMsg} />}
 
-    
-        <div className={styles.wrapper}>
-          <form className={styles.form} onSubmit={handleFormSubmit}>
-            <p className={styles.title}>Signup</p>
-            <div className={styles.flex}>
-              <label>
-                <input
-                  className={styles.input}
-                  type="text"
-                  value={firstName}
-                  onChange={handleFirstNameChange}
-                  required
-                />
-                <span>
-                  First Name <span className={styles.errMsg}>{firstErr}</span>
-                </span>
-              </label>
-              <label>
-                <input
-                  className={styles.input}
-                  type="text"
-                  required
-                  value={lastName}
-                  onChange={handleLastNameChange}
-                />
-                <span>
-                  Last Name <span className={styles.errMsg}>{lastErr}</span>
-                </span>
-              </label>
-            </div>
-            <label>
+        <form className={styles.form} onSubmit={handleFormSubmit}>
+          <div className={styles.flex}>
+            <div className={styles.inputGroup}>
               <input
                 className={styles.input}
                 type="text"
-                value={nickname}
-                onChange={handleNicknameChange}
+                placeholder="First Name"
+                value={firstName}
+                onChange={handleFirstNameChange}
                 required
               />
-              <span>
-                Nickname <span className={styles.errMsg}>{nickErr}</span>
-              </span>
-            </label>
-            <label>
+              {firstErr && <span className={styles.errMsg}>{firstErr}</span>}
+            </div>
+            <div className={styles.inputGroup}>
               <input
                 className={styles.input}
-                type="email"
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={handleLastNameChange}
                 required
-                value={email}
-                onChange={handleEmailChange}
               />
-              <span>
-                Email <span className={styles.errMsg}>{emailErr}</span>
-              </span>
-            </label>
+              {lastErr && <span className={styles.errMsg}>{lastErr}</span>}
+            </div>
+          </div>
 
-            <label>
+          <div className={styles.inputGroup}>
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="Nickname"
+              value={nickname}
+              onChange={handleNicknameChange}
+              required
+            />
+            {nickErr && <span className={styles.errMsg}>{nickErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <input
+              className={styles.input}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={handleEmailChange}
+              required
+            />
+            {emailErr && <span className={styles.errMsg}>{emailErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <div className={styles.specialInput}>
+              <small className={styles.specialLabel}>Date of Birth</small>
               <input
                 className={styles.input}
                 type="date"
-                required
                 value={dob}
                 onChange={handleDobChange}
+                required
               />
-              <span>
-                Date of Birth <span className={styles.errMsg}>{dateErr}</span>
-              </span>
-            </label>
+            </div>
+            {dateErr && <span className={styles.errMsg}>{dateErr}</span>}
+          </div>
 
-            <label>
+          <div className={styles.inputGroup}>
+            <div className={styles.specialInput}>
+              <small className={styles.specialLabel}>Avatar (Optional)</small>
               <input
-                className={styles.input}
+                className={`${styles.input} ${styles.fileInput}`}
                 type="file"
                 accept="image/jpeg, image/png, image/gif"
                 onChange={handleAvatarChange}
               />
-              <span>
-                Avatar (Optional){" "}
-                <span className={styles.errMsg}>{avatarErr}</span>
-              </span>
-            </label>
-            <label>
-              <textarea
-                className={styles.input}
-                rows="1"
-                style={{ resize: "none" }}
-                value={aboutMe}
-                onChange={handleAboutMeChange}
-                maxLength="100"
-              ></textarea>
-              <span>
-                About (Optional){" "}
-                <span className={styles.errMsg}>{aboutErr}</span>
-              </span>
-            </label>
-            <label>
-              <input
-                className={styles.input}
-                type="password"
-                required
-                value={password}
-                onChange={handlePasswordChange}
-              />
-              <span>
-                Password <span className={styles.errMsg}>{passErr}</span>
-              </span>
-            </label>
-            <button className={styles.submit} type="submit">
-              Submit
-            </button>
-            <p className={styles.signin}>
-              Already have an account? <Link href="/login">Signin</Link>
-            </p>
-          </form>
-        </div>
-    </>
+            </div>
+            {avatarErr && <span className={styles.errMsg}>{avatarErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <textarea
+              className={`${styles.input} ${styles.textarea}`}
+              placeholder="About (Optional)"
+              value={aboutMe}
+              onChange={handleAboutMeChange}
+              maxLength="50"
+            />
+            {aboutErr && <span className={styles.errMsg}>{aboutErr}</span>}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <input
+              className={styles.input}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={handlePasswordChange}
+              required
+            />
+            {passErr && <span className={styles.errMsg}>{passErr}</span>}
+          </div>
+
+          <button
+            className={`${styles.button} ${loading ? styles.loading : ""}`}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className={styles.buttonContent}>
+                <LoadingSpinner />
+              </div>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+
+          <p className={styles.signin}>
+            Already have an account? <Link href="/login">Sign in</Link>
+          </p>
+        </form>
+      </div>
+    </main>
   );
 };
 

@@ -7,6 +7,7 @@ import (
 	"social-network/pkg/db/queries"
 	"sync"
 	"github.com/gorilla/websocket"
+	"time"
 	//"social-network/pkg/utils"
 	datamodels "social-network/pkg/dataModels"
 )
@@ -14,6 +15,13 @@ import (
 type UserDetails struct {
 	ID       string `json:"id"`
 	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar,omitempty"`
+}
+
+type FollowRequest struct {
+	From           string `json:"from"`
+	To             string `json:"to"`
+	SenderNickname string `json:"senderNickname"`
 }
 type SocketMessage struct {
 	Type        string      `json:"type"`
@@ -32,12 +40,29 @@ type SocketMessage struct {
 	GroupMembersMessage               datamodels.GroupMembersMessage  `json:"group_members_message"` 
 	ActiveGroupMessage					datamodels.ActiveGroupMessage	`json:"active_group_message"`
 	ResetCountMessage					datamodels.ResetCountMessage	`json:"reset_count_message"`
+	ReceiverID    string        `json:"receiverId,omitempty"`
+	GroupID       string        `json:"groupId,omitempty"`
+	MessageID     string        `json:"messageId,omitempty"`
+	Timestamp     string        `json:"timestamp,omitempty"`
+	Status        string        `json:"status,omitempty"`
+	ClientMsgID   string        `json:"clientMsgId,omitempty"`
+	FollowRequest FollowRequest `json:"followRequest"`
 }
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
-var clients = make(map[string]*websocket.Conn)
+type Client struct {
+	Conn     *websocket.Conn
+	UserID   string
+	Nickname string
+	LastSeen int64
+	IsTyping bool
+}
+
+var clients = make(map[string]*Client)
+
+//var clients = make(map[string]*websocket.Conn)
 var socketMessages = make(chan SocketMessage)
 var mu sync.Mutex
 
@@ -51,22 +76,45 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer ws.Close()
+
+	// Get session cookie
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		log.Println("No session_id cookie:", err)
 		ws.WriteMessage(websocket.CloseMessage, []byte("No session found"))
 		return
 	}
-	// Extract user ID from query parameter
+
+
+	// Validate session and get user ID
 	userID, errSess := queries.ValidateSession(cookie.Value)
 	if errSess != nil {
 		log.Println("Invalid session:", errSess)
 		ws.WriteMessage(websocket.CloseMessage, []byte("Invalid session"))
 		return
 	}
+
+	// Get user details
+	nickname, errNickname := queries.GetNickname(userID)
+	if errNickname != nil {
+		log.Println("Error getting nickname:", errNickname)
+		ws.WriteMessage(websocket.CloseMessage, []byte("Error getting user details"))
+		return
+	}
+
+	// Create new client
+	client := &Client{
+		Conn:     ws,
+		UserID:   userID,
+		Nickname: nickname,
+		LastSeen: time.Now().Unix(),
+	}
+
 	mu.Lock()
 	// Register the client connection with the userID
-	clients[userID] = ws
+	//test
+	clients[userID] = client
+
 
 //-------------------------------------------------------------------------------------------
 	// here i will add the code responsible for sending invition when user logs in
@@ -82,10 +130,10 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	mu.Unlock()
 	msg := SocketMessage{}
 	userDetails := UserDetails{}
-	nickname, errNickname := queries.GetNickname(userID)
-	if errNickname != nil {
-		log.Fatal(errNickname)
-	}
+	// nickname, errNickname := queries.GetNickname(userID)
+	// if errNickname != nil {
+	// 	log.Fatal(errNickname)
+	// }
 	userDetails.ID = userID
 	userDetails.Nickname = nickname
 	msg.Type = "newUser"
@@ -113,7 +161,18 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		// Update client's last seen time
+		mu.Lock()
+		if client, ok := clients[userID]; ok {
+			client.LastSeen = time.Now().Unix()
+		}
+		mu.Unlock()
 		//socketMessages <- msg
+
+		// Set timestamp for all messages if not already set
+		if msg.Timestamp == "" {
+			msg.Timestamp = time.Now().Format(time.RFC3339)
+		}
 
 		fmt.Println("Received message:", msg) // Debugging print
 
@@ -153,41 +212,472 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				log.Println("error reseting the count for a group")
 				return
 			}
+		}else if msg.Type == "chat" {
+			if msg.ReceiverID != "" {
+				// Handle direct chat message
+				senderID := userID
+				receiverID := msg.ReceiverID
+
+				// Validate sender and receiver IDs
+				if senderID == "" || receiverID == "" {
+					errorMsg := SocketMessage{
+						Type:      "error",
+						Content:   "Invalid sender or receiver ID",
+						Timestamp: msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
+				}
+
+				// Set client message ID if not provided
+				if msg.ClientMsgID == "" {
+					msg.ClientMsgID = fmt.Sprintf("msg_%d_%s", time.Now().UnixNano(), userID)
+				}
+
+				// Set user details if not provided
+				if msg.UserDetails.ID == "" {
+					msg.UserDetails = UserDetails{
+						ID:       userID,
+						Nickname: nickname,
+					}
+				}
+
+				// Prevent sending message to self
+				if senderID == receiverID {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Cannot send message to yourself",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
+				}
+
+				// Check if users can chat with each other (based on follow relationship)
+				canChat, err := queries.CanUsersChat(senderID, receiverID)
+				if err != nil {
+					log.Printf("Error checking if users can chat: %v", err)
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Error checking follow relationship",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
+				}
+
+				// If users cannot chat with each other, send an error message
+				if !canChat {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "You can only chat with users who follow you or whom you follow",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+					continue
+				}
+
+				// Save message to database
+				messageID, err := queries.SaveChatMessage(senderID, receiverID, msg.Content)
+				if err != nil {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Failed to save message: " + err.Error(),
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+				} else {
+					msg.MessageID = fmt.Sprintf("%d", messageID)
+					msg.Status = "sent"
+					socketMessages <- msg
+				}
+			}
+
+		}else if msg.Type == "groupChat" {
+			if msg.GroupID != "" {
+				senderID := userID
+				groupID := msg.GroupID
+
+				// Set client message ID if not provided
+				if msg.ClientMsgID == "" {
+					msg.ClientMsgID = fmt.Sprintf("grp_%d_%s", time.Now().UnixNano(), userID)
+				}
+
+				// Save message to database
+				messageID, err := queries.SaveGroupChatMessage(groupID, senderID, msg.Content)
+				if err != nil {
+					errorMsg := SocketMessage{
+						Type:        "error",
+						Content:     "Failed to save group message",
+						ClientMsgID: msg.ClientMsgID,
+						Timestamp:   msg.Timestamp,
+					}
+					ws.WriteJSON(errorMsg)
+				} else {
+					msg.MessageID = fmt.Sprintf("%d", messageID)
+					msg.Status = "sent"
+					socketMessages <- msg
+				}
+			}
+
+		}else if msg.Type == "typing" {
+			// Handle typing indicator
+			mu.Lock()
+			if client, ok := clients[userID]; ok {
+				client.IsTyping = true
+			}
+			mu.Unlock()
+
+			socketMessages <- msg
+
+			// Reset typing status after a delay
+			go func() {
+				time.Sleep(5 * time.Second)
+				mu.Lock()
+				if client, ok := clients[userID]; ok {
+					client.IsTyping = false
+				}
+				mu.Unlock()
+			}()
+
+		}else if msg.Type == "read" {
+			// Handle read receipts
+			socketMessages <- msg
+
+		}else if msg.Type == "new_follow_request" {
+			// Handle follow requests
+			msg.FollowRequest.SenderNickname, err = queries.GetNickname(msg.FollowRequest.From)
+			if err != nil {
+				log.Println("Error getting nickname:", err)
+				continue
+			}
+
+			validUser, err := queries.DoesUserExists(msg.FollowRequest.To)
+			if err != nil {
+				log.Println("Error validating user:", err)
+				continue
+			}
+			if validUser {
+				socketMessages <- msg
+			}
+
 		}else{
 			socketMessages <- msg
 		}
-		
+
+		// // Process message based on type
+		// switch msg.Type {
+		// case "chat":
+		// 	if msg.ReceiverID != "" {
+		// 		// Handle direct chat message
+		// 		senderID := userID
+		// 		receiverID := msg.ReceiverID
+
+		// 		// Validate sender and receiver IDs
+		// 		if senderID == "" || receiverID == "" {
+		// 			errorMsg := SocketMessage{
+		// 				Type:      "error",
+		// 				Content:   "Invalid sender or receiver ID",
+		// 				Timestamp: msg.Timestamp,
+		// 			}
+		// 			ws.WriteJSON(errorMsg)
+		// 			continue
+		// 		}
+
+		// 		// Set client message ID if not provided
+		// 		if msg.ClientMsgID == "" {
+		// 			msg.ClientMsgID = fmt.Sprintf("msg_%d_%s", time.Now().UnixNano(), userID)
+		// 		}
+
+		// 		// Set user details if not provided
+		// 		if msg.UserDetails.ID == "" {
+		// 			msg.UserDetails = UserDetails{
+		// 				ID:       userID,
+		// 				Nickname: nickname,
+		// 			}
+		// 		}
+
+		// 		// Prevent sending message to self
+		// 		if senderID == receiverID {
+		// 			errorMsg := SocketMessage{
+		// 				Type:        "error",
+		// 				Content:     "Cannot send message to yourself",
+		// 				ClientMsgID: msg.ClientMsgID,
+		// 				Timestamp:   msg.Timestamp,
+		// 			}
+		// 			ws.WriteJSON(errorMsg)
+		// 			continue
+		// 		}
+
+		// 		// Check if users can chat with each other (based on follow relationship)
+		// 		canChat, err := queries.CanUsersChat(senderID, receiverID)
+		// 		if err != nil {
+		// 			log.Printf("Error checking if users can chat: %v", err)
+		// 			errorMsg := SocketMessage{
+		// 				Type:        "error",
+		// 				Content:     "Error checking follow relationship",
+		// 				ClientMsgID: msg.ClientMsgID,
+		// 				Timestamp:   msg.Timestamp,
+		// 			}
+		// 			ws.WriteJSON(errorMsg)
+		// 			continue
+		// 		}
+
+		// 		// If users cannot chat with each other, send an error message
+		// 		if !canChat {
+		// 			errorMsg := SocketMessage{
+		// 				Type:        "error",
+		// 				Content:     "You can only chat with users who follow you or whom you follow",
+		// 				ClientMsgID: msg.ClientMsgID,
+		// 				Timestamp:   msg.Timestamp,
+		// 			}
+		// 			ws.WriteJSON(errorMsg)
+		// 			continue
+		// 		}
+
+		// 		// Save message to database
+		// 		messageID, err := queries.SaveChatMessage(senderID, receiverID, msg.Content)
+		// 		if err != nil {
+		// 			errorMsg := SocketMessage{
+		// 				Type:        "error",
+		// 				Content:     "Failed to save message: " + err.Error(),
+		// 				ClientMsgID: msg.ClientMsgID,
+		// 				Timestamp:   msg.Timestamp,
+		// 			}
+		// 			ws.WriteJSON(errorMsg)
+		// 		} else {
+		// 			msg.MessageID = fmt.Sprintf("%d", messageID)
+		// 			msg.Status = "sent"
+		// 			socketMessages <- msg
+		// 		}
+		// 	}
+
+		// case "groupChat":
+		// 	if msg.GroupID != "" {
+		// 		senderID := userID
+		// 		groupID := msg.GroupID
+
+		// 		// Set client message ID if not provided
+		// 		if msg.ClientMsgID == "" {
+		// 			msg.ClientMsgID = fmt.Sprintf("grp_%d_%s", time.Now().UnixNano(), userID)
+		// 		}
+
+		// 		// Save message to database
+		// 		messageID, err := queries.SaveGroupChatMessage(groupID, senderID, msg.Content)
+		// 		if err != nil {
+		// 			errorMsg := SocketMessage{
+		// 				Type:        "error",
+		// 				Content:     "Failed to save group message",
+		// 				ClientMsgID: msg.ClientMsgID,
+		// 				Timestamp:   msg.Timestamp,
+		// 			}
+		// 			ws.WriteJSON(errorMsg)
+		// 		} else {
+		// 			msg.MessageID = fmt.Sprintf("%d", messageID)
+		// 			msg.Status = "sent"
+		// 			socketMessages <- msg
+		// 		}
+		// 	}
+
+		// case "typing":
+		// 	// Handle typing indicator
+		// 	mu.Lock()
+		// 	if client, ok := clients[userID]; ok {
+		// 		client.IsTyping = true
+		// 	}
+		// 	mu.Unlock()
+
+		// 	socketMessages <- msg
+
+		// 	// Reset typing status after a delay
+		// 	go func() {
+		// 		time.Sleep(5 * time.Second)
+		// 		mu.Lock()
+		// 		if client, ok := clients[userID]; ok {
+		// 			client.IsTyping = false
+		// 		}
+		// 		mu.Unlock()
+		// 	}()
+
+		// case "read":
+		// 	// Handle read receipts
+		// 	socketMessages <- msg
+
+		// case "new_follow_request":
+		// 	// Handle follow requests
+		// 	msg.FollowRequest.SenderNickname, err = queries.GetNickname(msg.FollowRequest.From)
+		// 	if err != nil {
+		// 		log.Println("Error getting nickname:", err)
+		// 		continue
+		// 	}
+
+		// 	validUser, err := queries.DoesUserExists(msg.FollowRequest.To)
+		// 	if err != nil {
+		// 		log.Println("Error validating user:", err)
+		// 		continue
+		// 	}
+		// 	if validUser {
+		// 		socketMessages <- msg
+		// 	}
+
+		// default:
+		// 	// Handle other message types
+		// 	socketMessages <- msg
+		// }	
 	}
 	
 	
 }
+
+
+/////////////////////////////////////////////////////////////////
+
 
 // Sends msgs
 func HandleMessages() {
 	for {
 		newMsg := <-socketMessages
 		mu.Lock()
-		//This will send the message to all the clients except the sender
+		// Handle different message types
 		if newMsg.Type == "newUser" || newMsg.Type == "removeUser" {
-			for id, c := range clients {
-				if c != clients[newMsg.UserDetails.ID] {
-					err := c.WriteJSON(newMsg)
+			// Broadcast to all clients except sender
+			for id, client := range clients {
+				if id != newMsg.UserDetails.ID {
+					err := client.Conn.WriteJSON(newMsg)
 					if err != nil {
 						log.Printf("Error sending message to user %s: %v", id, err)
-						c.Close()
+						client.Conn.Close()
 						delete(clients, id)
 					}
 				}
 			}
-		}else if newMsg.Type == "invite" {
-			//SendInvite(newMsg)
+		} else if newMsg.Type == "chat" {
+			// Message is already saved to database in HandleConnections
+			// Just log that we're processing it
+			log.Printf("Processing chat message: %s -> %s", newMsg.UserDetails.ID, newMsg.ReceiverID)
+
+			// Send to the specific recipient
+			if recipient, ok := clients[newMsg.ReceiverID]; ok {
+				// Update message status to delivered
+				newMsg.Status = "delivered"
+				err := recipient.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.ReceiverID, err)
+					recipient.Conn.Close()
+					delete(clients, newMsg.ReceiverID)
+				}
+
+				newMsg.Type = "new_chat_message"
+
+				err = recipient.Conn.WriteJSON(newMsg)
+
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.ReceiverID, err)
+					recipient.Conn.Close()
+					delete(clients, newMsg.ReceiverID)
+				}
+			}
+
+			// Also send back to sender for confirmation
+			if sender, ok := clients[newMsg.UserDetails.ID]; ok {
+
+				newMsg.Type = "chat"
+
+				// For sender, keep original status
+				senderMsg := newMsg
+				if newMsg.Status == "delivered" {
+					senderMsg.Status = "sent" // Don't show delivered to sender yet
+				}
+				err := sender.Conn.WriteJSON(senderMsg)
+				if err != nil {
+					log.Printf("Error sending confirmation to sender %s: %v", newMsg.UserDetails.ID, err)
+				}
+			}
+		} else if newMsg.Type == "groupChat" {
+			// Message is already saved to database in HandleConnections
+			// Just log that we're processing it
+			log.Printf("Processing group chat message: %s in group %s", newMsg.UserDetails.ID, newMsg.GroupID)
+
+			// For group chat, we need to send to all members of the group
+			// This is simplified - in a real app, you'd query group members from DB
+			for id, client := range clients {
+				// Skip sender to avoid duplicates
+				if id != newMsg.UserDetails.ID {
+					newMsg.Status = "delivered"
+					err := client.Conn.WriteJSON(newMsg)
+					if err != nil {
+						log.Printf("Error sending group message to user %s: %v", id, err)
+						client.Conn.Close()
+						delete(clients, id)
+					}
+				}
+			}
+
+			// Also send back to sender for confirmation
+			if sender, ok := clients[newMsg.UserDetails.ID]; ok {
+				// For sender, keep original status
+				senderMsg := newMsg
+				senderMsg.Status = "sent"
+				err := sender.Conn.WriteJSON(senderMsg)
+				if err != nil {
+					log.Printf("Error sending confirmation to sender %s: %v", newMsg.UserDetails.ID, err)
+				}
+			}
+		} else if newMsg.Type == "typing" {
+			// Send typing indicator only to the specific recipient
+			if recipient, ok := clients[newMsg.ReceiverID]; ok {
+				err := recipient.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending typing indicator to user %s: %v", newMsg.ReceiverID, err)
+				}
+			}
+		} else if newMsg.Type == "read" {
+			// Send read receipt to the original sender
+			if sender, ok := clients[newMsg.ReceiverID]; ok { // ReceiverID here is the original sender
+				newMsg.Status = "read"
+				err := sender.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending read receipt to user %s: %v", newMsg.ReceiverID, err)
+				}
+			}
+		} else if newMsg.Type == "new_post" || newMsg.Type == "update_profile_stats" || newMsg.Type == "update_follower_list" {
+			if client, ok := clients[newMsg.UserDetails.ID]; ok {
+				err := client.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.UserDetails.ID, err)
+					client.Conn.Close()
+					delete(clients, newMsg.UserDetails.ID)
+				}
+			}
+		} else if newMsg.Type == "new_follow_request" || newMsg.Type == "cancel_follow_request" {
+			if client, ok := clients[newMsg.FollowRequest.To]; ok {
+				err := client.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.FollowRequest.To, err)
+					client.Conn.Close()
+					delete(clients, newMsg.FollowRequest.To)
+				}
+
+				newMsg.Type = "update_requests_list"
+				err = client.Conn.WriteJSON(newMsg)
+				if err != nil {
+					log.Printf("Error sending message to user %s: %v", newMsg.FollowRequest.To, err)
+					client.Conn.Close()
+					delete(clients, newMsg.FollowRequest.To)
+				}
+			}
 		} else {
-			for id, c := range clients {
-				if c != clients[newMsg.UserDetails.ID] {
-					err := c.WriteJSON(newMsg)
+			// Default behavior for other message types
+			for id, client := range clients {
+				if id != newMsg.UserDetails.ID {
+					err := client.Conn.WriteJSON(newMsg)
 					if err != nil {
 						log.Printf("Error sending message to user %s: %v", id, err)
-						c.Close()
+						client.Conn.Close()
 						delete(clients, id)
 					}
 				}
@@ -199,7 +689,36 @@ func HandleMessages() {
 }
 
 // Returns the list of connected clients
-func GetCLients() map[string]*websocket.Conn {
-	return clients
+func GetConnectedUsers() []string {
+	mu.Lock()
+	defer mu.Unlock()
+
+	userIDs := make([]string, 0, len(clients))
+	for id := range clients {
+		userIDs = append(userIDs, id)
+	}
+
+	return userIDs
+}
+
+// Check if a user is online
+func IsUserOnline(userID string) bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	_, online := clients[userID]
+	return online
+}
+
+// Get user's connection status
+func GetUserStatus(userID string) (bool, int64) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if client, ok := clients[userID]; ok {
+		return true, client.LastSeen
+	}
+
+	return false, 0
 }
 

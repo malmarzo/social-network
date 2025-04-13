@@ -10,8 +10,6 @@ import (
 	"social-network/pkg/db/queries"
 	"social-network/pkg/utils"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 // Handles the signup request
@@ -33,7 +31,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Create a new uuid for the user
-		id := uuid.New().String()
+		id := utils.GenerateUUID()
 		if id == "" {
 			utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
 			return
@@ -77,8 +75,8 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		user.ID = id
-		user.FirstName = strings.ToUpper(firstName)
-		user.LastName = strings.ToUpper(lastName)
+		user.FirstName = strings.ToUpper(strings.ToLower(firstName))[0:1] + strings.ToLower(firstName)[1:]
+		user.LastName = strings.ToUpper(strings.ToLower(lastName))[0:1] + strings.ToLower(lastName)[1:]
 		user.Email = email
 		user.Password = hashedPassword
 		user.DOB = dob

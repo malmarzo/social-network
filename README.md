@@ -20,6 +20,13 @@ A Facebook like social media application made using Next.js and go.
 - Navigate to the backend dir: `cd backend`
 - Run: `go run cmd/server.go`
 
+
+
+### Working on your branch
+- Create a new branch: `git checkout -b branch-name` use your name and feature to implement. Ex: `mahmood/homePage`
+- Stagging and committing: `git add .` `git commit -m "msg"`
+- Pushing: `git push origin branch-name`
+
 ### Project Structure
 
 ```
@@ -53,21 +60,7 @@ social-network/
 #### frontend/app
 
 - Will hold the different routes as directories that include the different pages of the app
-- The test directory inside it is an example of how to create a new route
-- Navigating to localhost:3000/test would show the newly created page
 - The name of the page for the route has to be named as `page.js or page.jsx`
-
-#### frontend/public
-
-- Will include all the public assests like images, etc..
-
-#### frontend/styles
-
-- CSS styles for the pages
-
-#### frontend/utils
-
-- Utility code
 
 ### Frontend Utilities
 
@@ -112,62 +105,38 @@ const response = await invokeAPI(
 
 #### backend/cmd
 
-- Includes the main.go file to be ran
+- Includes the server.go file to be ran
 
 #### backend/pkg
 
 - Includes the different go packages created (api, db, middleware,...)
 
-#### pkg/api
-
-- Will include all the different API handlers
-
-#### pkg/dataModels
-
-- Will include all the different structs to be used and constant variables
-
-#### pkg/middleware
-
-- Will include all the middlewares (auth, cors,...)
-
-#### pkg/utils
-
-- Utility code
-
-#### pkg/websocket
-
-- Will include all the websocket handling
-
-#### pkg/db
-
-- Everything related to db interation
-- Migrations in the `/migrations` dir
-- DB connection in the `/sqlite` dir in the `sqlite.go` file
-- Functions and queries in the `queries` dir
-
 #### database & migration
 
+- install the go-migrate tool from the terminal
 - to create a new migration file run the command "migrate create -ext sql -dir pkg/db/migrations/sqlite -seq create_notifications_table" by changing the create_notifications_table you change the name of the file
 - after creating a migration file there will be one file called down which has the drop table code and another file
   that is called up which has the table itself
 - by running the application the migrations will be applied automatically and if the migrations are succesful the
   function will print a message in the terminal
 
-### Backend Utilities
-
 #### CORS Middleware
+
+- Has to be used as a wrapper over the routes handlers to allow requests from the frontend
 
 ```go
 // Usage in server.go
 	http.HandleFunc("/signup", middleware.CorsMiddleware(api.SignupHandler))
 ```
 
-Enables Cross-Origin Resource Sharing with configured options:
+#### Auth Middleware
 
-- Allowed Origins: localhost:3000
-- Allowed Methods: GET, POST, PUT, DELETE
-- Allowed Headers: Content-Type
-- Credentials: Allowed
+- Has to be used over the routes handlers to protect the routes
+
+```go
+//Usage in server.go
+http.HandleFunc("/logout", middleware.CorsMiddleware(middleware.AuthMiddleware(api.LogoutHandler)))
+```
 
 #### SendResponse Function
 
@@ -186,16 +155,105 @@ Sends a standardized JSON response with:
 - `Status`: "Success" or "Failed"
 - `ErrorMsg`: Error message (optional)
 
-#### Password Utilities
+### Frontend Route Protection
 
-```go
-// Hash a password
-hashedPassword, err := utils.HashPassword(password)
+- Routes are protected using an auth middeware function that validates if the user is logged in or not and redirects him to the correct page found in `frontend/middleware.js`
+- Login/Signup are only for non-auth users
 
-// Verify a password
-match := utils.CheckPasswordHash(password, hashedPassword)
+### Accessing user Auth state in the frontend in other components
+
+Use the `useAuth` hook to access authentication state in any component:
+- You can also access the user id and user nickname using it
+
+```javascript
+import { useAuth } from "@/context/AuthContext";
+
+const MyComponent = () => {
+  const { isLoggedIn, loading, setIsLoggedIn, userID, userNickname } = useAuth();
+
+  return (
+    <div>
+      {!isLoggedIn && !loading && <LoginButton />}
+      {isLoggedIn && !loading && <UserDashboard />}
+    </div>
+  );
+};
 ```
 
-- `HashPassword`: Generates a secure hash using bcrypt
-- `CheckPasswordHash`: Verifies a password against its hash
-- Uses bcrypt with default cost factor
+### Accessing the websocket connection in other components
+
+Use the `useWebSocket` hook to access WebSocket functionality:
+
+```javascript
+import { useWebSocket } from "@/context/Websocket";
+
+const ChatComponent = () => {
+  const { addMessageHandler, sendMessage } = useWebSocket();
+};
+```
+
+### Receiving and handling different types of websocket msgs in other components
+
+- Example in the `UserNotifier` component
+
+```javascript
+import { useEffect } from "react";
+import { useWebSocket } from "@/context/Websocket";
+
+//Used this component in the layout.js file to notify users
+const UserNotifier = () => {
+  const { addMessageHandler } = useWebSocket();
+
+  useEffect(() => {
+    //Adding msg Handlers (set the msg type and the function to handle it)
+
+    addMessageHandler("newUser", (msg) => {
+      alert("New user joined");
+    });
+
+    addMessageHandler("removeUser", (msg) => {
+      alert("User left");
+    });
+
+    addMessageHandler("hello", (msg) => {
+      alert(msg.content);
+    });
+  }, [addMessageHandler]);
+
+  return null; 
+};
+
+export default UserNotifier;
+```
+
+### Sending websocket msgs in other components
+
+- Example in `HelloSender` component
+
+```javascript
+import React from "react";
+import { useWebSocket } from "@/context/Websocket";
+
+const HelloSender = () => {
+  const { sendMessage } = useWebSocket();
+
+  const sendHello = () => {
+    const msg = {};
+    msg.type = "hello";
+    msg.content = "Hello World!";
+    sendMessage(msg);
+  };
+
+  return (
+    <div>
+      <button
+        onClick={sendHello}
+      >
+        Send Hello
+      </button>
+    </div>
+  );
+};
+
+export default HelloSender;
+```
