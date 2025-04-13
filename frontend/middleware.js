@@ -25,14 +25,17 @@ export async function middleware(request) {
   // If we have a session, verify it
   if (sessionCookie) {
     try {
-      const response = await fetch("http://backend:8080/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${sessionCookie.value}`,
-        },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionCookie.value}`,
+          },
+          credentials: "include",
+        }
+      );
 
       const responseData = await response.json();
 
