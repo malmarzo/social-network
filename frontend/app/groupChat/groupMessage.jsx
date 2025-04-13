@@ -74,3 +74,21 @@ export const sendGroupMembersMessage = async (groupID, sendMessage) => {
     sendMessage( groupMembersMsg);  
 
 };
+
+
+
+export const sendActiveGroupMessage = async (status,groupID, sendMessage) => {
+    console.log("the function is functioning");
+    const activeGroupMsg = {
+        type: "activeGroupMessage",
+       
+        active_group_message: {
+            status:status,
+            group_id: parseInt(groupID),
+        }
+    };
+    console.log("Sending message:", JSON.stringify(activeGroupMsg));
+    //console.log(user);
+    sendMessage(activeGroupMsg);  
+
+};

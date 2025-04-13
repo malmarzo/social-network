@@ -15,6 +15,8 @@ import { sendEventResponseMessage } from "./eventResponseMessage";
 import  PostsFeed  from "./postFeed"
 import { sendUsersInvitationListMessage } from "../groupMessage";
 import { sendGroupMembersMessage } from "../groupMessage";
+import { sendActiveGroupMessage } from "../groupMessage";
+
 export default function GroupChat() {
     const router = useRouter();
     const { id } = useParams();
@@ -41,6 +43,11 @@ export default function GroupChat() {
      const [activeSection, setActiveSection] = useState("events");
      const [showEventForm, setShowEventForm] = useState(false);
       const [errors, setErrors] = useState({});
+      const historyIndex = useRef(0);
+     
+      const prevPath = useRef(null);
+      
+
 
 
      
@@ -58,7 +65,17 @@ export default function GroupChat() {
   
       
     useEffect(() => {
+       
+        // const handlePopState = () => {
+        //     // User pressed browser back button
+        //     console.log("Back button pressed");
+        //     sendActiveGroupMessage("false", parseInt(id), sendMessage);
+        //     sessionStorage.setItem("navigatedForwardToGroup",parseInt(id));
 
+        //   };
+      
+        //   window.addEventListener("popstate", handlePopState);
+       
      
         const fetchGroup = async () => {
             if (!id) {
@@ -120,7 +137,7 @@ export default function GroupChat() {
         };
        
           addMessageHandler("groupMessage", (msg) => {
-            console.log("Received message:", msg); // Debug log
+            console.log("Received group message:", msg); // Debug log
             setMessages((prev) => [...prev, msg]); // Append new messages
            
         });
@@ -312,13 +329,14 @@ export default function GroupChat() {
     };
     
     
-
+    const handleBackButton = async () => {
+        sendActiveGroupMessage("false",group.group.id,sendMessage);
+      };
 
     
     
    
     return (
-        
         <div className="max-w-5xl mx-auto p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-lg text-white border border-gray-700 backdrop-blur-lg mt-6">
             <h2 className="text-3xl font-extrabold mb-3 text-blue-400">Title: {group.group.title}</h2>
             <p className="text-lg text-gray-300 italic">Description: {group.group.description}</p>

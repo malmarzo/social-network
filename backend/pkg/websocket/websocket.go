@@ -30,6 +30,8 @@ type SocketMessage struct {
 	UsersInviationListMessage   datamodels.UsersInvitationListMessage  `json:"users_invitation_list_message"`             
 	//EventNotification    datamodels.EventNotification    `json:"event_notification"`
 	GroupMembersMessage               datamodels.GroupMembersMessage  `json:"group_members_message"` 
+	ActiveGroupMessage					datamodels.ActiveGroupMessage	`json:"active_group_message"`
+	ResetCountMessage					datamodels.ResetCountMessage	`json:"reset_count_message"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -142,6 +144,15 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 			SendUsersInvitationList(msg,w,userID)
 		}else if msg.Type == "groupMembersMessage" {
 			SendGroupMembers(msg,w)
+		}else if msg.Type == "activeGroupMessage" {
+			SendActiveGroup(msg,userID)
+		}else if msg.Type == "resetCountMessage" {
+			groupID:= msg.ResetCountMessage.GroupID
+			err:= queries.ResetUnreadCount(groupID,userID)
+			if err != nil {
+				log.Println("error reseting the count for a group")
+				return
+			}
 		}else{
 			socketMessages <- msg
 		}

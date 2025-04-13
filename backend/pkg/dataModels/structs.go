@@ -39,6 +39,7 @@ type Group struct {
 	 ChatHistory	[]GroupMessage `json:"chat_history"`
 	 EventHistory    []EventMessage   `json:"event_history"`
 	 EventResponsesHistory []EventResponseMessage `json:"event_responses_history"`
+	 Count   				int 					`json:"count"`
 }
 
 // Invite to invite a person to join a group
@@ -65,6 +66,7 @@ type GroupMessage struct {
 	Message 		 string      `json:"message"`
 	FirstName		 string    	 `json:"first_name"`
 	DateTime		 string       `json:"date_time"`
+	Count  			 int 			 `json:"count"`
 }
 
 type TypingMessage struct {
@@ -74,7 +76,14 @@ type TypingMessage struct {
 	//FirstName 		 string      `json:"first_name"`
 }
 
+type ActiveGroupMessage struct {
+	Status  string `json:"status"`
+	GroupID int    `json:"group_id"`
+}
 
+type ResetCountMessage struct {
+	GroupID int    `json:"group_id"`
+}
 
 type EventMessage struct {
     ID          int      `json:"id"`

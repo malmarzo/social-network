@@ -506,6 +506,54 @@ func GetPendingRequests(userID string) ([]datamodels.Request, error) {
 }
 
 
+// func ListMyGroups(userID string) ([]datamodels.Group, error) {
+// 	dbPath := getDBPath()
+// 	db, err := sql.Open("sqlite3", dbPath)
+// 	if err != nil {
+// 		log.Println("Error opening DB:", err)
+// 		return nil, err
+// 	}
+// 	defer db.Close()
+// 	query := `
+// 	SELECT DISTINCT g.id, g.title, g.description, g.creator_id
+// 	FROM group_members gm
+// 	JOIN groups g ON gm.group_id = g.id
+// 	LEFT JOIN (
+// 		SELECT group_id, MAX(created_at) AS last_message_time 
+// 		FROM group_chats 
+// 		WHERE status = 'delivered'
+// 		GROUP BY group_id
+// 	) AS last_msg ON g.id = last_msg.group_id
+// 	WHERE (gm.user_id = ? AND gm.status = 'accepted') 
+// 	      OR  g.creator_id = ?
+// 	ORDER BY 
+// 		CASE WHEN last_msg.last_message_time IS NULL THEN 1 ELSE 0 END,  -- Groups with messages come first
+// 		last_msg.last_message_time DESC,  -- Order by last message time if it exists
+// 		g.title ASC  -- Otherwise, order alphabetically
+// `
+
+// //OR  g.creator_id = gm.invited_by
+// 	rows, err := db.Query(query, userID, userID)  // Pass userID twice for both conditions
+// 	if err != nil {
+// 		log.Println("Error executing query:", err)
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var groups []datamodels.Group
+// 	for rows.Next() {
+// 		var group datamodels.Group
+// 		err := rows.Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID)
+// 		if err != nil {
+// 			log.Println("Error scanning row:", err)
+// 			continue
+// 		}
+// 		groups = append(groups, group)
+// 	}
+
+// 	return groups, nil
+// }
+
 func ListMyGroups(userID string) ([]datamodels.Group, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
@@ -515,15 +563,13 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 	}
 	defer db.Close()
 
-	// query := `
-	// 	SELECT DISTINCT g.id, g.title, g.description, g.creator_id
-	// 	FROM group_members gm
-	// 	JOIN groups g ON gm.group_id = g.id
-	// 	WHERE (gm.user_id = ? AND gm.status = 'accepted') 
-	// 	   OR  g.creator_id = gm.invited_by`
-
 	query := `
-	SELECT DISTINCT g.id, g.title, g.description, g.creator_id
+	SELECT 
+		DISTINCT g.id, 
+		g.title, 
+		g.description, 
+		g.creator_id,
+		COALESCE(um.count, 0) AS unread_count
 	FROM group_members gm
 	JOIN groups g ON gm.group_id = g.id
 	LEFT JOIN (
@@ -532,16 +578,16 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 		WHERE status = 'delivered'
 		GROUP BY group_id
 	) AS last_msg ON g.id = last_msg.group_id
+	LEFT JOIN unread_messages um ON um.group_id = g.id AND um.user_id = ?
 	WHERE (gm.user_id = ? AND gm.status = 'accepted') 
-	      OR  g.creator_id = ?
+	      OR g.creator_id = ?
 	ORDER BY 
-		CASE WHEN last_msg.last_message_time IS NULL THEN 1 ELSE 0 END,  -- Groups with messages come first
-		last_msg.last_message_time DESC,  -- Order by last message time if it exists
-		g.title ASC  -- Otherwise, order alphabetically
-`
+		CASE WHEN last_msg.last_message_time IS NULL THEN 1 ELSE 0 END,
+		last_msg.last_message_time DESC,
+		g.title ASC
+	`
 
-//OR  g.creator_id = gm.invited_by
-	rows, err := db.Query(query, userID, userID)  // Pass userID twice for both conditions
+	rows, err := db.Query(query, userID, userID, userID) // Pass userID for unread join, gm.user_id, and g.creator_id
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, err
@@ -551,7 +597,7 @@ func ListMyGroups(userID string) ([]datamodels.Group, error) {
 	var groups []datamodels.Group
 	for rows.Next() {
 		var group datamodels.Group
-		err := rows.Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID)
+		err := rows.Scan(&group.ID, &group.Title, &group.Description, &group.CreatorID, &group.Count)
 		if err != nil {
 			log.Println("Error scanning row:", err)
 			continue
@@ -1351,4 +1397,140 @@ func GetGroupName(groupID int) (string, error) {
 	}
 
 	return title, nil
+}
+
+
+func IncrementUnreadCount(groupID int, userID string) (int, error) {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return 0, err
+	}
+	defer db.Close()
+
+	// Step 1: Try to update the count
+	updateQuery := `
+		UPDATE unread_messages
+		SET count = count + 1
+		WHERE group_id = ? AND user_id = ?;
+	`
+
+	res, err := db.Exec(updateQuery, groupID, userID)
+	if err != nil {
+		log.Println("Error executing update:", err)
+		return 0, err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		log.Println("Error checking affected rows:", err)
+		return 0, err
+	}
+
+	// Step 2: If no row was updated, insert a new one
+	if rowsAffected == 0 {
+		insertQuery := `
+			INSERT INTO unread_messages (group_id, user_id, count, group_message_id)
+			VALUES (?, ?, 1, 0);
+		`
+		_, err = db.Exec(insertQuery, groupID, userID)
+		if err != nil {
+			log.Println("Error inserting new unread message:", err)
+			return 0, err
+		}
+	}
+
+	// Step 3: Fetch the updated count
+	selectQuery := `
+		SELECT count FROM unread_messages
+		WHERE group_id = ? AND user_id = ?;
+	`
+
+	var count int
+	err = db.QueryRow(selectQuery, groupID, userID).Scan(&count)
+	if err != nil {
+		log.Println("Error fetching updated count:", err)
+		return 0, err
+	}
+
+	return count, nil
+}
+
+
+func SetUserActiveGroup(userID string, groupID int) (error) {
+	db, err := sql.Open("sqlite3", getDBPath())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+		INSERT INTO user_active_group (user_id, group_id)
+		VALUES (?, ?)
+		ON CONFLICT(user_id) DO UPDATE SET group_id = excluded.group_id;
+	`, userID, groupID)
+	return err
+}
+
+
+func ClearUserActiveGroup(userID string, groupID int) error {
+	db, err := sql.Open("sqlite3", getDBPath())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`DELETE FROM user_active_group WHERE user_id = ? AND group_id = ?`, userID, groupID)
+	return err
+}
+
+
+func IsUserInActiveGroup(userID string, groupID int) (bool, error) {
+	db, err := sql.Open("sqlite3", getDBPath())
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+
+	// Query to check if the user and group combination exists in the table
+	var exists bool
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM user_active_group WHERE user_id = ? AND group_id = ?
+		)
+	`
+
+	// Execute the query
+	err = db.QueryRow(query, userID, groupID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+
+func ResetUnreadCount(groupID int, userID string) error {
+	dbPath := getDBPath()
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Println("Error opening DB:", err)
+		return err
+	}
+	defer db.Close()
+
+	updateQuery := `
+		UPDATE unread_messages
+		SET count = 0
+		WHERE group_id = ? AND user_id = ?;
+	`
+
+	_, err = db.Exec(updateQuery, groupID, userID)
+	if err != nil {
+		log.Println("Error resetting unread count:", err)
+		return err
+	}
+
+	return nil
 }

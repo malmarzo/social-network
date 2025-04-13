@@ -119,7 +119,27 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	}
 	msg.GroupMessage.ID = messageID
 	// Now, check if the user is online and send the invite if they are
+	var counter int
+	status,err:= queries.IsUserInActiveGroup(user.ID,msg.GroupMessage.GroupID)
+	if err != nil {
+		log.Printf("cant get if user is active in group or not")
+		return
+
+	}
+	if status {
+		
+
+	}else{
+		count,err0:= queries.IncrementUnreadCount(msg.GroupMessage.GroupID, user.ID)
+		if err0 != nil {
+			log.Printf("Error incrementing the count for user %s: %v", user.ID, err)
+		}
+		counter = count
+	}
+	
 	if exists {
+		
+		msg.GroupMessage.Count = counter
 		err := recipientConn.WriteJSON(msg)
 		if err != nil {
 			log.Printf("Error sending invitation to user %s: %v", user.ID, err)
@@ -137,6 +157,31 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	}
 	
 	mu.Unlock()
+}
+
+
+func SendActiveGroup(msg SocketMessage, userID string) {
+	fmt.Println("active groupMessahe is functioning")
+	mu.Lock()
+	mu.Unlock()
+	//recipientConn, exists := clients[userID]
+	activeGroup:= msg.ActiveGroupMessage.Status
+
+	if activeGroup == "true"{
+		err:= queries.SetUserActiveGroup(  userID, msg.ActiveGroupMessage.GroupID)
+		if err != nil {
+			log.Printf("Error setting user active group")
+			return
+		}
+	}else if activeGroup == "false" {
+		err:= queries.ClearUserActiveGroup(  userID, msg.ActiveGroupMessage.GroupID)
+		if err != nil {
+			log.Printf("Error clearing user active group")
+			return
+		}
+
+	}
+
 }
 //end----------------------------------------------------------------
 // test
