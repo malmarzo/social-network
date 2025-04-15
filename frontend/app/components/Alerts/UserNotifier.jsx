@@ -13,15 +13,6 @@ const UserNotifier = () => {
   useEffect(() => {
     //Adding msg Handlers (set the msg type and the function to handle it)
 
-    addMessageHandler("newUser", (msg) => {
-      alert("New user joined");
-    });
-
-    addMessageHandler("removeUser", (msg) => {
-      alert("User left");
-    });
-
-
     addMessageHandler("new_follow_request", (msg) => {
       showInfo("New Follow Request", {
         duration: 3000,
