@@ -8,7 +8,7 @@ export async function invokeAPI(route, body, method, contentType, queryParams) {
   };
 
   // Handle query parameters
-  let url = `${process.env.NEXT_PUBLIC_API_URL}/${route}`;
+  let url = `http://localhost:8080/${route}`;
   if (queryParams && Object.keys(queryParams).length > 0) {
     const searchParams = new URLSearchParams();
     Object.entries(queryParams).forEach(([key, value]) => {
