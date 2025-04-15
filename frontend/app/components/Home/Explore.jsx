@@ -5,9 +5,16 @@ import { invokeAPI } from "@/utils/invokeAPI";
 import UserLoader from "../loaders/UserLoader";
 import debounce from "lodash/debounce";
 import { PlusCircle } from "lucide-react";
+import { useWebSocket } from "@/context/Websocket";
+import { sendActiveGroupMessage } from "../../groupChat/groupMessage";
+import { sendResetCountMessage } from "../../groupChat/groupMessage";
+import { handleRequestJoin } from "../../groupChat/groupMessage";
+import  DisplayInvitationCard from "../../createGroup/invitationCard"
+import  DisplayRequestCard from "../../requestGroup/RequestCard"
+import EventNotificationCard from "@/app/groupChat/[id]/eventNotificationCard";
 
 const Explore = () => {
-  const [UsersSearch, setUsersSearch] = useState(true);
+  const [UsersSearch, setUsersSearch] = useState(false);
   const [usersList, setUsersList] = useState([]);
   const [allGroupList, setAllGroupList] = useState([]);
   const [myGroupList, setMyGroupList] = useState([]);
@@ -17,7 +24,28 @@ const Explore = () => {
   const [error, setError] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [filteredGroups, setFilteredGroups] = useState([]);
-  const [groupsType, setGroupsType] = useState("all");
+  const [groupsType, setGroupsType] = useState("myGroups");
+  const { addMessageHandler } = useWebSocket();
+  const { sendMessage } = useWebSocket();
+  const [currentUser, setCurrentUser] = useState([]);
+  const [invitations, setInvitations] = useState([]); 
+  const [requests, setRequests] = useState([]);
+  const [eventNotifications, setEventNotifications] = useState([]);
+    
+
+    
+  const getMyGroups = async () => {
+    setLoading(true);
+    const myGroupsMsg = { type: "myGroups" };
+    sendMessage(myGroupsMsg);
+    
+};
+
+const getGroupsToRequest = () => {
+  setLoading(true);
+  const GroupsToRequestMsg = { type: "groupsToRequest" };
+  sendMessage(GroupsToRequestMsg);
+};
 
   //Fetches the users and groups on component mount
   async function fetchData() {
@@ -28,8 +56,7 @@ const Explore = () => {
         console.log(response.data);
         setUsersList(response.data.users_list || []);
         setAllGroupList(response.data.all_groups_list || []);
-        setMyGroupList(response.data.my_groups_list || []);
-        setNotMyGroupList(response.data.not_my_groups_list || []);
+        
 
         // Set the initial filtered lists to the full lists
         setFilteredUsers(response.data.users_list || []);
@@ -46,11 +73,61 @@ const Explore = () => {
       setFilteredUsers([]);
       setFilteredGroups([]);
     }
+    // test if somthing went wrong
+    getMyGroups();
+    // end of test
   }
 
   useEffect(() => {
     fetchData();
-  }, []);
+
+  addMessageHandler("myGroups", (msg) => {
+    setLoading(false);
+    setGroupsType("myGroups");
+    console.log("Received myGroups message:", msg);
+    const updatedMyGroups = Array.isArray(msg.my_groups) ? msg.my_groups : [];
+    setMyGroupList(updatedMyGroups);
+  
+    if (!UsersSearch && groupsType === "myGroups") {
+      setLoading(false);
+      setFilteredGroups(updatedMyGroups); 
+    }
+  });
+
+  addMessageHandler("groupMessage", (msg) => {
+      console.log("New message received, refreshing groups...");
+      getMyGroups();  
+  });
+
+  addMessageHandler("groupsToRequest", (msg) => {
+    setLoading(false);
+    //setGroupsType("notMyGroups");
+    if (!msg.my_groups || msg.my_groups.length === 0) {
+      setNotMyGroupList([]); 
+    } else {
+      setNotMyGroupList(msg.my_groups);
+    }
+    setCurrentUser(msg.userDetails.id)
+
+    if (!UsersSearch && groupsType === "notMyGroups") {
+      setLoading(false);
+      setFilteredGroups(notMyGroupList); // 
+    }
+});
+
+    addMessageHandler("invite", (msg) => {
+      setInvitations((prevNotifications) => [...prevNotifications, msg]);
+    });
+
+    addMessageHandler("request", (msg) => {
+      setRequests((prevNotifications) => [...prevNotifications, msg]);
+    });
+
+    addMessageHandler("eventNotificationMsg", (msg) => {
+      setEventNotifications((prevNotifications) => [...prevNotifications, msg]);
+    });
+
+  }, [addMessageHandler, sendMessage]);
 
   // Debounced search function will run every 300ms after the user changed the input
   const debouncedSearch = useCallback(
@@ -58,7 +135,14 @@ const Explore = () => {
       if (searchTerm.trim() === "") {
         //If the inout is empty then show all the list items
         setFilteredUsers(usersList);
-        setFilteredGroups(allGroupList);
+
+
+       if (groupsType === "all") {
+      } else if (groupsType === "myGroups") {
+        setFilteredGroups(myGroupList);
+      } else {
+        setFilteredGroups(notMyGroupList);
+      }
         return;
       }
 
@@ -72,16 +156,14 @@ const Explore = () => {
       } else {
         let filtered = [];
         if (groupsType === "all") {
-          filtered = allGroupList.filter((group) =>
-            group.name.toLowerCase().includes(term)
-          );
+         
         } else if (groupsType === "myGroups") {
           filtered = myGroupList.filter((group) =>
-            group.name.toLowerCase().includes(term)
+            group.title.toLowerCase().includes(term)
           );
         } else {
           filtered = notMyGroupList.filter((group) =>
-            group.name.toLowerCase().includes(term)
+            group.title.toLowerCase().includes(term)
           );
         }
         setFilteredGroups(filtered);
@@ -91,7 +173,6 @@ const Explore = () => {
       usersList,
       UsersSearch,
       groupsType,
-      allGroupList,
       myGroupList,
       notMyGroupList,
     ]
@@ -111,28 +192,46 @@ const Explore = () => {
   useEffect(() => {
     if (searchValue.trim() === "") {
       setFilteredUsers(usersList);
-      setFilteredGroups(allGroupList);
     } else {
       debouncedSearch(searchValue);
     }
   }, [UsersSearch]);
+
+  useEffect(() => {
+    if (!UsersSearch && groupsType === "myGroups") {
+      setFilteredGroups(myGroupList);
+    }else if(!UsersSearch && groupsType === "notMyGroups"){
+      setFilteredGroups(notMyGroupList);
+
+    }
+  }, [myGroupList,notMyGroupList, UsersSearch, groupsType]);
+
+  const handleDismissNotification = (index) => {
+    setEventNotifications((prevNotifications) =>
+      prevNotifications.filter((_, i) => i !== index) 
+    );
+  };
+  
+
 
   return (
     <div className={styles.wrapper}>
       <h1 className={styles.title}>Explore</h1>
       <div className={styles.container}>
         <div className={styles.toggleContainer}>
-          <button
-            onClick={() => setUsersSearch(true)}
-            className={UsersSearch ? styles.active : styles.inactive}
-          >
-            Users
-          </button>
+         
           <button
             onClick={() => setUsersSearch(false)}
             className={!UsersSearch ? styles.active : styles.inactive}
           >
             Groups
+          </button>
+
+          <button
+            onClick={() => setUsersSearch(true)}
+            className={UsersSearch ? styles.active : styles.inactive}
+          >
+            Users
           </button>
         </div>
 
@@ -163,21 +262,10 @@ const Explore = () => {
           <div>
             <div className={styles.groupTypeButtonsContainer}>
               <div className={styles.groupTypeButtons}>
-                <button
+              <button
                   onClick={() => {
-                    setGroupsType("all");
-                    setFilteredGroups(allGroupList);
-                  }}
-                  className={
-                    groupsType === "all" ? styles.active : styles.inactive
-                  }
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => {
-                    setGroupsType("myGroups");
-                    setFilteredGroups(myGroupList);
+                    getMyGroups();
+                    
                   }}
                   className={
                     groupsType === "myGroups" ? styles.active : styles.inactive
@@ -185,10 +273,11 @@ const Explore = () => {
                 >
                   My Groups
                 </button>
+
                 <button
                   onClick={() => {
-                    setGroupsType("notMyGroups");
-                    setFilteredGroups(notMyGroupList);
+                     setGroupsType("notMyGroups");
+                    getGroupsToRequest();
                   }}
                   className={
                     groupsType === "notMyGroups"
@@ -198,6 +287,19 @@ const Explore = () => {
                 >
                   Not My Groups
                 </button>
+                
+                <button
+                  onClick={() => {
+                     setGroupsType("all");
+                  }}
+                  className={
+                    groupsType === "all" ? styles.active : styles.inactive
+                  }
+                >
+                   🔔
+                </button>
+                
+                
               </div>
             </div>
           </div>
@@ -232,20 +334,110 @@ const Explore = () => {
               <p className={styles.noResults}>No users found</p>
             )}
 
-            {!UsersSearch &&
-              filteredGroups &&
-              filteredGroups.map((group) => (
-                <Link key={group.id} href={`/group/${group.id}`}>
-                  <div className={styles.userCard}>
-                    <img
-                      src="/imgs/defaultAvatar.jpg"
-                      alt={group.name}
-                      className={styles.userImage}
-                    />
-                    <span className={styles.userName}>{group.name}</span>
-                  </div>
-                </Link>
-              ))}
+
+              {!UsersSearch && filteredGroups && (
+                <>
+                  {groupsType === "myGroups" && filteredGroups.map((group) => (
+                    <Link
+                      key={group.id}
+                      href={`/groupChat/${group.id}`}
+                      onClick={() => {
+                        sendActiveGroupMessage("true", group.id, sendMessage);
+                        sessionStorage.setItem("navigatedForwardToGroup", group.id);
+                        sendResetCountMessage(group.id, sendMessage);
+                      }}
+                    >
+                      <div className={styles.userCard}>
+                        <img
+                          src="/imgs/defaultAvatar.jpg"
+                          alt={group.title}
+                          className={styles.userImage}
+                        />
+                        <span className={styles.userName}>{group.title}</span>
+                        {group.count > 0 && (
+                          <span className={styles.groupCount}>{group.count}</span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+
+                  {groupsType === "notMyGroups" && filteredGroups.map((group) => (
+                    <div key={group.id}>
+                      <div className={styles.userCard}>
+                        <img
+                          src="/imgs/defaultAvatar.jpg"
+                          alt={group.title}
+                          className={styles.userImage}
+                        />
+                        <span className={styles.userName}>{group.title}</span>
+                        <button
+                          className={styles.joinButton}
+                          onClick={() => {
+                            handleRequestJoin(group.id, group.creator_id, currentUser, sendMessage);
+                            getGroupsToRequest();
+                          }}
+                        >
+                          Join
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                    {groupsType === "all" ? (
+                      <div className={styles.groupNotification}>
+                      {/* this id for the invitation card */}
+                      <>
+
+                    {invitations && invitations.map((invitation, index) => (
+                      <DisplayInvitationCard
+                        key={index}
+                        invitation={invitation}
+                        onRespond={(userId, accepted) => {
+                          console.log(`User ${userId} ${accepted ? "accepted" : "declined"} the invitation`);
+
+                          // Remove only the responded invitation
+                          setInvitations((prev) => prev.filter((_, i) => i !== index));
+                        }}
+                      />
+                    ))} 
+                        </>
+                        
+                        <>
+                        {/* this for the request card  */}
+                        {requests && requests.map((request, index) => (
+                        <DisplayRequestCard
+                          key={index}
+                          request={request}
+                          onRespond={(userId, accepted) => {
+                            console.log(`User ${userId} ${accepted ? "accepted" : "declined"} the request`);
+
+                            // Remove only the responded request
+                            setRequests((prev) => prev.filter((_, i) => i !== index));
+                          }}
+                        />
+                      ))}
+                        </>
+
+                       {/* this for the event notification  */}
+                        {eventNotifications.map((notification, index) => (
+                                <EventNotificationCard
+                                  key={index}
+                                  content={notification.content}
+                                  onDismiss={() => handleDismissNotification(index)} // Pass index for dismissal
+                                />
+                              ))}
+                        <>
+                       
+                        </>
+                
+                    </div>
+                
+                    ) : null}
+                </>
+              )}
+
+
+
 
             {!UsersSearch &&
               (!filteredGroups || filteredGroups.length === 0) && (

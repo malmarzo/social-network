@@ -7,7 +7,6 @@ export const sendTypingMessage = async (groupID,senderID, sendMessage) => {
             sender_id: senderID,
         }
     };
-    //console.log(user);
     sendMessage(typingMsg);  
 
 };

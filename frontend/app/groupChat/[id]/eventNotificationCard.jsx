@@ -1,122 +1,30 @@
-// import { useState } from 'react';
-
-// const EventNotificationCard = ({ content, onDismiss }) => {
-//   const [isVisible, setIsVisible] = useState(true);
-
-//   // Handle click on the "OK" button to hide the card
-//   const handleDismiss = () => {
-//     setIsVisible(false);
-//     if (onDismiss) {
-//       onDismiss(); // Call onDismiss callback if provided
-//     }
-//   };
-
-//   return (
-//     isVisible && (
-//       <div className="card">
-//         <div className="card-content">
-//           <h3>New Event Notification</h3>
-//           <p>{`"${content}" `}</p>
-//         </div>
-//         <button className="btn" onClick={handleDismiss}>
-//           OK
-//         </button>
-//       </div>
-//     )
-//   );
-// };
-
-// export default EventNotificationCard;
-
 import { useState } from 'react';
 
 const EventNotificationCard = ({ content, onDismiss }) => {
   const [isVisible, setIsVisible] = useState(true);
 
-  // Handle click on the "OK" button to hide the card
+  
   const handleDismiss = () => {
     setIsVisible(false);
     if (onDismiss) {
-      onDismiss(); // Call onDismiss callback if provided
+      onDismiss(); 
     }
   };
 
-  // Inline styles for the card
-  const cardStyle = {
-    backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    width: '300px',
-    padding: '20px',
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    zIndex: 1000,
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  // Inline styles for the button
-  const buttonStyle = {
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '25px',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s ease',
-    marginTop: '15px',
-  };
-
-  // Button hover and active styles
-  const buttonHoverStyle = {
-    backgroundColor: '#0056b3',
-  };
-
-  const buttonActiveStyle = {
-    backgroundColor: '#003f7d',
-    transform: 'translateY(2px)',
-  };
-
-  // Card content style
-  const cardContentStyle = {
-    textAlign: 'center',
-  };
-
-  const handleMouseEnter = (e) => {
-    e.target.style.backgroundColor = buttonHoverStyle.backgroundColor;
-  };
-
-  const handleMouseLeave = (e) => {
-    e.target.style.backgroundColor = buttonStyle.backgroundColor;
-  };
-
-  const handleMouseDown = (e) => {
-    e.target.style.backgroundColor = buttonActiveStyle.backgroundColor;
-    e.target.style.transform = 'translateY(2px)';
-  };
-
-  const handleMouseUp = (e) => {
-    e.target.style.backgroundColor = buttonHoverStyle.backgroundColor;
-    e.target.style.transform = 'none';
-  };
 
   return (
     isVisible && (
-      <div style={cardStyle}>
-        <div style={cardContentStyle}>
+      <div style={styles.cardStyle}>
+        <div style={styles.cardContentStyle}>
           <h3>New Event Notification</h3>
           <p>{`"${content}"`}</p>
         </div>
         <button
-          style={buttonStyle}
+          style={styles.buttonStyle}
           onClick={handleDismiss}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
+         
         >
-          OK
+          Discard
         </button>
       </div>
     )
@@ -125,3 +33,57 @@ const EventNotificationCard = ({ content, onDismiss }) => {
 
 export default EventNotificationCard;
 
+const styles = {
+  cardStyle: {
+    backgroundColor: '#fdfdfd',
+    borderRadius: '16px',
+    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
+    width: '100%',
+    padding: '24px',
+    marginBottom: '16px',
+    fontFamily: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`,
+    boxSizing: 'border-box',
+    transition: 'transform 0.2s ease, box-shadow 0.3s ease',
+  },
+
+  cardHoverStyle: {
+    transform: 'scale(1.02)',
+    boxShadow: '0 10px 24px rgba(0, 0, 0, 0.12)',
+  },
+
+  cardContentStyle: {
+    textAlign: 'left',
+    color: '#333',
+    fontSize: '1.05rem',
+    lineHeight: '1.6',
+  },
+
+  titleStyle: {
+    fontSize: '1.5rem',
+    fontWeight: '600',
+    marginBottom: '12px',
+    color: '#111',
+  },
+
+  subtitleStyle: {
+    fontSize: '1rem',
+    color: '#555',
+    marginBottom: '16px',
+  },
+
+  buttonStyle: {
+    backgroundColor: '#4f46e5', // elegant indigo
+    color: '#ffffff',
+    border: 'none',
+    padding: '10px 24px',
+    borderRadius: '30px',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease, transform 0.2s ease',
+  },
+
+  buttonHoverStyle: {
+    backgroundColor: '#4338ca',
+    transform: 'translateY(-2px)',
+  },
+};

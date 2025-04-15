@@ -72,26 +72,29 @@ export default function DisplayRequestCard({ request,onRespond }) {
 const styles = {
     card: {
         background: "#fff",
-        border: "1px solid black",
+        border: "1px solid #e2e8f0",
         padding: "15px",
-        boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.2)",
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        width: "250px",
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+        width: "100%", // Make it adapt to container width
         borderRadius: "8px",
+        marginBottom: "0.5rem", // spacing between other users
+        fontFamily: "var(--font-geist-sans)",
     },
     acceptBtn: {
-        background: "green",
+        background: "#16a34a", // Tailwind green-600
         color: "white",
         padding: "5px 10px",
         cursor: "pointer",
         marginRight: "5px",
+        border: "none",
+        borderRadius: "4px",
     },
     declineBtn: {
-        background: "red",
+        background: "#dc2626", // Tailwind red-600
         color: "white",
         padding: "5px 10px",
         cursor: "pointer",
+        border: "none",
+        borderRadius: "4px",
     }
 };

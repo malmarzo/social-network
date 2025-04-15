@@ -30,7 +30,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
       let response;
 
       if (isGroup) {
-        //console.log("yunes");
         response = await invokeAPI(
           `groups/chat/${groupID}/groupPostInteractions/${postID}`,
           {},
@@ -179,7 +178,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
     }
   }
 console.log(commentsList);
-  // Clean up preview URL when component unmounts
   useEffect(() => {
     return () => {
       if (imagePreviewUrl) {

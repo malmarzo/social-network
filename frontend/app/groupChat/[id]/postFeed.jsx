@@ -94,7 +94,7 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
     <div
       className={styles.container}
     >
-       <h2 className="text-2xl font-bold mb-4  text-center">Posts & Comments</h2>
+       <h2 className="text-2xl font-bold mb-4  text-center text-blue-400">Posts & Comments</h2>
        {shouldShowCreatePost() && (
                   <button
                     className={styles.createPostButton}
@@ -109,7 +109,6 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
         <div className={styles.headerContainer}>
           {isProfile ? (
             <div className={styles.profileHeader}>
-              {/* <h1 className={styles.title}>Activity</h1> */}
               {shouldShowCreatePost() && (
                 <button
                   className={styles.createPostButton}
@@ -121,7 +120,6 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
             </div>
           ) : (
             <>
-              {/* <h1 className={styles.title}>{isGroup ? "Activity" : "Posts"}</h1> */}
               <nav className={styles.toggleNav}>
                 {!isGroup && (
                   <div className={styles.toggleButtons}>

@@ -42,7 +42,7 @@ func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
 
 	}
 
-	msg.Content = "you are invited by " + getFirstName + " to join the a group called " + getGroupName
+	msg.Content = "you are invited by " + getFirstName + " to join a group called " + getGroupName
 	// Now, check if the user is online and send the invite if they are
 	if exists {
 		err := recipientConn.Conn.WriteJSON(msg)
@@ -184,50 +184,7 @@ func SendActiveGroup(msg SocketMessage, userID string) {
 
 }
 //end----------------------------------------------------------------
-// test
-// func SendPendingGroupMessages(ws *websocket.Conn, userID string,w http.ResponseWriter) {
-// 	pendingGroupMessages, err := queries.GetPendingGroupMessages(userID)
-// 	if err != nil {
-// 		log.Printf("Error fetching pending invites for user %s: %v", userID, err)
-// 		return
-// 	}
-// 	for _, GroupMessage := range pendingGroupMessages {
-		
-// 		senderName, err2 := queries.GetFirstNameById(GroupMessage.SenderID)
-// 		if err2 != nil {
-// 			utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
-// 			mu.Unlock()
-// 			return
-// 		}
-	
-// 		dateTime, err3:= queries.GetMessageCreatedAt(GroupMessage.GroupID,  GroupMessage.SenderID, GroupMessage.RecevierID,GroupMessage.Message)
-// 		if err3 != nil {
-// 			utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
-// 			mu.Unlock()
-// 			return
-// 		}
-// 		GroupMessage.FirstName = senderName
-// 		GroupMessage.DateTime = string(dateTime)
 
-
-// 		groupMsg := SocketMessage{
-// 			Type:    "groupMessage",
-// 			GroupMessage: GroupMessage,
-// 		}
-// 		err := ws.WriteJSON(groupMsg)
-// 		if err != nil {
-// 			log.Printf("Error sending stored invitation to user %s: %v", userID, err)
-// 		}
-
-// 		err4 := queries.UpdateMessageStatusToDelivered(GroupMessage.GroupID,  GroupMessage.SenderID, GroupMessage.RecevierID, GroupMessage.Message)
-// 	if err4 != nil {
-// 		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
-// 		mu.Unlock()
-// 		return
-// 	}
-// 	}
-// }
-//end of test------------------------------------------------------------
 
 // here where i will do the event ----------------------------------------
 func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
@@ -291,11 +248,7 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
 	}
 
 
-	// eventID, err:= queries.GetEventID(msg.EventMessage.GroupID, msg.EventMessage.SenderID, msg.EventMessage.Title, msg.EventMessage.Description)
-	// if err != nil {
-	// 	log.Println("Error retrieving event id", err)
-    //     return
-	// }
+	
 	msg.EventMessage.Day = day
 	fmt.Println(day)
     msg.EventMessage.FirstName = senderName
@@ -440,9 +393,21 @@ func SendPendingRequests(ws *websocket.Conn, userID string) {
 		return
 	}
 	for _, request := range pendingRequests {
+		getFirstName, err2:= queries.GetFirstNameById(request.UserID)
+		if err2 != nil {
+			fmt.Println("Error retreving the requester name", err2)
+			return
+
+		}
+		getGroupName, err3:= queries.GetGroupName(request.GroupID)
+		if err3 != nil {
+			fmt.Println("Error retreving the group name", err3)
+			return
+
+		}
 		requestMsg := SocketMessage{
 			Type:    "request",
-			Content: fmt.Sprintf("Someone requested to join the group %d", request.GroupID),
+			Content: fmt.Sprintf(getFirstName + " has requested to join the group called " + getGroupName),
 			Request: request,
 		}
 		err := ws.WriteJSON(requestMsg)
@@ -562,9 +527,21 @@ func SendPendingInvitations(ws *websocket.Conn, userID string) {
 		return
 	}
 	for _, invite := range pendingInvitations {
+		getFirstName, err2:= queries.GetFirstNameById(invite.InvitedBy)
+		if err2 != nil {
+			fmt.Println("Error retreving the invited by name", err2)
+			return
+
+		}
+		getGroupName, err3:= queries.GetGroupName(invite.GroupID)
+		if err3 != nil {
+			fmt.Println("Error retreving the group name", err3)
+			return
+
+		}
 		inviteMsg := SocketMessage{
 			Type:    "invite",
-			Content: fmt.Sprintf("You have been invited to group %d", invite.GroupID),
+			Content: fmt.Sprintf("you are invited by " + getFirstName + " to join a group called " + getGroupName),
 			Invite:  invite,
 		}
 		err := ws.WriteJSON(inviteMsg)
@@ -609,37 +586,7 @@ func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
 
 
 //--------------------------------------------------------------------------
-// this function to send the groups to request
 
-// func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string){
-// 	fmt.Println("function to provide the groups to request")
-// 			mu.Lock()
-// 			recipientConn, exists := clients[userID]
-// 			if exists {
-			
-// 					myGroups, err := queries.GroupsToRequest(userID)
-// 					if err != nil {
-// 						log.Printf("Error fetching pending requests for user %s: %v", userID, err)
-// 						return
-// 					}
-// 						groupsToRequestMsg := SocketMessage{
-// 							Type:    "groupsToRequest",
-// 							MyGroups: myGroups,
-// 							UserDetails: UserDetails{
-// 								ID: userID,
-// 							},
-// 						}
-// 						err = recipientConn.WriteJSON(groupsToRequestMsg)
-// 						if err != nil {
-// 							log.Printf("Error sending myGroups to user %s: %v", userID, err)
-// 						}
-				
-// 			} else {
-// 				log.Printf("User %s is not online", userID)
-				
-// 			}
-// 			mu.Unlock()
-// }
 
 func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string) {
 	fmt.Println("function to provide the groups to request")

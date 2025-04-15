@@ -29,10 +29,7 @@ export default function CreateGroup() {
   }, []);  // This will run only once when the component mounts
    
     const createGroup = async () => {
-        // if (!title.trim() || !description.trim()) {
-        //     alert("Title and Description are required.");
-        //     return;
-        // }
+       
         const errors = {
             title: title.trim() ? "" : "Title is required",
             description: description.trim() ? "" : "Description is required",
@@ -91,51 +88,54 @@ export default function CreateGroup() {
     
 
     return (
-        <div className="max-w-md mx-auto p-6 bg-gray-900 rounded-lg shadow-md text-white">
-            <h2 className="text-xl font-bold mb-4 text-center">Create a Group</h2>
+
+        <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300">
+        <div className="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-2xl border border-blue-200">
+            <h2 className="text-2xl font-extrabold text-blue-800 mb-6 text-center">Create a Group</h2>
 
             <input 
-                type="text" 
-                placeholder="Title" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-4 mb-4 text-white bg-gray-800 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
+            type="text" 
+            placeholder="Title" 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full p-4 mb-4 text-blue-900 placeholder-blue-400 bg-blue-100 rounded-lg border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:shadow-md transition"
             />
-             {errors.title && (
-                <p className="text-lg font-bold text-red-600 mt-2">{errors.title}</p>
-                )}
-                <br></br>
+            {errors.title && (
+            <p className="text-base font-semibold text-red-600 mt-1">{errors.title}</p>
+            )}
 
             <input 
-                type="text" 
-                placeholder="Description" 
-                value={description} 
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-4 mb-4 text-white bg-gray-800 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
+            type="text" 
+            placeholder="Description" 
+            value={description} 
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-4 mb-4 text-blue-900 placeholder-blue-400 bg-blue-100 rounded-lg border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:shadow-md transition"
             />
             {errors.description && (
-                 <p className="text-lg font-bold text-red-600 mt-2">{errors.description}</p>
-                    )}
-                    <br></br>
-            {/* Pass selectedUsers state and setter to UsersList */}
-            <UsersList 
-                users = {users}
-                selectedUsers={selectedUsers} 
-                setSelectedUsers={setSelectedUsers} 
-            />
-            <br></br>
+            <p className="text-base font-semibold text-red-600 mt-1">{errors.description}</p>
+            )}
+
+        <div className="flex justify-center mt-4">
+        <UsersList 
+            users={users}
+            selectedUsers={selectedUsers} 
+            setSelectedUsers={setSelectedUsers} 
+        />
+        </div>
 
             <button 
-                // onClick={createGroup}
-
-                onClick={() => {
-                    createGroup();
-                    // getGroupsToRequest();
-                }}
-                className="w-full bg-blue-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200"
+            onClick={() => {
+                createGroup();
+                // getGroupsToRequest();
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mt-6 shadow-md hover:shadow-xl transition-all duration-200"
             >
-                Create Group
+            Create Group
             </button>
         </div>
+        </div>
+
+       
     );
 }
+

@@ -14,7 +14,6 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
   const [selectedFollowers, setSelectedFollowers] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
- // const [followersList, setFollowersList] = useState([]);
   const [fetchError, setFetchError] = useState("");
 
   const { sendMessage } = useWebSocket();
@@ -24,23 +23,7 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
     if (isGroup) {
       return;
     }
-    // async function getFollowers() {
-    //   setFetchError("");
-    //   try {
-    //     const response = await invokeAPI("followersList", {}, "GET");
-    //     if (response.code === 200) {
-    //       console.log(response);
-    //       const followers = response.data;
-    //       setFollowersList(followers);
-    //     } else {
-    //       setFetchError("Error fetching data");
-    //     }
-    //   } catch (error) {
-    //     console.error("Failed to fetch followers", error);
-    //     setFetchError("Error fetching data");
-    //   }
-    // }
-    // getFollowers();
+   
   }, []);
 
   async function handleSubmit(e) {
@@ -61,14 +44,7 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
     if (postImage) {
       formData.append("image", postImage);
     }
-    // if (postPrivacy === "private") {
-    //   if (selectedFollowers.length === 0) {
-    //     setErrors({ submit: "Select at least one follower" });
-    //     setIsSubmitting(false);
-    //     return;
-    //   }
-    //   formData.append("followers", JSON.stringify(selectedFollowers));
-    // }
+    
 
     try {
       let response;
@@ -76,31 +52,20 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
         formData.append("groupID", groupID);
         response = await invokeAPI(`groups/chat/${groupID}/createGroupPost`, formData, "POST");
       } else {
-       // response = await invokeAPI("createPost", formData, "POST");
+      
       }
       console.log(response);
       if (response.code === 200) {
-        // Clear form
         setPostTitle("");
         setPostContent("");
         setPostImage(null);
-        //setPostPrivacy("public");
-        //setSelectedFollowers([]);
+       
 
         // Call the onPostCreated callback
         if (onPostCreated) {
           onPostCreated();
         }
         onClose();
-
-        // if (!isGroup) {
-        //   sendMessage({
-        //     type: "new_post",
-        //     userDetails: {
-        //       id: userID,
-        //     },
-        //   });
-        // }
       }
     } catch (error) {
       console.error("Failed to create post", error);
@@ -125,15 +90,6 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
     }
   }
 
-//   const handleFollowerSelection = (followerId) => {
-//     setSelectedFollowers((prev) => {
-//       if (prev.includes(followerId)) {
-//         return prev.filter((id) => id !== followerId);
-//       } else {
-//         return [...prev, followerId];
-//       }
-//     });
-//   };
 
   return (
     <div className={styles.container}>
@@ -234,7 +190,7 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
 };
 
 CreateNewPost.defaultProps = {
-  onPostCreated: () => {}, // Add default prop
+  onPostCreated: () => {}, 
 };
 
 export default CreateNewPost;

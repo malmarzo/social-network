@@ -5,6 +5,7 @@ import ("log"
 datamodels "social-network/pkg/dataModels"
 "fmt"
 "social-network/pkg/utils"
+"sort"
 )
 
 
@@ -1097,12 +1098,12 @@ func OldGroupEvents(groupID int) ([]datamodels.EventMessage, error) {
 	defer db.Close()
 
 	query := `
-		SELECT e.id, e.group_id, e.creator_id, e.title, e.description, e.event_date, e.event_date,
+		SELECT e.id, e.group_id, e.creator_id, e.title, e.description, e.event_date, e.created_at,
 		       eo.id, eo.option_text
 		FROM events e
 		LEFT JOIN event_options eo ON e.id = eo.event_id
 		WHERE e.group_id = ?
-		ORDER BY e.created_at DESC
+		ORDER BY e.event_date DESC
 	`
 	
 	rows, err := db.Query(query, groupID)
@@ -1170,6 +1171,11 @@ func OldGroupEvents(groupID int) ([]datamodels.EventMessage, error) {
 	for _, event := range eventMap {
 		eventHistory = append(eventHistory, *event)
 	}
+
+	sort.Slice(eventHistory, func(i, j int) bool {
+		return eventHistory[i].DateTime > eventHistory[j].DateTime
+	})
+	
 
 	return eventHistory, nil
 }

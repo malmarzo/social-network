@@ -10,7 +10,7 @@ export default function UsersList({ users, selectedUsers, setSelectedUsers }) {
     };
 
     return (
-        <div className="w-full max-w-md bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700">
+        <div className="w-full max-w-md bg-blue-400 p-6 rounded-xl shadow-lg border border-gray-700">
     <h2 className="text-white text-xl font-semibold mb-4">Select Users to Invite</h2>
     
     <div className="max-h-64 overflow-y-auto divide-y divide-gray-700 rounded-md border border-gray-700">
@@ -20,8 +20,8 @@ export default function UsersList({ users, selectedUsers, setSelectedUsers }) {
             onClick={() => toggleUserSelection(user)}
             className={`p-3 cursor-pointer transition duration-200 ease-in-out ${
             selectedUsers.includes(user.id)
-                ? "bg-blue-600 text-white"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                ? "bg-blue-300 text-white"
+                : "bg-blue-700 text-white hover:bg-gray-700"
             }`}
         >
             {user.nickname}

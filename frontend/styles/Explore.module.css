@@ -267,3 +267,55 @@
     margin-bottom: 1rem;
   }
 }
+
+.groupCount {
+  background-color: #25d366;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+  margin-left: auto; /* this pushes it to the far right */
+}
+
+.joinButton {
+  background-color: #3949ab;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+  margin-left: auto;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.joinButton:hover {
+  background-color: #3949ab;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.joinButton:active {
+  transform: scale(0.95);
+}
+.groupNotification {
+  z-index: 2; /* Float above .userCard */
+  position: relative;
+  max-width: 100%;
+  word-wrap: break-word;
+}

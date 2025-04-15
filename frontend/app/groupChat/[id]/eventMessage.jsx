@@ -1,6 +1,5 @@
 export const sendEventMessage = async (groupID,senderID,title,description, dateTime, options,sendMessage) => {
-    // 
-    //console.log("the function event is functioning");
+   
     const eventMsg = {
         type: "eventMessage",
         event_message: {
@@ -12,7 +11,7 @@ export const sendEventMessage = async (groupID,senderID,title,description, dateT
              sender_id: senderID,
         }
     };
-    //console.log(eventMsg);
+    
     sendMessage(eventMsg);  
 
 };

@@ -5,21 +5,19 @@ import { useWebSocket } from "@/context/Websocket";
 
 
 export const sendInvitations = async (users, sendMessage, groupID,invitedBy) => {
-    // const { sendMessage } = useWebSocket();
     users.forEach((user) => {
         console.log("the function is functioning");
         const inviteMsg = {
             type: "invite",
-           //invited_user: user, // Ensure it's a single recipient ID
             content: "",
             invite: {
                 group_id: groupID,
-                user_id: user,  // The user being invited
-                invited_by: invitedBy  // The user who is sending the invite
+                user_id: user,  
+                invited_by: invitedBy 
             }
         };
         console.log(user);
-        sendMessage(inviteMsg);  // Send each invitation
+        sendMessage(inviteMsg);  
     });
 };
 

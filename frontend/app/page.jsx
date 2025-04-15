@@ -19,9 +19,7 @@ export default function Home() {
       <div className={styles.searchDiv}>
         <Explore />
       </div>
-      <div>
-      <AuthButton text="group page " href="/groupPage" />
-      </div>
+      
     </div>
   );
 }
