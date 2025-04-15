@@ -1,0 +1,14 @@
+# Ignore everything by default
+**
+
+# Allow frontend and backend directories
+!frontend/
+!backend/
+
+# But ignore unnecessary parts inside it
+frontend/node_modules
+frontend/.next
+frontend/.env*
+frontend/.DS_Store
+frontend/npm-debug.log
+frontend/yarn-error.log

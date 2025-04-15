@@ -35,6 +35,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			MaxAge:   86400, // 1 day
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
+			Secure: false,
 		})
 
 		// Call the next handler
