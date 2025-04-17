@@ -2,25 +2,25 @@ package middleware
 
 import (
 	"net/http"
+	datamodels "social-network/pkg/dataModels"
 	"social-network/pkg/db/queries"
+	"social-network/pkg/utils"
 )
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Log the request path for debugging
-		// log.Printf("AuthMiddleware: Processing request for path: %s", r.URL.Path)
 
 		// Get the session cookie
 		cookie, err1 := r.Cookie("session_id")
 		if err1 != nil {
-			http.Error(w, "Unauthorized: No session cookie", http.StatusUnauthorized)
+			utils.SendResponse(w, datamodels.Response{Code: http.StatusUnauthorized, Status: "Unauthorized", ErrorMsg: "Unauthorized"})
 			return
 		}
 
 		// Validate the session and get the user ID
 		userID, err2 := queries.ValidateSession(cookie.Value)
 		if err2 != nil {
-			http.Error(w, "Unauthorized: Invalid session", http.StatusUnauthorized)
+			utils.SendResponse(w, datamodels.Response{Code: http.StatusUnauthorized, Status: "Unauthorized", ErrorMsg: "Unauthorized"})
 			return
 		}
 
@@ -35,7 +35,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			MaxAge:   86400, // 1 day
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
-			Secure: false,
+			Secure:   false,
 		})
 
 		// Call the next handler
