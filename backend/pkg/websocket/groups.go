@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
 	"net/http"
 	"social-network/pkg/db/queries"
@@ -16,7 +16,6 @@ import (
 // this function to send the list of my groups
 
 func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
-	fmt.Println("Request to join group function triggered")
 			mu.Lock()
 			recipientConn, exists := clients[userID]
 			if exists {
@@ -32,7 +31,6 @@ func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
 							MyGroups: myGroups,
 							
 						}
-						//fmt.Println("startssssss",myGroupsMsg)
 						err = recipientConn.Conn.WriteJSON(myGroupsMsg)
 						if err != nil {
 							log.Printf("Error sending myGroups to user %s: %v", userID, err)
@@ -50,7 +48,6 @@ func SendMyGroups(msg SocketMessage, w http.ResponseWriter, userID string){
 // here i will send the group memebers inside the group chat
 
 func SendGroupMembers(msg SocketMessage, w http.ResponseWriter) {
-	fmt.Println("SendgroupMembers is functioning")
 	mu.Lock()
 	defer mu.Unlock()
 

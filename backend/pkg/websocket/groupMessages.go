@@ -7,7 +7,7 @@ import (
 	"social-network/pkg/db/queries"
 	//"sync"
 	//"github.com/gorilla/websocket"
-	"social-network/pkg/utils"
+	//"social-network/pkg/utils"
 	datamodels "social-network/pkg/dataModels"
 		
 )
@@ -15,25 +15,21 @@ import (
 
 //here to send the group message------------------------------------
 func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
-	fmt.Println("groupMessageChat is functioning")
 	mu.Lock()
 	getGroupMembers, err7:= queries.GroupMembers(msg.GroupMessage.GroupID)
 	if err7 != nil {
 		fmt.Println("Error retreving group members", err7)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
 	CreatorID, err:= queries.GetCreatorIDByGroupID(msg.GroupMessage.GroupID)
 	if err != nil {
 		fmt.Println("Error retreving CreatorID", err)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
 	getFirstName, err8:= queries.GetFirstNameById(CreatorID)
 	if err8 != nil {
 		fmt.Println("Error retriving first name by id", err8)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
@@ -49,20 +45,20 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	
 	err1 := queries.InsertGroupMessage(msg.GroupMessage.GroupID,  msg.GroupMessage.SenderID, user.ID,msg.GroupMessage.Message)
 	if err1 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Println("Error inserting group message into the database", err1)
 		mu.Unlock()
 		return
 	}
 	senderName, err2 := queries.GetFirstNameById(msg.GroupMessage.SenderID)
 	if err2 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Println("Error getting the first name by id", err2)
 		mu.Unlock()
 		return
 	}
 
 	dateTime, err3:= queries.GetMessageCreatedAt(msg.GroupMessage.GroupID,  msg.GroupMessage.SenderID, user.ID,msg.GroupMessage.Message)
 	if err3 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Println("Error getting the message created at ", err3)
 		mu.Unlock()
 		return
 	}
@@ -70,11 +66,30 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	msg.GroupMessage.DateTime = string(dateTime)
 	messageID, err4:= queries.GetMessageGroupId(msg.GroupMessage.GroupID,  msg.GroupMessage.SenderID, user.ID,msg.GroupMessage.Message)
 	if err4 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Println("Error getting the message group id", err4)
 		mu.Unlock()
 		return
 	}
 	msg.GroupMessage.ID = messageID
+	groupName, err:= queries.GetGroupName(msg.GroupMessage.GroupID)
+	if err != nil {
+		fmt.Println("Error getting group name", err)
+        return
+	}
+	msg.GroupMessage.GroupName = groupName
+
+	msg2:= SocketMessage{
+		Type: "groupNotifier", 
+		Notifier : datamodels.GroupNotifier{
+			//ID:       msg.GroupMessage.GroupID,
+			SenderID:  msg.GroupMessage.SenderID,
+			FirstName: senderName,
+			GroupName:  groupName,
+		},
+
+	}
+	
+
 	// Now, check if the user is online and send the invite if they are
 	var counter int
 	status,err:= queries.IsUserInActiveGroup(user.ID,msg.GroupMessage.GroupID)
@@ -103,10 +118,16 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 		}
 		err2 := queries.UpdateMessageStatusToDelivered(msg.GroupMessage.GroupID,  msg.GroupMessage.SenderID,user.ID, msg.GroupMessage.Message)
 	if err2 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Println("Error UpdateMessageStatusToDelivered", err2)
 		mu.Unlock()
 		return
 	}
+
+	err3 := recipientConn.Conn.WriteJSON(msg2)
+		if err3 != nil {
+			log.Printf("Error sending notifier to user")
+			return
+		}
 
 	} else {
 		log.Printf("User %s is not online", user.ID)
@@ -118,7 +139,6 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 
 
 func SendActiveGroup(msg SocketMessage, userID string) {
-	fmt.Println("active groupMessahe is functioning")
 	mu.Lock()
 	mu.Unlock()
 	//recipientConn, exists := clients[userID]
@@ -146,25 +166,21 @@ func SendActiveGroup(msg SocketMessage, userID string) {
 
 // test real time typing
 func SendTypingMessage(msg SocketMessage, w http.ResponseWriter) {
-	fmt.Println("sendTyping is functioning")
 	mu.Lock()
 	getGroupMembers, err7:= queries.GroupMembers(msg.TypingMessage.GroupID)
 	if err7 != nil {
 		fmt.Println("Error retreving group members", err7)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
 	CreatorID, err:= queries.GetCreatorIDByGroupID(msg.TypingMessage.GroupID)
 	if err != nil {
 		fmt.Println("Error retreving CreatorID", err)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 	}
 	getFirstName, err8:= queries.GetFirstNameById(CreatorID)
 	if err8 != nil {
 		fmt.Println("Error retriving first name by id", err8)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
@@ -181,7 +197,7 @@ func SendTypingMessage(msg SocketMessage, w http.ResponseWriter) {
 	
 	senderName, err2 := queries.GetFirstNameById(msg.TypingMessage.SenderID)
 	if err2 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Printf("Error GetFirstNameById ")
 		mu.Unlock()
 		return
 	}

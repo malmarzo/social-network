@@ -6,7 +6,7 @@ import (
 	"social-network/pkg/db/queries"
 	"social-network/pkg/utils"
 	"strings"
-	"fmt"
+	//"fmt"
 	"log"
 )
 
@@ -50,7 +50,7 @@ func GroupPostInteractionsHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	fmt.Println(stats)
+	
 	utils.SendResponse(w, datamodels.Response{
 		Code:   http.StatusOK,
 		Status: "Success",

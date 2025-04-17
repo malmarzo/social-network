@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/base64"
-	"fmt"
+	//"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -48,7 +48,6 @@ func NewGroupComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commentID := utils.GenerateUUID()
-	fmt.Println("comment ID" + commentID)
 	if commentID == "" {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
 		return
@@ -171,15 +170,11 @@ func NewGroupComment(w http.ResponseWriter, r *http.Request) {
 // second function
 
 func GetGroupPostComments(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("this function is functioning")
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	//Getting the post id from the path parameter
-	// postID := r.URL.Path[len("/comments/"):]
-	// fmt.Println(postID)
 	pathParts := strings.Split(r.URL.Path, "/")
 	postID := pathParts[len(pathParts)-1] // Get postID from /like/{postID}
 
@@ -210,7 +205,7 @@ func GetGroupPostComments(w http.ResponseWriter, r *http.Request) {
 			comments[i].ImageDataURL = nil
 		}
 	}
-fmt.Println(comments)
+
 	utils.SendResponse(w, datamodels.Response{
 		Code:   http.StatusOK,
 		Status: "Success",

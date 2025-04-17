@@ -47,6 +47,7 @@ type SocketMessage struct {
 	Status        string        `json:"status,omitempty"`
 	ClientMsgID   string        `json:"clientMsgId,omitempty"`
 	FollowRequest FollowRequest `json:"followRequest"`
+	Notifier      datamodels.GroupNotifier   `json:"group_notifier"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -118,13 +119,13 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 
 //-------------------------------------------------------------------------------------------
 	// here i will add the code responsible for sending invition when user logs in
-	SendPendingInvitations(ws,userID)
+	//SendPendingInvitations(ws,userID)
 	// here i will add the code responsible for sending the pending requests
-	SendPendingRequests(ws,userID)
+	//SendPendingRequests(ws,userID)
 	// here i will add the code responsible for sending the pending groupMessages
 	//SendPendingGroupMessages(ws,userID,w)	
 	// here i will send the event notification 
-	SendPendingEventNotifications(ws,userID)	
+	//SendPendingEventNotifications(ws,userID)	
 //--------------------------------------------------------------------------------------------
 
 	mu.Unlock()
@@ -171,13 +172,17 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 			msg.Timestamp = time.Now().Format(time.RFC3339)
 		}
 
-		fmt.Println("Received message:", msg) // Debugging print
-
 		if msg.Type == "invite" {
 			InvitePeople(msg,w)
 			
 		}else if msg.Type == "request" {
 				RequestToJoinGroup(msg,w)
+		}else if msg.Type == "getInvite" {
+			SendPendingInvitations(ws,userID)
+		}else if msg.Type == "getRequest" {
+			SendPendingRequests(ws,userID)
+		}else if msg.Type == "getEvents" {
+			SendPendingEventNotifications(ws,userID)
 		}else if  msg.Type == "myGroups" {
 			SendMyGroups(msg,w, userID)
 			//BroadcastMyGroupsUpdate()

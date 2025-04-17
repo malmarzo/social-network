@@ -12,6 +12,9 @@ import { handleRequestJoin } from "../../groupChat/groupMessage";
 import  DisplayInvitationCard from "../../createGroup/invitationCard"
 import  DisplayRequestCard from "../../requestGroup/RequestCard"
 import EventNotificationCard from "@/app/groupChat/[id]/eventNotificationCard";
+import { getInvitations } from "@/app/createGroup/sendInvitation";
+import { getRequests } from "../../requestGroup/RequestCard";
+import { getEvents } from "../../groupChat/groupMessage";
 
 const Explore = () => {
   const [UsersSearch, setUsersSearch] = useState(false);
@@ -31,7 +34,7 @@ const Explore = () => {
   const [invitations, setInvitations] = useState([]); 
   const [requests, setRequests] = useState([]);
   const [eventNotifications, setEventNotifications] = useState([]);
-    
+  
 
     
   const getMyGroups = async () => {
@@ -40,6 +43,8 @@ const Explore = () => {
     sendMessage(myGroupsMsg);
     
 };
+
+//await sendInvitations(selectedUsers,sendMessage,response.group.id,response.group.creator_id);
 
 const getGroupsToRequest = () => {
   setLoading(true);
@@ -76,15 +81,19 @@ const getGroupsToRequest = () => {
     // test if somthing went wrong
     getMyGroups();
     // end of test
+    
+   
+    
+   
   }
 
   useEffect(() => {
+    
     fetchData();
 
   addMessageHandler("myGroups", (msg) => {
     setLoading(false);
     setGroupsType("myGroups");
-    console.log("Received myGroups message:", msg);
     const updatedMyGroups = Array.isArray(msg.my_groups) ? msg.my_groups : [];
     setMyGroupList(updatedMyGroups);
   
@@ -95,7 +104,6 @@ const getGroupsToRequest = () => {
   });
 
   addMessageHandler("groupMessage", (msg) => {
-      console.log("New message received, refreshing groups...");
       getMyGroups();  
   });
 
@@ -118,7 +126,7 @@ const getGroupsToRequest = () => {
     addMessageHandler("invite", (msg) => {
       setInvitations((prevNotifications) => [...prevNotifications, msg]);
     });
-
+   
     addMessageHandler("request", (msg) => {
       setRequests((prevNotifications) => [...prevNotifications, msg]);
     });
@@ -180,6 +188,7 @@ const getGroupsToRequest = () => {
 
   // Update search when input changes
   useEffect(() => {
+    
     debouncedSearch(searchValue);
 
     // Will clean up the debounced function
@@ -198,6 +207,7 @@ const getGroupsToRequest = () => {
   }, [UsersSearch]);
 
   useEffect(() => {
+   
     if (!UsersSearch && groupsType === "myGroups") {
       setFilteredGroups(myGroupList);
     }else if(!UsersSearch && groupsType === "notMyGroups"){
@@ -211,7 +221,11 @@ const getGroupsToRequest = () => {
       prevNotifications.filter((_, i) => i !== index) 
     );
   };
-  
+
+  // useEffect(() => {
+  //   getInvitations(sendMessage);
+  //   getRequests(sendMessage);
+  // }, []);
 
 
   return (
@@ -291,6 +305,13 @@ const getGroupsToRequest = () => {
                 <button
                   onClick={() => {
                      setGroupsType("all");
+                     setInvitations([]);
+                     getInvitations(sendMessage);
+                     setRequests([]);
+                     getRequests(sendMessage);
+                     //test
+                     setEventNotifications([]);
+                     getEvents(sendMessage);
                   }}
                   className={
                     groupsType === "all" ? styles.active : styles.inactive

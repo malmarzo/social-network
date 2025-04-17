@@ -12,6 +12,7 @@ const UserNotifier = () => {
 
   useEffect(() => {
     //Adding msg Handlers (set the msg type and the function to handle it)
+    
 
     addMessageHandler("new_follow_request", (msg) => {
       showInfo("New Follow Request", {
@@ -27,6 +28,45 @@ const UserNotifier = () => {
         position: "top-right",
         link: `/chat`,
       });
+    });
+
+ 
+    addMessageHandler("groupNotifier", (msg) => {
+
+        if (msg.group_notifier.sender_id != userID){
+                showInfo(`${msg.group_notifier.first_name} sent a message in a group called ${msg.group_notifier.group_name}`, {
+                    duration: 3000,
+                    position: "top-right",
+                    //link: `/groupChat/${msg.group_notifier.id}`,
+                });
+           } 
+    });
+  
+    addMessageHandler("inviteNotifier", (msg) => {
+      showInfo(`${msg.content}`, {
+        duration: 3000,
+        position: "top-right",
+        //link: `/chat`,
+      });
+      
+    });
+
+    addMessageHandler("requestNotifier", (msg) => {
+      showInfo(`${msg.content}`, {
+        duration: 3000,
+        position: "top-right",
+        //link: `/chat`,
+      });
+      
+    });
+
+    addMessageHandler("eventNotifier", (msg) => {
+      showInfo(`${msg.content}`, {
+        duration: 3000,
+        position: "top-right",
+        //link: `/chat`,
+      });
+      
     });
 
   }, [addMessageHandler]);

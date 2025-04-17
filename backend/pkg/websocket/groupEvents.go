@@ -18,8 +18,6 @@ import (
 
 // here where i will do the event ----------------------------------------
 func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
-    fmt.Println("sendEventMessage is functioning")
-
     mu.Lock()
     defer mu.Unlock() // Ensure mutex unlocks at the end of the function
 
@@ -80,14 +78,27 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
 
 	
 	msg.EventMessage.Day = day
-	fmt.Println(day)
     msg.EventMessage.FirstName = senderName
     msg.EventMessage.CreatedAt = string(createdAt)
 	msg.EventMessage.EventID = eventID
+
+    getGroupName, err3:= queries.GetGroupName(msg.EventMessage.GroupID)
+	if err3 != nil {
+		fmt.Println("Error retreving the group name", err3)
+        return
+
+	}
+
 	
 	eventNotificationMsg := SocketMessage{
 		Type:    "eventNotificationMsg",
-		Content: fmt.Sprintf("there is new event called %s created by %s", msg.EventMessage.Title,senderName),
+		Content: fmt.Sprintf("there is new event called %s created by %s in group called %s", msg.EventMessage.Title,senderName,getGroupName),
+		//EventNotification: event,
+	}
+
+    eventNotificationMsg2 := SocketMessage{
+		Type:    "eventNotifier",
+		Content: fmt.Sprintf("there is new event called %s created by %s in group called %s", msg.EventMessage.Title,senderName,getGroupName),
 		//EventNotification: event,
 	}
     for _, user := range getGroupMembers {
@@ -100,7 +111,8 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
         if exists {
             // User is online; send the message via WebSocket
             if err := recipientConn.Conn.WriteJSON(msg); err != nil {
-                log.Printf("Error sending message to user %s: %v", user.ID, err)	
+                log.Printf("Error sending message to user %s: %v", user.ID, err)
+                	
             }
 			if !(user.ID == msg.EventMessage.SenderID ){
 				err = recipientConn.Conn.WriteJSON(eventNotificationMsg)
@@ -109,6 +121,12 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
 				log.Printf("Error sending stored eventNotification to user %s: %v", user.ID, err)
 				return
 			}
+
+            err2 := recipientConn.Conn.WriteJSON(eventNotificationMsg2)
+            if err2 != nil {
+                log.Printf("Error sending eventNotifier to user %s: %v", user.ID, err2)
+				return
+            }
 
 			}
 			
@@ -162,7 +180,6 @@ func SendPendingEventNotifications(ws *websocket.Conn, userID string) {
 //--------------------------------------------------------------------
 // here i will add the handleResponseEvent
 func SendEventResponseMessage(msg SocketMessage, w http.ResponseWriter) {
-    fmt.Println("sendEventResponseMessage is functioning")
 
     mu.Lock()
     defer mu.Unlock() // Ensure mutex unlocks at the end of the function
@@ -172,7 +189,6 @@ func SendEventResponseMessage(msg SocketMessage, w http.ResponseWriter) {
         log.Println("Error retrieving group members", err7)
         return // Remove HTTP response write since WebSocket is used
     }
-	fmt.Println(getGroupMembers)
     CreatorID, err := queries.GetCreatorIDByGroupID(msg.EventResponseMessage.GroupID)
     if err != nil {
         log.Println("Error retrieving CreatorID", err)

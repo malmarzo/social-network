@@ -65,7 +65,7 @@ func ConnectDB() *sql.DB {
 //     }
 
 //     // Force the database version to 14
-//     if err := m.Force(35); err != nil {
+//     if err := m.Force(47); err != nil {
 //         log.Println("Failed to force version:", err)
 //     } else {
 //         log.Println("Database forced to version 14")

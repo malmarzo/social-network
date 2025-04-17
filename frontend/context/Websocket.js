@@ -97,7 +97,10 @@ const WebSocketProvider = ({ children }) => {
     handlersRef.current = {
       ...handlersRef.current,
       [type]: handler,
+      
     };
+    //console.log(` Handler added for type: ${type}`);
+
   };
 
   // Function to send messages

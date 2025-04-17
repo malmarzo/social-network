@@ -12,6 +12,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { sendActiveGroupMessage } from "@/app/groupChat/groupMessage";
 import { useEffect, useState } from "react";
 
+
+
 const Header = () => {
   const { isLoggedIn, loading } = useAuth();
   const router = useRouter(); // 
@@ -29,6 +31,7 @@ const Header = () => {
             sendActiveGroupMessage("false", groupId, sendMessage);
             sessionStorage.removeItem("navigatedForwardToGroup");
           }
+         
         }}
         
         >

@@ -7,7 +7,6 @@ import { useWebSocket } from "@/context/Websocket";
 export default function DisplayRequestCard({ request,onRespond }) {
     const [showCard, setShowCard] = useState(false);
     const { sendMessage } = useWebSocket();
-    // const { sendMessage } = useWebSocket();
 
     useEffect(() => {
         if (request) {
@@ -17,14 +16,7 @@ export default function DisplayRequestCard({ request,onRespond }) {
 
     
     const handleResponse = async (accepted) => {
-
-       
         try {
-            
-            // Call the Golang API
-           // console.log(invitation.invite.invited_by);
-           console.log( request.request.group_id);
-           console.log(request.request.user_id);
           const response = await invokeAPI("groups/request", {
             "type": "request",
                     "request": {
@@ -39,17 +31,7 @@ export default function DisplayRequestCard({ request,onRespond }) {
 
             // Call parent function to remove the invitation from the list
             onRespond(response.user_id, accepted);
-            // not tested 
              await  sendGroupMembersMessage(request.request.group_id, sendMessage); 
-            // if (!accepted) {
-            //     // Request updated group list
-            //     const getGroupsToRequest = () => {
-            //         const GroupsToRequestMsg = { type: "groupsToRequest" };
-            //         sendMessage(GroupsToRequestMsg);
-            //     };
-            //     getGroupsToRequest();
-            // }
-
             // Hide the card after responding
             setShowCard(false);
         } catch (error) {
@@ -68,6 +50,16 @@ export default function DisplayRequestCard({ request,onRespond }) {
     );
 }
 
+
+export const getRequests = async (sendMessage) => {
+    const GetRequestMsg = {
+        type: "getRequest",
+    };
+    sendMessage(GetRequestMsg);  
+
+};
+
+
 // CSS styles as JS object
 const styles = {
     card: {
@@ -75,13 +67,13 @@ const styles = {
         border: "1px solid #e2e8f0",
         padding: "15px",
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-        width: "100%", // Make it adapt to container width
+        width: "100%", 
         borderRadius: "8px",
-        marginBottom: "0.5rem", // spacing between other users
+        marginBottom: "0.5rem", 
         fontFamily: "var(--font-geist-sans)",
     },
     acceptBtn: {
-        background: "#16a34a", // Tailwind green-600
+        background: "#16a34a", 
         color: "white",
         padding: "5px 10px",
         cursor: "pointer",
@@ -90,7 +82,7 @@ const styles = {
         borderRadius: "4px",
     },
     declineBtn: {
-        background: "#dc2626", // Tailwind red-600
+        background: "#dc2626", 
         color: "white",
         padding: "5px 10px",
         cursor: "pointer",

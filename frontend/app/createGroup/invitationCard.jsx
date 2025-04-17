@@ -18,7 +18,6 @@ export default function DisplayInvitationCard({ invitation,onRespond }) {
        
         try {
             
-            console.log(invitation.invite.invited_by);
           const response = await invokeAPI("groups/invitation", {
             "type": "invite",
                  "userDetails": {

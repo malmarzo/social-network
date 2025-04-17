@@ -69,7 +69,17 @@ type GroupMessage struct {
 	FirstName		 string    	 `json:"first_name"`
 	DateTime		 string       `json:"date_time"`
 	Count  			 int 			 `json:"count"`
+	GroupName		 string			 `json:"group_name"`
+	CurrentUser      string         `json:"current_user"`
 }
+
+type GroupNotifier struct {
+	//ID 				 int		`json:"id"`
+	SenderID		 string 	`json:"sender_id"`
+	FirstName		 string    	 `json:"first_name"`
+	GroupName		 string			 `json:"group_name"`
+}
+
 
 type TypingMessage struct {
     GroupID          int       `json:"group_id"`

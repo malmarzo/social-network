@@ -16,6 +16,9 @@ import  PostsFeed  from "./postFeed"
 import { sendUsersInvitationListMessage } from "../groupMessage";
 import { sendGroupMembersMessage } from "../groupMessage";
 import { sendActiveGroupMessage } from "../groupMessage";
+import { useNotification } from "@/context/NotificationContext";
+import { useAuth } from "@/context/AuthContext";
+import { stringify } from "postcss";
 
 export default function GroupChat() {
     const router = useRouter();
@@ -43,6 +46,8 @@ export default function GroupChat() {
      const [activeSection, setActiveSection] = useState("events");
      const [showEventForm, setShowEventForm] = useState(false);
       const [errors, setErrors] = useState({});
+      const { showInfo } = useNotification();
+      const { userID } = useAuth();
       
      const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" , block: "end" });
@@ -53,11 +58,12 @@ export default function GroupChat() {
       
     }, [messages]);
 
+    
+
     useEffect(() => {
        
         const handlePopState = () => {
             // User pressed browser back button
-            console.log("Back button pressed");
             sendActiveGroupMessage("false", parseInt(id), sendMessage);
             sessionStorage.setItem("navigatedForwardToGroup",parseInt(id));
 
@@ -73,7 +79,6 @@ export default function GroupChat() {
             }    
             
             const response = await invokeAPI(`groups/chat/${id}`, null, "GET");
-            console.log("Response status:", response.status);
 
             if (response.code === 200) {
                 
@@ -85,12 +90,14 @@ export default function GroupChat() {
                 }
 
                 if (response.group && response.group.event_history) {
+                    console.log(response.group.event_history);
                     setEvents(response.group.event_history.map((msg) => ({ event_message: msg })));
                 }
                 
+                
                 if (response.group && response.group.event_responses_history) {
-                    console.log("hello");
                     const eventResponses = response.group.event_responses_history.map((msg) => ({
+                        
                         option_id: msg.option_id,
                         sender_id: msg.sender_id,
                         first_name: msg.first_name,
@@ -116,10 +123,12 @@ export default function GroupChat() {
                 router.push("/"); // Redirect if group not found
             }
         };
+
        
           addMessageHandler("groupMessage", (msg) => {
-            setMessages((prev) => [...prev, msg]); 
            
+            setMessages((prev) => [...prev, msg]);
+            
         });
 
         addMessageHandler("typingMessage", (msg) => {
@@ -201,7 +210,7 @@ export default function GroupChat() {
         try {
             await sendInvitations(selectedUsers,sendMessage,group.group.id, group.group.creator_id);
             await  sendUsersInvitationListMessage(id, sendMessage);
-            alert("Invitations sent successfully!");
+            //alert("Invitations sent successfully!");
             setSelectedUsers([]); 
         } catch (error) {
             console.error("Error sending invitations:", error);
@@ -265,7 +274,6 @@ export default function GroupChat() {
             return;
           }
         sendEventMessage(group.group.id, group.group.current_user, title, description, dateTime, formattedOptions, sendMessage);
-        console.log("Event is sent");
         setErrors({});
         setTitle('');
         setDescription('');
@@ -363,23 +371,50 @@ export default function GroupChat() {
             <div className="mt-6 bg-blue-300 p-4 rounded-lg border border-blue-300">
                 <h3 className="text-xl font-bold text-white">💬 Chat messages</h3>
                 {/* Messages display */}
-                <div className="h-60 overflow-y-auto bg-gradient-to-br from-white to-gray-100 p-3 rounded-lg border border-gray-300 mt-2">
+                <div className="h-80 overflow-y-auto  bg-blue-100 bg-blue-100 p-3 rounded-lg border border-gray-300 mt-2">
                     {messages.length > 0 ? (
                     messages.map((msg) => (
                         msg.group_message ? (  // Add this check
-                            <div key={msg.group_message.id} className={`mb-3 ${msg.group_message.sender_id === group.group.current_user ? "text-right" : ""}`}>
-                                <p className={`text-sm font-semibold ${msg.group_message.sender_id === group.group.current_user ? "text-blue-600" : "text-blue-400"}`}>
-                                    {msg.group_message.sender_id === group.group.current_user ? "You" : msg.group_message.first_name}
-                                </p>
-                                <p className="text-sm text-white-300">{msg.group_message.message}</p>
-                                <p className="text-xs text-white-500">{msg.group_message.date_time}</p>
+                            <div
+                            key={msg.group_message.id}
+                            className={`mb-3 flex flex-col ${
+                              msg.group_message.sender_id === group.group.current_user ? "items-end" : "items-start"
+                            }`}
+                          >
+                            {/* Sender */}
+                            <p
+                              className={`text-sm font-semibold mb-1 ${
+                                msg.group_message.sender_id === group.group.current_user
+                                  ? "text-blue-600"
+                                  : "text-blue-400"
+                              }`}
+                            >
+                              {msg.group_message.sender_id === group.group.current_user ? "You" : msg.group_message.first_name}
+                            </p>
+                  
+                            {/* 💬 Message Bubble */}
+                            <div
+                              className={`max-w-xs px-4 py-2 rounded-xl relative text-sm shadow ${
+                                msg.group_message.sender_id === group.group.current_user
+                                  ? "bg-blue-500 text-white rounded-br-none"
+                                  : "bg-blue-300 text-gray-800 rounded-bl-none"
+                              }`}
+                            >
+                               {msg.group_message.message}
                             </div>
+                  
+                            {/* Timestamp */}
+                            <p className="text-xs text-gray-500 mt-1">{msg.group_message.date_time}</p>
+                          </div>
                         ) : null  
                     ))
                 ) : (
                     <p className="text-gray-400 italic">No messages yet...</p>
                 )}
                     <div ref={messagesEndRef}/>
+                    <div>
+                        
+                    </div>
                 </div> 
                 {/* end of message displays */}
 
@@ -391,7 +426,7 @@ export default function GroupChat() {
                 <div className="mt-4 flex items-center space-x-3">
                     <input
                         type="text"
-                        className="flex-1 p-2 rounded-lg bg-blue-100 text-white border border-gray-700"
+                        className="flex-1 p-2 rounded-lg bg-blue-100 text-black border border-blue-100"
                         placeholder="Type your message..."
                         value={message}
                         onChange={(e) => {

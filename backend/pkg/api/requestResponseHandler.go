@@ -1,6 +1,6 @@
 package api 
 import ("net/http"
-"fmt"
+//"fmt"
 "social-network/pkg/utils"
 datamodels "social-network/pkg/dataModels"
 "social-network/pkg/db/queries"
@@ -15,7 +15,6 @@ type RequestResponse struct {
 
 
 func RequestResponseHandler(w http.ResponseWriter, r *http.Request){
-	fmt.Println("the request response function is functioning")
 
 	if r.Method != http.MethodPost {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusMethodNotAllowed, Status: "Failed", ErrorMsg: "Invalid request method"})
@@ -29,9 +28,6 @@ func RequestResponseHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	if req.Request.Accepted {
-		fmt.Println("accepted is triggered")
-		fmt.Println(req.Request.GroupID)
-		fmt.Println(req.Request.UserID)
 		// Accept: Update invitation status & add user to group
 		err:= queries.AcceptRequest(req.Request.GroupCreator,req.Request.GroupID, req.Request.UserID)
 		if err != nil {
@@ -40,7 +36,6 @@ func RequestResponseHandler(w http.ResponseWriter, r *http.Request){
 		}
 
 	} else {
-		fmt.Println("declined is triggered")
 		
 		// Decline: Just update the invitation status
 		err:= queries.DeclineRequest(req.Request.GroupCreator,req.Request.GroupID, req.Request.UserID)

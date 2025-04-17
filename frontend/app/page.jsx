@@ -7,9 +7,12 @@ import PostsFeed from "./components/Home/PostsFeed";
 import Explore from "./components/Home/Explore";
 import AuthButton from "./components/Buttons/AuthButtons";
 
+
 export default function Home() {
   return (
+    
     <div className={styles.container}>
+      
       <div className={styles.userProfileDiv}>
         <ProfileWindow />
       </div>
@@ -19,7 +22,7 @@ export default function Home() {
       <div className={styles.searchDiv}>
         <Explore />
       </div>
-      
+     
     </div>
   );
 }

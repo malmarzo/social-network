@@ -55,7 +55,6 @@ func RequestGroupListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Response JSON:", string(jsonData)) // Log JSON response
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)

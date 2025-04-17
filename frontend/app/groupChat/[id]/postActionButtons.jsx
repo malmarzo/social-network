@@ -60,7 +60,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
         response = await invokeAPI(`like/${postID}`, {}, "POST");
       }
       if (response.code === 200) {
-        console.log(response);
         setLikes(response.data.likes);
         setDislikes(response.data.dislikes);
         setComments(response.data.comments);
@@ -82,7 +81,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
         response = await invokeAPI(`dislike/${postID}`, {}, "POST");
       }
       if (response.code === 200) {
-        console.log(response);
         setLikes(response.data.likes);
         setDislikes(response.data.dislikes);
         setComments(response.data.comments);
@@ -122,7 +120,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
       }
 
       if (response.code === 200) {
-        console.log(response);
         setLikes(response.data.stats.likes);
         setDislikes(response.data.stats.dislikes);
         setComments(response.data.stats.comments);
@@ -169,7 +166,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
       try {
         const response = await invokeAPI(`groups/chat/${groupID}/groupComments/${postID}`, {}, "GET");
         if (response.code === 200) {
-          console.log("hello yunes",response);
           setCommentsList(response.data);
         }
       } catch (error) {
@@ -177,7 +173,6 @@ const PostActionButtons = ({ postID, isGroup, groupID }) => {
       }
     }
   }
-console.log(commentsList);
   useEffect(() => {
     return () => {
       if (imagePreviewUrl) {

@@ -14,19 +14,19 @@ export default function CreateGroup() {
     const [description, setDescription] = useState("");
     const [groupID, setGroupID] = useState(null);
     const [groupCreatorID, setGroupCreatorID] = useState(null);
-    const [selectedUsers, setSelectedUsers] = useState([]);  // Store selected users here
+    const [selectedUsers, setSelectedUsers] = useState([]);  
     const router = useRouter();
     const [users, setUsers] = useState([]);
     const { sendMessage } = useWebSocket();
     const [errors, setErrors] = useState({});
     useEffect(() => {
       const fetchUsers = async () => {
-          const data = await fetchUsersData();  // Fetch users data
-          setUsers(data);  // Set the fetched users data into state
+          const data = await fetchUsersData();  
+          setUsers(data);  
       };
 
       fetchUsers();
-  }, []);  // This will run only once when the component mounts
+  }, []);  
    
     const createGroup = async () => {
        
@@ -53,11 +53,8 @@ export default function CreateGroup() {
       
         
         if (response.code === 200) {
-            //setErrors({});
-            console.log("Group created successfully:", response.group);
             setGroupID(response.group.id);
             setGroupCreatorID(response.group.creator_id);
-            console.log(groupCreatorID);
             const getGroupsToRequest = () => {
                 const GroupsToRequestMsg = { type: "groupsToRequest" };
                 sendMessage(GroupsToRequestMsg);
@@ -70,16 +67,11 @@ export default function CreateGroup() {
 
             // Invite users automatically after creating the group
             if (selectedUsers.length > 0) {
-                // await sendInvitations(response.group.id, response.group.creator_id, selectedUsers);
-                //test;
-                console.log("Selected Users:", selectedUsers);
-
-                console.log("test for send invitations");
                 await sendInvitations(selectedUsers,sendMessage,response.group.id,response.group.creator_id);
                 //end of test
             }
             
-            alert("Group created and users invited successfully!");
+            //alert("Group created and users invited successfully!");
         } else {
             console.log("Could not create the group");
         }

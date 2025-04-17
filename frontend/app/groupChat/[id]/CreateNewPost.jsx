@@ -54,7 +54,6 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
       } else {
       
       }
-      console.log(response);
       if (response.code === 200) {
         setPostTitle("");
         setPostContent("");

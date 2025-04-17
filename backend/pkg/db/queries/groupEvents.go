@@ -51,12 +51,12 @@ func InsertEventOptions(eventID int, option []datamodels.Option) error {
 	defer db.Close()
 
 	query := `
-		INSERT INTO event_options (event_id, option_text)
-		VALUES (?, ?)
+		INSERT INTO event_options (event_id, option_text, option_id)
+		VALUES (?, ?, ?)
 	`
 
 	for _, option := range option {
-		_, execErr := db.Exec(query, eventID, option.Text)
+		_, execErr := db.Exec(query, eventID, option.Text,option.ID)
 		if execErr != nil {
 			log.Printf("Error inserting event option (%s): %v\n", option.Text, execErr)
 			return execErr
@@ -254,6 +254,7 @@ func OldGroupEvents(groupID int) ([]datamodels.EventMessage, error) {
 }
 
 func GetEventResponses(eventID int) ([]datamodels.EventResponseMessage, error) {
+	log.Println("the error in this function")
 	dbPath := getDBPath() // Get the database path
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -281,8 +282,9 @@ func GetEventResponses(eventID int) ([]datamodels.EventResponseMessage, error) {
 
 	// Process rows and build event responses
 	for rows.Next() {
-		var userID, optionText, firstName string
+		var userID,firstName string
 		var optionID, eventID int
+		var optionText string
 
 		err := rows.Scan(&userID, &optionID, &optionText, &eventID, &firstName)
 		if err != nil {

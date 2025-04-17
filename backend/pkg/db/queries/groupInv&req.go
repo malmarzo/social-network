@@ -3,7 +3,7 @@ package queries
 import ("log"
 "database/sql"
 datamodels "social-network/pkg/dataModels"
-// "fmt"
+ //"fmt"
 // "social-network/pkg/utils"
 // "sort"
 )
@@ -161,6 +161,7 @@ func GetPendingInvitations(userID string) ([]datamodels.Invite, error) {
 		log.Println("Error iterating over invite rows:", err)
 		return nil, err
 	}
+	
 
 	return invites, nil
 }

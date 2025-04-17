@@ -1,6 +1,5 @@
 
 export const sendGroupMessage = async (groupID,senderID,message, sendMessage) => {
-        console.log("the function is functioning");
         const groupMsg = {
             type: "groupMessage",
             group_message: {
@@ -16,14 +15,12 @@ export const sendGroupMessage = async (groupID,senderID,message, sendMessage) =>
 
 
 export const sendUsersInvitationListMessage = async (groupID, sendMessage) => {
-    console.log("the function is functioning");
     const usersInvitationListMsg = {
         type: "usersInvitationListMessage",
        users_invitation_list_message: {
             group_id: parseInt(groupID, 10),
         }
     };
-    console.log("Sending WebSocket message:", usersInvitationListMsg);
     sendMessage(usersInvitationListMsg);  
 
 };
@@ -31,14 +28,12 @@ export const sendUsersInvitationListMessage = async (groupID, sendMessage) => {
 
 
 export const sendGroupMembersMessage = async (groupID, sendMessage) => {
-    console.log("the function is functioning");
     const groupMembersMsg = {
         type: "groupMembersMessage",
        group_members_message: {
             group_id: parseInt(groupID, 10),
         }
     };
-    console.log("Sending WebSocket message:",  groupMembersMsg);
     sendMessage( groupMembersMsg);  
 
 };
@@ -46,7 +41,6 @@ export const sendGroupMembersMessage = async (groupID, sendMessage) => {
 
 
 export const sendActiveGroupMessage = async (status,groupID, sendMessage) => {
-    console.log("the function is functioning");
     const activeGroupMsg = {
         type: "activeGroupMessage",
        
@@ -55,7 +49,6 @@ export const sendActiveGroupMessage = async (status,groupID, sendMessage) => {
             group_id: parseInt(groupID),
         }
     };
-    console.log("Sending message:", JSON.stringify(activeGroupMsg));
     sendMessage(activeGroupMsg);  
 
 };
@@ -64,7 +57,6 @@ export const sendActiveGroupMessage = async (status,groupID, sendMessage) => {
 
 
 export const sendResetCountMessage = async (groupID, sendMessage) => {
-    console.log("the function is functioning");
     const resetCountMsg = {
         type: "resetCountMessage",
         reset_count_message: {
@@ -77,7 +69,6 @@ export const sendResetCountMessage = async (groupID, sendMessage) => {
 
 
 export const handleRequestJoin = async ( groupID,groupCreator,currentUser,sendMessage) => {
-        console.log("the function is functioning");
         const requestMsg = {
             type: "request",
             content: "",
@@ -88,4 +79,13 @@ export const handleRequestJoin = async ( groupID,groupCreator,currentUser,sendMe
             },
         };
         sendMessage(requestMsg);  
+};
+
+
+export const getEvents = async (sendMessage) => {
+    const GetEventsMsg = {
+        type: "getEvents",
+    };
+    sendMessage( GetEventsMsg);  
+
 };

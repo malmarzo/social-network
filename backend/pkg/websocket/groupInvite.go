@@ -7,7 +7,7 @@ import (
 	"social-network/pkg/db/queries"
 	//"sync"
 	"github.com/gorilla/websocket"
-	"social-network/pkg/utils"
+	//"social-network/pkg/utils"
 	datamodels "social-network/pkg/dataModels"
 		
 )
@@ -16,29 +16,25 @@ import (
 // this function to invite users and insert pending invitations whether 
 // the user is online or not 
 func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
-	fmt.Println("Invitation function triggered")
 	mu.Lock()
 	recipientID := msg.Invite.UserID
-	fmt.Println(recipientID)
 	recipientConn, exists := clients[recipientID]
 	// Insert into the database FIRST, regardless of user status
 	err1 := queries.InviteUser(msg.Invite.GroupID, recipientID, msg.Invite.InvitedBy)
 	if err1 != nil {
-		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+		log.Println("Error inserting user invite into the database", err1)
 		mu.Unlock()
 		return
 	}
 	getFirstName, err2:= queries.GetFirstNameById(msg.Invite.InvitedBy)
 	if err2 != nil {
 		fmt.Println("Error retreving the invited by name", err2)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
 	getGroupName, err3:= queries.GetGroupName(msg.Invite.GroupID)
 	if err3 != nil {
 		fmt.Println("Error retreving the group name", err3)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
@@ -50,6 +46,19 @@ func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
 		if err != nil {
 			log.Printf("Error sending invitation to user %s: %v", recipientID, err)
 		}
+
+		inviteNotifier := SocketMessage{
+			Type:    "inviteNotifier",
+			Content: fmt.Sprintf("you are invited by " + getFirstName + " to join a group called " + getGroupName),
+			//Request: request,
+		}
+
+		err10 := recipientConn.Conn.WriteJSON(inviteNotifier)
+		if err10 != nil {
+			log.Printf("Error sending invite notifier to user")
+			return
+		}
+
 	} else {
 		log.Printf("User %s is not online", recipientID)
 	}
@@ -86,6 +95,18 @@ func SendPendingRequests(ws *websocket.Conn, userID string) {
 		if err != nil {
 			log.Printf("Error sending stored request to user %s: %v", userID, err)
 		}
+
+		// reqNotifier := SocketMessage{
+		// 	Type:    "requestNotifier",
+		// 	Content: fmt.Sprintf(getFirstName + " has requested to join the group called " + getGroupName),
+		// 	//Request: request,
+		// }
+
+		// err10 := ws.WriteJSON(reqNotifier)
+		// if err10 != nil {
+		// 	log.Printf("Error sending request notifier to user")
+		// 	return
+		// }
 	}
 }
 // end of event notification
@@ -95,28 +116,23 @@ func SendPendingRequests(ws *websocket.Conn, userID string) {
 // this function to send a request if the user online and insert the
 // the request whether the user online or not 
 func RequestToJoinGroup(msg SocketMessage, w http.ResponseWriter){
-	fmt.Println("Request to join group function triggered")
 			mu.Lock()
 			recipientID := msg.Request.GroupCreator
-			fmt.Println(recipientID)
-			fmt.Println(recipientID)
 			recipientConn, exists := clients[recipientID]
 			err1:= queries.RequestToJoin(msg.Request.GroupID, msg.Request.UserID, recipientID)
 				if err1 != nil {
-				utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "invalid request"})
+					log.Println("Error inserting the request to join in the database", err1)
 					return
 					}
 	getFirstName, err2:= queries.GetFirstNameById(msg.Request.UserID)
 	if err2 != nil {
 		fmt.Println("Error retreving the requester name", err2)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
 	getGroupName, err3:= queries.GetGroupName(msg.Request.GroupID)
 	if err3 != nil {
 		fmt.Println("Error retreving the group name", err3)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
         return
 
 	}
@@ -126,6 +142,18 @@ func RequestToJoinGroup(msg SocketMessage, w http.ResponseWriter){
 				err := recipientConn.Conn.WriteJSON(msg)
 				if err != nil {
 					log.Printf("Error sending request to user %s: %v", recipientID, err)
+				}
+
+				reqNotifier := SocketMessage{
+					Type:    "requestNotifier",
+					Content: fmt.Sprintf(getFirstName + " has requested to join the group called " + getGroupName),
+					//Request: request,
+				}
+		
+				err10 := recipientConn.Conn.WriteJSON(reqNotifier)
+				if err10 != nil {
+					log.Printf("Error sending request notifier to user")
+					return
 				}
 				
 			} else {
@@ -165,6 +193,18 @@ func SendPendingInvitations(ws *websocket.Conn, userID string) {
 		if err != nil {
 			log.Printf("Error sending stored invitation to user %s: %v", userID, err)
 		}
+
+		// inviteNotifier := SocketMessage{
+		// 	Type:    "inviteNotifier",
+		// 	Content: fmt.Sprintf(getFirstName + " has requested to join the group called " + getGroupName),
+		// 	//Request: request,
+		// }
+
+		// err10 := ws.WriteJSON(inviteNotifier)
+		// if err10 != nil {
+		// 	log.Printf("Error sending invite notifier to user")
+		// 	return
+		// }
 	}
 }
 //------------------------------------------------------------------------
@@ -174,8 +214,6 @@ func SendPendingInvitations(ws *websocket.Conn, userID string) {
 
 
 func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string) {
-	fmt.Println("function to provide the groups to request")
-	
 	// Lock to avoid concurrent writes to clients map
 	mu.Lock()
 
@@ -218,7 +256,6 @@ func SendGroupsToRequest(msg SocketMessage, w http.ResponseWriter, userID string
 // here i will do the the invitation user list inside the chat 
 
 func SendUsersInvitationList(msg SocketMessage, w http.ResponseWriter, userID string) {
-	fmt.Println("SendUsersInvitationList is functioning")
 	mu.Lock()
 	defer mu.Unlock()
 

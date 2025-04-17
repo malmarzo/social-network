@@ -18,7 +18,6 @@ func CreateGroupHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
     // DEBUG: Log incoming request
     body, _ := io.ReadAll(r.Body)
-    fmt.Println("Received Body:", string(body))
 
     if err := json.Unmarshal(body, &g); err != nil {
         fmt.Println("Error decoding JSON:", err)
@@ -49,11 +48,7 @@ func CreateGroupHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    fmt.Println("Group successfully created:", g)
-	// response.Code = 200
-	// response.Status = "OK"
-	// response.Group.ID= groupID
-	// response.Group.CreatorID = CreatorID
+   
 	response = datamodels.Response{
         Code:   200,
         Status: "OK",
