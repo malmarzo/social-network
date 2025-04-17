@@ -299,20 +299,55 @@
 /* Responsive design */
 @media (max-width: 1280px) {
   .container {
+    display: grid;
     grid-template-columns: 280px 1fr;
     padding: 1rem;
     gap: 1rem;
   }
 
   .followersFollowing {
-    display: none;
+    grid-column: span 2; /* Make it span both columns */
+    height: auto;
+    min-height: 300px;
+    position: static;
+    margin-top: 1rem;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 908px) {
   .container {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .profileDetails {
+    width: 100%;
+    height: auto;
+    min-height: auto;
+    position: static;
+    order: 1; /* Show profile first */
+  }
+
+  .postsFeed {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    overflow-y: visible;
+    order: 2; /* Show posts second */
+  }
+
+  .followersFollowing {
+    width: 100%;
+    height: auto;
+    min-height: 300px;
+    position: static;
+    order: 3; /* Show followers/following last */
+    display: block;
+    margin-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
   }
 
   .profileCard {
@@ -327,16 +362,6 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-  }
-
-  .profileDetails {
-    height: auto;
-    min-height: min(50vh, 400px);
-    position: static;
-  }
-
-  .privateContainer .profileDetails {
-    min-height: min(40vh, 300px); /* Even smaller on mobile */
   }
 
   .details {
@@ -358,14 +383,6 @@
 
   .actionButton {
     width: 100%;
-  }
-
-  .postsFeed {
-    height: auto;
-  }
-
-  .followersFollowing {
-    display: none;
   }
 }
 

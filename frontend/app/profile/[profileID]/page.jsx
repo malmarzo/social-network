@@ -9,8 +9,6 @@ import PostsFeed from "@/app/components/Home/PostsFeed";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/app/components/Alerts/PopUp";
 import { useWebSocket } from "@/context/Websocket";
-
-
 import FollowersAndFollowingList from "@/app/components/Profiles/FollowersAndFollowingList";
 
 const ProfilePage = () => {
