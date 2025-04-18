@@ -125,7 +125,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	// here i will add the code responsible for sending the pending groupMessages
 	//SendPendingGroupMessages(ws,userID,w)	
 	// here i will send the event notification 
-	//SendPendingEventNotifications(ws,userID)	
+		
 //--------------------------------------------------------------------------------------------
 
 	mu.Unlock()

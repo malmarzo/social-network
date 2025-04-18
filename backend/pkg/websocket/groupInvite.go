@@ -34,7 +34,7 @@ func InvitePeople(msg SocketMessage, w http.ResponseWriter) {
 	}
 	getGroupName, err3:= queries.GetGroupName(msg.Invite.GroupID)
 	if err3 != nil {
-		fmt.Println("Error retreving the group name", err3)
+		fmt.Println("Error retreving the group name 2", err3)
         return
 
 	}
@@ -80,9 +80,10 @@ func SendPendingRequests(ws *websocket.Conn, userID string) {
 			return
 
 		}
+		fmt.Println(request.GroupID)
 		getGroupName, err3:= queries.GetGroupName(request.GroupID)
 		if err3 != nil {
-			fmt.Println("Error retreving the group name", err3)
+			fmt.Println("Error retreving the group name 3", err3)
 			return
 
 		}
@@ -132,7 +133,7 @@ func RequestToJoinGroup(msg SocketMessage, w http.ResponseWriter){
 	}
 	getGroupName, err3:= queries.GetGroupName(msg.Request.GroupID)
 	if err3 != nil {
-		fmt.Println("Error retreving the group name", err3)
+		fmt.Println("Error retreving the group name 4", err3)
         return
 
 	}
@@ -180,7 +181,7 @@ func SendPendingInvitations(ws *websocket.Conn, userID string) {
 		}
 		getGroupName, err3:= queries.GetGroupName(invite.GroupID)
 		if err3 != nil {
-			fmt.Println("Error retreving the group name", err3)
+			fmt.Println("Error retreving the group name 5", err3)
 			return
 
 		}

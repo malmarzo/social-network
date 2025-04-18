@@ -73,7 +73,7 @@ func SendGroupMessage(msg SocketMessage, w http.ResponseWriter) {
 	msg.GroupMessage.ID = messageID
 	groupName, err:= queries.GetGroupName(msg.GroupMessage.GroupID)
 	if err != nil {
-		fmt.Println("Error getting group name", err)
+		fmt.Println("Error getting group name 6", err)
         return
 	}
 	msg.GroupMessage.GroupName = groupName

@@ -84,7 +84,7 @@ func SendEventMessage(msg SocketMessage, w http.ResponseWriter) {
 
     getGroupName, err3:= queries.GetGroupName(msg.EventMessage.GroupID)
 	if err3 != nil {
-		fmt.Println("Error retreving the group name", err3)
+		fmt.Println("Error retreving the group name 1", err3)
         return
 
 	}

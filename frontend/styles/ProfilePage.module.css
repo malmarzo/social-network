@@ -27,9 +27,10 @@
   border-radius: 1rem;
   border: 1px solid #e5e7eb;
   padding: 1.5rem;
-  position: sticky;
+  position: static;
   top: 80px;
-  height: min(90vh, 600px);
+  height: 575px;
+  min-height: 400px;
 }
 
 .private {
@@ -328,6 +329,10 @@
     min-height: auto;
     position: static;
     order: 1; /* Show profile first */
+    flex-direction: column !important;
+    flex-wrap: nowrap;
+    
+    
   }
 
   .postsFeed {
@@ -342,7 +347,7 @@
     width: 100%;
     height: auto;
     min-height: 300px;
-    position: static;
+    position: relative;
     order: 3; /* Show followers/following last */
     display: block;
     margin-top: 1rem;
