@@ -1,5 +1,6 @@
 package datamodels
 
+
 // Response struct to be sent back
 type Response struct {
 
