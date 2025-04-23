@@ -1,15 +1,17 @@
 package queries
-import (
-	"log"
-"database/sql"
-datamodels "social-network/pkg/dataModels"
-//"fmt"
-//"social-network/pkg/utils"
-"os"
-"path/filepath"
-	"mime"
-)
 
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	datamodels "social-network/pkg/dataModels"
+
+	// "fmt"
+	// "social-network/pkg/utils"
+	"mime"
+	"os"
+	"path/filepath"
+)
 
 func InsertNewGroupPost(post datamodels.GroupPost) error {
 	dbPath := getDBPath()
@@ -49,8 +51,7 @@ func InsertNewGroupPost(post datamodels.GroupPost) error {
 	return nil
 }
 
-
-func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.GroupPost, error) {
+func GetAllGroupPosts(userID string, groupID int, tab string) ([]datamodels.GroupPost, error) {
 	dbPath := getDBPath()
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -70,12 +71,12 @@ func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.Group
 	case "trending":
 		rows, errFetch = db.Query(baseQuery+` 
             ORDER BY (gp.num_likes + gp.num_dislikes + gp.num_comments) DESC`,
-			groupID,)
+			groupID)
 	case "my-posts":
 		rows, errFetch = db.Query("SELECT * FROM group_posts WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC", userID, groupID)
 	default: // "latest" or empty
 		rows, errFetch = db.Query(baseQuery+`ORDER BY gp.created_at DESC`,
-			groupID,)
+			groupID)
 	}
 
 	if errFetch != nil {
@@ -90,7 +91,7 @@ func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.Group
 			&post.PostID,
 			&post.GroupID,
 			&post.UserID,
-			&post.UserNickname, 
+			&post.UserNickname,
 			&post.PostTitle,
 			&post.Content,
 			&post.PostImage,
@@ -126,6 +127,8 @@ func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.Group
 		}
 
 		posts = append(posts, post)
+
+		fmt.Println(post.CreatedAt)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -134,8 +137,6 @@ func GetAllGroupPosts(userID string,groupID int, tab string) ([]datamodels.Group
 
 	return posts, nil
 }
-
-
 
 func GetGroupPostInteractionStats(groupPostID string) (datamodels.GroupPostInteractions, error) {
 	dbPath := getDBPath()
@@ -153,8 +154,6 @@ func GetGroupPostInteractionStats(groupPostID string) (datamodels.GroupPostInter
 
 	return groupPostInteractions, nil
 }
-
-
 
 func LikeGroupPost(postID string, userID string) error {
 	dbPath := getDBPath()
@@ -212,8 +211,6 @@ func LikeGroupPost(postID string, userID string) error {
 
 	return tx.Commit()
 }
-
-
 
 func DislikeGroupPost(postID string, userID string) error {
 	dbPath := getDBPath()

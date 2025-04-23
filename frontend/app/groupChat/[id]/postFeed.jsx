@@ -32,7 +32,11 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
           setError("Failed to fetch posts");
           return;
         }
-        response = await invokeAPI(`groups/chat/${groupID}/groupPosts`, null, "GET");
+        response = await invokeAPI(
+          `groups/chat/${groupID}/groupPosts`,
+          null,
+          "GET"
+        );
       } else if (isProfile) {
         if (!profileID) {
           setError("Failed to fetch posts");
@@ -40,13 +44,14 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
         }
         response = await invokeAPI(`profilePosts/${profileID}`, null, "GET");
       } else {
-        const queryParams = { 
+        const queryParams = {
           tab: activeTab,
         };
         response = await invokeAPI("posts", null, "GET", null, queryParams);
       }
       if (response.code === 200) {
         setPosts(response.data);
+        console.log(response.data);
       } else {
         setError("Failed to fetch posts");
       }
@@ -78,7 +83,11 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
   if (error) {
     return (
       <div className={styles.errorState}>
-        <ExclamationTriangleIcon className={styles.errorIcon} />
+        <ExclamationTriangleIcon className={styles.errorIcon} style={{
+          width: "50px",
+          height: "50px",
+          color: "#4B5563",
+        }} />
         <h3 className={styles.errorTitle}>Oops! Something went wrong</h3>
         <p className={styles.errorText}>
           {error === "Failed to fetch posts"
@@ -90,20 +99,20 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
   }
 
   return (
-    <div
-      className={styles.container}
-    >
-       <h2 className="text-2xl font-bold mb-4  text-center text-blue-400">Posts & Comments</h2>
-       {shouldShowCreatePost() && (
-                  <button
-                    className={styles.createPostButton}
-                    onClick={() => setCreateNewPost(true)}
-                  >
-                    Create Post
-                  </button>
-                )}
-                <br></br>
-                <br></br>
+    <div className={styles.container}>
+      <h2 className="text-2xl font-bold mb-4  text-center text-blue-400">
+        Posts & Comments
+      </h2>
+      {shouldShowCreatePost() && (
+        <button
+          className={styles.createPostButton}
+          onClick={() => setCreateNewPost(true)}
+        >
+          Create Post
+        </button>
+      )}
+      <br></br>
+      <br></br>
       <div className="posts-list space-y-3 h-[600px] overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 shadow-sm p-3">
         <div className={styles.headerContainer}>
           {isProfile ? (
@@ -135,7 +144,6 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
                     ))}
                   </div>
                 )}
-               
               </nav>
             </>
           )}
@@ -153,7 +161,14 @@ const PostsFeed = ({ isGroup, groupID, isProfile, profileID, myProfile }) => {
         <div className={styles.postsGrid}>
           {!loading && !posts ? (
             <div className={styles.emptyState}>
-              <ClipboardDocumentIcon className={styles.emptyStateIcon} />
+              <ClipboardDocumentIcon
+                className={styles.emptyStateIcon}
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  color: "#4B5563",
+                }}
+              />
               <h3 className={styles.emptyStateTitle}>No Activity Yet</h3>
               <p className={styles.emptyStateText}>
                 {isProfile

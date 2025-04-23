@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,9 +11,8 @@ import (
 	datamodels "social-network/pkg/dataModels"
 	"social-network/pkg/db/queries"
 	"social-network/pkg/utils"
-	"strings"
 	"strconv"
-	"fmt"
+	"strings"
 	"time"
 )
 
@@ -58,37 +58,36 @@ func CreateNewGroupPostHandler(w http.ResponseWriter, r *http.Request) {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusBadRequest, Status: "Failed", ErrorMsg: "Missing required fields"})
 		return
 	}
-	
+
 	postID := utils.GenerateUUID()
 	if postID == "" {
 		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
 		return
 	}
-	// here for the groupid modt probably you gonna fix it 
+	// here for the groupid modt probably you gonna fix it
 	parts := strings.Split(r.URL.Path, "/")
-    if len(parts) < 4 {
-        http.Error(w, "Invalid request", http.StatusBadRequest)
-        return
-    }
-    groupID := parts[3] // The ID is the 4th part in "/groups/chat/{id}"
-	groupIDInt, err2:= strconv.Atoi(groupID)
+	if len(parts) < 4 {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	groupID := parts[3] // The ID is the 4th part in "/groups/chat/{id}"
+	groupIDInt, err2 := strconv.Atoi(groupID)
 	if err2 != nil {
 		fmt.Println("Error converting groupid from the url to int:", err2)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
-        return
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+		return
 	}
 	// end
 	// Format current time as dd-mm-yyyy hh:mm am/pm
 	currentTime := time.Now().Format("02-01-2006 03:04 PM")
 
-
 	post := datamodels.GroupPost{
-		GroupID:		groupIDInt,
-		PostID:        postID,
-		UserID:        userID,
-		UserNickname:  userNickname,
-		PostTitle:     postTitle,
-		Content:       content,
+		GroupID:      groupIDInt,
+		PostID:       postID,
+		UserID:       userID,
+		UserNickname: userNickname,
+		PostTitle:    postTitle,
+		Content:      content,
 		//PostPrivacy:   postPrivacy,
 		NumOfLikes:    0,
 		NumOfDislikes: 0,
@@ -195,19 +194,19 @@ func GetGroupPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parts := strings.Split(r.URL.Path, "/")
-    if len(parts) < 4 {
-        http.Error(w, "Invalid request", http.StatusBadRequest)
-        return
-    }
+	if len(parts) < 4 {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 	groupID := parts[3] // The ID is the 4th part in "/groups/chat/{id}"
-	groupIDInt, err2:= strconv.Atoi(groupID)
+	groupIDInt, err2 := strconv.Atoi(groupID)
 	if err2 != nil {
 		fmt.Println("Error converting groupid from the url to int:", err2)
-        utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
-        return
+		utils.SendResponse(w, datamodels.Response{Code: http.StatusInternalServerError, Status: "Failed", ErrorMsg: "Internal Server Error"})
+		return
 	}
 
-	posts, err := queries.GetAllGroupPosts(userID,groupIDInt ,activeTab)
+	posts, err := queries.GetAllGroupPosts(userID, groupIDInt, activeTab)
 	if err != nil {
 		log.Println("Failed to get posts:", err)
 		utils.SendResponse(w, datamodels.Response{
@@ -290,8 +289,6 @@ func GetGroupPostsHandler(w http.ResponseWriter, r *http.Request) {
 // 		})
 // 		return
 // 	}
-
-	
 
 // 	// Convert images to base64 for each post
 // 	for i := range posts {

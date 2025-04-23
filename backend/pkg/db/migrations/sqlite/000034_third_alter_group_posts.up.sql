@@ -9,7 +9,7 @@ CREATE TABLE group_posts_temp (
     num_likes INTEGER DEFAULT 0,
     num_dislikes INTEGER DEFAULT 0,
     num_comments INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES groups(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

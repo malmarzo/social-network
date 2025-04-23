@@ -254,7 +254,6 @@ func OldGroupEvents(groupID int) ([]datamodels.EventMessage, error) {
 }
 
 func GetEventResponses(eventID int) ([]datamodels.EventResponseMessage, error) {
-	log.Println("the error in this function")
 	dbPath := getDBPath() // Get the database path
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {

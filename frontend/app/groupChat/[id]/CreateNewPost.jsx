@@ -30,10 +30,10 @@ const CreateNewPost = ({ onClose, onPostCreated, isGroup, groupID }) => {
     e.preventDefault();
     setIsSubmitting(true); // Add loading state
     const formData = new FormData();
-    if (!postTitle || !postContent || fetchError) {
+    if (!postTitle || !postContent || fetchError || postTitle.trim() === "" || postContent.trim() === "") {
       setErrors({
-        title: postTitle ? "" : "Title is required",
-        content: postContent ? "" : "Content is required",
+        title: (postTitle && !postTitle.trim() === "" ) ? "" : "Title is required",
+        content: (postContent && !postContent.trim() === "") ? "" : "Content is required",
       });
       setIsSubmitting(false);
       return;
