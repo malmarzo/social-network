@@ -15,7 +15,6 @@ func main() {
 	defer db.Close()
 	go websocket.HandleMessages() // Start the websocket message handler
 
-	//go websocket.HandleMessages() // Start the websocket message handler
 
 	// Move specific routes first
 	http.HandleFunc("/signup", middleware.CorsMiddleware(api.SignupHandler))
@@ -56,8 +55,6 @@ func main() {
 	http.HandleFunc("/session", middleware.CorsMiddleware(api.SessionHandler))
 	
 	http.HandleFunc("/groups", middleware.CorsMiddleware(middleware.AuthMiddleware(api.CreateGroupHandler)))
-   // http.HandleFunc("/groups/invite", middleware.CorsMiddleware(middleware.AuthMiddleware(api.InviteUserHandler)))
-   
 	http.HandleFunc("/groups/users", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetUsersHandler)))
 	http.HandleFunc("/groups/chat/{id}/groupComments/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GetGroupPostComments)))
 	http.HandleFunc("/groups/chat/", middleware.CorsMiddleware(middleware.AuthMiddleware(api.GroupPostInteractionsHandler)))
@@ -73,10 +70,8 @@ func main() {
 	http.HandleFunc("/groups/list", middleware.CorsMiddleware(middleware.AuthMiddleware(api.RequestGroupListHandler)))
 	http.HandleFunc("/groups/request", middleware.CorsMiddleware(middleware.AuthMiddleware(api.RequestResponseHandler)))
 	
-	//http.HandleFunc("/groups/mygroups", middleware.CorsMiddleware(middleware.AuthMiddleware(api.ListMyGroupsHandler)))
-	//Handle establishing websocket connection
-	//http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))
 
+	// WebSocket route
 	http.HandleFunc("/ws", middleware.CorsMiddleware(middleware.AuthMiddleware(websocket.HandleConnections)))
 
 	// Add catch-all route last

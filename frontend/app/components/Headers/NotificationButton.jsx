@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNotification } from "@/context/NotificationContext";
 import { useRouter } from "next/navigation";
-import { BiBell } from "react-icons/bi"; // Make sure to install react-icons
+import { BiBell } from "react-icons/bi"; 
 
 const NotificationButton = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,12 +1,12 @@
 "use client";
 import { React, useState } from "react";
 import { invokeAPI } from "@/utils/invokeAPI";
-import FailAlert from "../components/Alerts/FailAlert";
+import FailAlert from "../Alerts/FailAlert";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useAlert } from "../components/Alerts/PopUp";
+import { useAlert } from "../Alerts/PopUp";
 import styles from "@/styles/AuthButtons.module.css";
-import { PowerIcon } from "@heroicons/react/24/outline"; // Import the power icon
+import { PowerIcon } from "@heroicons/react/24/outline";
 
 const LogoutButton = () => {
   const [errorMsg, setErrorMsg] = useState("");
