@@ -2,6 +2,8 @@
 
 A full-stack Facebook-like social media application made using Next.js and Go.
 
+![screenshot](app.png)
+
 ### Prerequisites
 
 - Install Node if not installed
