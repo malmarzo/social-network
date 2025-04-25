@@ -14,6 +14,7 @@ A full-stack Facebook-like social media application made using Next.js and Go.
 ### Running the frontend
 
 - Navigate to the frontend dir: `cd frontend`
+- Install packages: `npm install`
 - Run: `pnpm dev` or `npm run dev`
 - Application will start on port `3000`
 
