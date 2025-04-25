@@ -1,13 +1,13 @@
 # social-network
 
-A Facebook like social media application made using Next.js and go.
+A full-stack Facebook-like social media application made using Next.js and Go.
 
 ### Prerequisites
 
-- Install node if not installed
+- Install Node if not installed
 - Install pnpm:
   `npm install -g pnpm`
-- Clone the repo: `git clone https://learn.reboot01.com/git/malmarzo/social-network.git`
+- Clone the repo: `https://github.com/malmarzo/social-network.git`
 
 ### Running the frontend
 
@@ -20,10 +20,22 @@ A Facebook like social media application made using Next.js and go.
 - Navigate to the backend dir: `cd backend`
 - Run: `go run cmd/server.go`
 
-### Running on docker
+### Running on Docker
 - In the root directory `/social-network`
 - Run the command `docker compose up`
 - Containers will start on port 3000 (frontend) and 8080 (backend)
+
+
+### Features
+- Secure signup and login with session-based authentication
+- Create and view posts
+- Like, dislike, and comment on posts
+- Add images to posts and comments
+- Public and private profiles
+- Follow and unfollow users
+- Real-time private chat and notifications
+- Create and join group chats
+- Create group posts and events
 
 
 
@@ -40,7 +52,7 @@ social-network/
 │
 └── backend/
     ├── cmd/
-    │   └── main.go
+    │   └── server.go
     │
     ├── pkg/
         ├── api/
